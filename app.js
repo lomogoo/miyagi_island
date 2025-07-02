@@ -2,6 +2,7 @@
 let currentPoints = 0;
 let collectedStamps = [];
 let userLocation = null;
+let html5QrCode; // QRコードリーダーのインスタンスを保持
 
 // 島の情報
 const islands = {
@@ -17,20 +18,12 @@ const islands = {
 
 // 初期化
 document.addEventListener('DOMContentLoaded', function() {
-    // Supabaseクライアントの初期化
-    // const supabase = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
-    
-    // Google Maps APIの初期化
-    // initMap();
-    
-    // 位置情報の取得
-    getCurrentLocation();
-    
-    // ローカルストレージからデータを読み込む（Supabase実装前の暫定処理）
+    // ローカルストレージからデータを読み込む
     loadUserData();
-    
     // ポイント表示の更新
     updatePointsDisplay();
+    // 位置情報の取得
+    getCurrentLocation();
 });
 
 // 位置情報の取得
@@ -43,8 +36,6 @@ function getCurrentLocation() {
                     lng: position.coords.longitude
                 };
                 console.log('現在位置:', userLocation);
-                // Google Maps APIで現在位置を表示
-                // updateUserLocationOnMap(userLocation);
             },
             (error) => {
                 console.error('位置情報の取得に失敗しました:', error);
@@ -53,71 +44,70 @@ function getCurrentLocation() {
     }
 }
 
-// Google Maps初期化（API組み込み時に実装）
-function initMap() {
-    // const map = new google.maps.Map(document.getElementById('map'), {
-    //     center: { lat: 38.3, lng: 141.0 },
-    //     zoom: 10
-    // });
-    
-    // 各島にマーカーを配置
-    // Object.keys(islands).forEach(islandKey => {
-    //     const island = islands[islandKey];
-    //     const marker = new google.maps.Marker({
-    //         position: { lat: island.lat, lng: island.lng },
-    //         map: map,
-    //         title: island.name
-    //     });
-    // });
-}
+// ▼▼▼ 変更箇所 ▼▼▼
 
 // QRコードモーダルを開く
 function openQRModal() {
     document.getElementById('qrModal').style.display = 'flex';
-    // QRコードリーダーの初期化
-    // const html5QrCode = new Html5Qrcode("qr-reader");
-    // html5QrCode.start(
-    //     { facingMode: "environment" },
-    //     { fps: 10, qrbox: 250 },
-    //     onScanSuccess,
-    //     onScanFailure
-    // );
     
-    // 暫定的にテスト用のQRコード読み取りをシミュレート
-    setTimeout(() => {
-        simulateQRScan();
-    }, 2000);
+    // QRコードリーダーの初期化と開始
+    html5QrCode = new Html5Qrcode("qr-reader");
+    html5QrCode.start(
+        { facingMode: "environment" }, // 背面カメラを使用
+        {
+            fps: 10, // 1秒あたりのスキャンフレーム数
+            qrbox: 250 // スキャン領域のサイズ（ピクセル）
+        },
+        onScanSuccess, // スキャン成功時のコールバック
+        onScanFailure  // スキャン失敗時のコールバック
+    ).catch(err => {
+        // カメラの起動失敗などのエラー処理
+        console.error("QRコードリーダーの起動に失敗しました。", err);
+        alert("カメラの起動に失敗しました。ブラウザのカメラアクセスを許可してください。");
+        closeQRModal();
+    });
 }
 
 // QRコードモーダルを閉じる
 function closeQRModal() {
     document.getElementById('qrModal').style.display = 'none';
-    // QRコードリーダーを停止
-    // html5QrCode.stop();
+    
+    // QRコードリーダーが起動していれば停止する
+    if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().then(ignore => {
+            console.log("QR Code scanning stopped.");
+        }).catch(err => {
+            console.error("Failed to stop QR Code scanning.", err);
+        });
+    }
 }
 
 // QRコード読み取り成功時の処理
 function onScanSuccess(decodedText, decodedResult) {
     console.log('QRコード読み取り成功:', decodedText);
+    // スキャン成功後、一度だけ処理を実行し、すぐにリーダーを閉じる
+    html5QrCode.stop();
     processQRCode(decodedText);
     closeQRModal();
 }
 
 // QRコード読み取り失敗時の処理
 function onScanFailure(error) {
-    // エラーは無視（連続的にスキャンするため）
-}
-
-// テスト用：QRスキャンをシミュレート
-function simulateQRScan() {
-    const testIslands = Object.keys(islands);
-    const randomIsland = testIslands[Math.floor(Math.random() * testIslands.length)];
-    processQRCode(randomIsland);
-    closeQRModal();
+    // このコールバックはスキャンが成功するまで呼ばれ続けるため、通常はエラーをコンソールに出力しない
 }
 
 // QRコードの処理
-function processQRCode(islandKey) {
+function processQRCode(decodedText) {
+    // QRコードの文字列が "_island" で終わるかチェック
+    if (!decodedText || !decodedText.endsWith('_island')) {
+        alert('無効なQRコードです');
+        return;
+    }
+
+    // "_island" を取り除いて島のキーを取得
+    const islandKey = decodedText.replace('_island', '');
+
+    // 島のキーが存在するか確認
     if (!islands[islandKey]) {
         alert('無効なQRコードです');
         return;
@@ -132,21 +122,19 @@ function processQRCode(islandKey) {
     addStamp(islandKey);
 }
 
+// ▲▲▲ 変更箇所 ▲▲▲
+
+
 // スタンプを追加
 function addStamp(islandKey) {
     collectedStamps.push(islandKey);
     currentPoints++;
     
-    // アニメーション付きでスタンプを表示
     const stampElement = document.getElementById(`stamp-${islandKey}`);
     stampElement.classList.add('collected', 'animating');
     
-    // データを保存
     saveUserData();
     updatePointsDisplay();
-    
-    // Supabaseにデータを保存
-    // saveToSupabase(islandKey);
     
     alert(`${islands[islandKey].name}のスタンプを獲得しました！`);
 }
@@ -155,7 +143,6 @@ function addStamp(islandKey) {
 function updatePointsDisplay() {
     document.getElementById('current-points').textContent = currentPoints;
     
-    // 応募ボタンの有効/無効を更新
     document.querySelectorAll('.apply-button').forEach(button => {
         const requiredPoints = parseInt(button.parentElement.querySelector('.prize-points').textContent.match(/\d+/)[0]);
         button.disabled = currentPoints < requiredPoints;
@@ -173,15 +160,11 @@ function applyForPrize(prize, requiredPoints) {
         currentPoints -= requiredPoints;
         updatePointsDisplay();
         saveUserData();
-        
-        // Supabaseに応募情報を保存
-        // saveApplicationToSupabase(prize, requiredPoints);
-        
         alert(`${prize}賞への応募が完了しました！`);
     }
 }
 
-// ユーザーデータの保存（ローカルストレージ - 暫定）
+// ユーザーデータの保存（ローカルストレージ）
 function saveUserData() {
     const userData = {
         collectedStamps: collectedStamps,
@@ -190,7 +173,7 @@ function saveUserData() {
     localStorage.setItem('stampRallyData', JSON.stringify(userData));
 }
 
-// ユーザーデータの読み込み（ローカルストレージ - 暫定）
+// ユーザーデータの読み込み（ローカルストレージ）
 function loadUserData() {
     const savedData = localStorage.getItem('stampRallyData');
     if (savedData) {
@@ -198,39 +181,11 @@ function loadUserData() {
         collectedStamps = userData.collectedStamps || [];
         currentPoints = userData.currentPoints || 0;
         
-        // 既存のスタンプを表示
         collectedStamps.forEach(islandKey => {
             const stampElement = document.getElementById(`stamp-${islandKey}`);
             stampElement.classList.add('collected');
         });
     }
-}
-
-// Supabaseへの保存（API実装時に使用）
-async function saveToSupabase(islandKey) {
-    // const { data, error } = await supabase
-    //     .from('stamps')
-    //     .insert([
-    //         {
-    //             user_id: currentUserId,
-    //             island: islandKey,
-    //             collected_at: new Date()
-    //         }
-    //     ]);
-}
-
-// Supabaseへの応募情報保存（API実装時に使用）
-async function saveApplicationToSupabase(prize, points) {
-    // const { data, error } = await supabase
-    //     .from('applications')
-    //     .insert([
-    //         {
-    //             user_id: currentUserId,
-    //             prize: prize,
-    //             points_used: points,
-    //             applied_at: new Date()
-    //         }
-    //     ]);
 }
 
 // 島スポットクリック時の処理
