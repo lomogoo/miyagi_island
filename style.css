@@ -1190,31 +1190,4 @@ select.form-control {
 }
 
 
-/* style.css の末尾に追記 */
 
-/* 矢印アイコンのスタイル */
-.direction-arrow-container {
-  background: none;
-  border: none;
-}
-
-.direction-arrow {
-  color: var(--color-error);
-  font-size: 36px;
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-  transition: transform 0.5s ease-in-out; /* 回転を滑らかに */
-  animation: point-animation 1.5s infinite ease-in-out;
-}
-
-/* 矢印を指し示すようにアニメーション */
-@keyframes point-animation {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px); /* 少し上下に動く */
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
