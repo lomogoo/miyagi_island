@@ -446,3 +446,22 @@ body {
 .bottom-nav span{ font-size:11px; }
 
 .app-section{ display:none; padding-bottom:80px; } /* nav 高さ分余白 */
+
+/* style.css の末尾に追加 */
+
+.user-marker {
+    width: 20px;
+    height: 20px;
+    background-color: #4285F4;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.island-marker {
+    font-size: 24px;
+    background: white;
+    padding: 4px;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
