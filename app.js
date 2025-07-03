@@ -67,6 +67,14 @@ const islands = {
     }
 };
 
+function loadGoogleMaps() {
+    // config.jsからAPI_KEYを読み込んでscriptタグを生成
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap&map_ids=STAMP_RALLY_MAP&libraries=marker`;
+    script.async = true;
+    document.head.appendChild(script);
+}
+
 // Google Maps APIによって呼び出されるグローバル関数
 async function initMap() {
     const miyagiPref = { lat: 38.2682, lng: 140.8694 };
@@ -154,6 +162,7 @@ function createIslandMarker(key, island, AdvancedMarkerElement) {
 // DOM読み込み完了時に実行される関数
 document.addEventListener('DOMContentLoaded', function() {
     setupApp();
+    loadGoogleMaps(); // DOMの準備ができたらマップの読み込みを開始
 });
 
 // アプリの初期設定
