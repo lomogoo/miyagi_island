@@ -97,6 +97,7 @@ let totalPoints = 0;
 let map;
 let markers = [];
 let html5QrcodeScanner;
+let arrowMarker = null; // ← 最寄りの離島
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', function() {
@@ -135,6 +136,7 @@ function initializeMap() {
       (position) => {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
+        const userLatLng = L.latLng(userLat, userLng); // ユーザー位置をオブジェクトとして保持
         
 
         // 現在地にマーカーを追加
@@ -156,6 +158,8 @@ L.marker([userLat, userLng], {
 
         // マップの中心を現在地に移動
         map.setView([userLat, userLng], 12);
+
+        updateNearestIslandArrow(userLatLng); // 矢印を更新
       },
       () => {
         // ユーザーが許可しなかった場合
@@ -608,4 +612,82 @@ function initializeApp() {
   initializePrizes();
   updatePointsDisplay();
   initializeDevTools(); // ← この行を追加
+}
+
+
+// app.js の末尾に追記
+
+/**
+ * 2点間の角度（方角）を計算する関数
+ * @returns {number} 0-360度の角度
+ */
+function calculateBearing(lat1, lon1, lat2, lon2) {
+  const toRadians = (deg) => deg * Math.PI / 180;
+  const toDegrees = (rad) => rad * 180 / Math.PI;
+
+  const phi1 = toRadians(lat1);
+  const phi2 = toRadians(lat2);
+  const deltaLambda = toRadians(lon2 - lon1);
+
+  const y = Math.sin(deltaLambda) * Math.cos(phi2);
+  const x = Math.cos(phi1) * Math.sin(phi2) -
+            Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+  
+  let brng = toDegrees(Math.atan2(y, x));
+  return (brng + 360) % 360; // 角度を0-360に正規化
+}
+
+
+/**
+ * 最寄りの島を指す矢印を更新する関数
+ * @param {L.LatLng} userLatLng - ユーザーの現在地
+ */
+function updateNearestIslandArrow(userLatLng) {
+  // 未取得の島を探す
+  const uncollectedIslands = islands.filter(island => !collectedStamps.has(island.id));
+
+  // 全て取得済みの場合は矢印を消して終了
+  if (uncollectedIslands.length === 0) {
+    if (arrowMarker) {
+      arrowMarker.remove();
+    }
+    return;
+  }
+
+  // 最も近い未取得の島を見つける
+  let nearestIsland = null;
+  let minDistance = Infinity;
+
+  uncollectedIslands.forEach(island => {
+    const distance = userLatLng.distanceTo([island.lat, island.lng]);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestIsland = island;
+    }
+  });
+
+  // 方角を計算
+  const bearing = calculateBearing(userLatLng.lat, userLatLng.lng, nearestIsland.lat, nearestIsland.lng);
+
+  // 矢印マーカーを作成または更新
+  if (!arrowMarker) {
+    arrowMarker = L.marker(userLatLng, {
+      icon: L.divIcon({
+        className: 'direction-arrow-container',
+        html: '<div class="direction-arrow">➤</div>'
+      }),
+      keyboard: false, // 矢印をタブ操作の対象外にする
+      interactive: false // 矢印をクリックできないようにする
+    }).addTo(map);
+  } else {
+    arrowMarker.setLatLng(userLatLng);
+  }
+
+  // 矢印を回転させる
+  const iconElement = arrowMarker.getElement();
+  if (iconElement) {
+    // Leafletのtransformと共存させるため、元のtransformを保持しつつrotateを追加
+    const existingTransform = iconElement.style.transform.replace(/ rotate\([^)]+\)/, '');
+    iconElement.style.transform = `${existingTransform} rotate(${bearing}deg)`;
+  }
 }
