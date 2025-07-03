@@ -1,4 +1,5 @@
-// app.js の全コード
+// app.js の全コード（マーカーを新しい方式に更新）
+
 // グローバル変数
 let currentPoints = 0;
 let collectedStamps = [];
@@ -6,88 +7,93 @@ let html5QrCode;
 let map; // Google Mapオブジェクトを保持する変数
 let infoWindow; // 情報ウィンドウを保持する変数
 
-// ▼▼▼ 島の情報に image プロパティを追加 ▼▼▼
+// 島の情報
 const islands = {
     aji: { 
         name: '網地島', 
         lat: 38.3833, 
         lng: 141.4667, 
         description: '美しい砂浜が広がる、夏には多くの海水浴客で賑わう島。',
-        image: 'https://i.imgur.com/39s93Sn.jpeg' // 仮の画像
+        image: 'https://i.imgur.com/39s93Sn.jpeg'
     },
     tashiro: { 
         name: '田代島', 
         lat: 38.3167, 
         lng: 141.4167, 
         description: '「猫の島」として有名。多くの猫たちが自由気ままに暮らしている。',
-        image: 'https://i.imgur.com/xJ4l6c2.jpeg' // 仮の画像
+        image: 'https://i.imgur.com/xJ4l6c2.jpeg'
     },
     katsura: { 
         name: '桂島', 
         lat: 38.2833, 
         lng: 141.1000, 
         description: '浦戸諸島の一つで、歴史的な見どころも多い風光明媚な島。',
-        image: 'https://i.imgur.com/39s93Sn.jpeg' // 仮の画像
+        image: 'https://i.imgur.com/39s93Sn.jpeg'
     },
     nonoshima: { 
         name: '野々島', 
         lat: 38.2667, 
         lng: 141.0833, 
         description: 'ツバキのトンネルや潟湖など、豊かな自然が魅力の島。',
-        image: 'https://i.imgur.com/xJ4l6c2.jpeg' // 仮の画像
+        image: 'https://i.imgur.com/xJ4l6c2.jpeg'
     },
     sabusawa: { 
         name: '寒風沢島', 
         lat: 38.2500, 
         lng: 141.0667, 
         description: '江戸時代の歴史的な港跡が残る、歴史とロマンの島。',
-        image: 'https://i.imgur.com/39s93Sn.jpeg' // 仮の画像
+        image: 'https://i.imgur.com/39s93Sn.jpeg'
     },
     ho: { 
         name: '朴島', 
         lat: 38.2333, 
         lng: 141.0500, 
         description: '比較的小さな島で、静かな時間を過ごすことができる。',
-        image: 'https://i.imgur.com/xJ4l6c2.jpeg' // 仮の画像
+        image: 'https://i.imgur.com/xJ4l6c2.jpeg'
     },
     izushima: { 
         name: '出島', 
         lat: 38.2167, 
         lng: 140.9667, 
         description: '本土と橋で結ばれており、アクセスしやすい漁業の盛んな島。',
-        image: 'https://i.imgur.com/39s93Sn.jpeg' // 仮の画像
+        image: 'https://i.imgur.com/39s93Sn.jpeg'
     },
     enoshima: { 
         name: '江島', 
         lat: 38.2000, 
         lng: 140.9500, 
         description: 'ウミネコの繁殖地として知られ、自然豊かな景観が広がる。',
-        image: 'https://i.imgur.com/xJ4l6c2.jpeg' // 仮の画像
+        image: 'https://i.imgur.com/xJ4l6c2.jpeg'
     }
 };
 
 // Google Maps APIによって呼び出されるグローバル関数
-function initMap() {
+async function initMap() {
     const miyagiPref = { lat: 38.2682, lng: 140.8694 };
 
-    map = new google.maps.Map(document.getElementById("map"), {
+    // AdvancedMarkerElement を使うためにライブラリを読み込む
+    const { Map } = await google.maps.importLibrary("maps");
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+    map = new Map(document.getElementById("map"), {
         zoom: 10,
         center: miyagiPref,
+        mapId: "STAMP_RALLY_MAP", // Map IDは必須
         mapTypeControl: false,
         streetViewControl: false,
     });
 
     infoWindow = new google.maps.InfoWindow();
 
-    displayUserLocation();
+    displayUserLocation(AdvancedMarkerElement);
 
     for (const islandKey in islands) {
-        createIslandMarker(islandKey, islands[islandKey]);
+        createIslandMarker(islandKey, islands[islandKey], AdvancedMarkerElement);
     }
 }
 
 // ユーザーの現在地を表示する関数
-function displayUserLocation() {
+function displayUserLocation(AdvancedMarkerElement) {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -95,18 +101,16 @@ function displayUserLocation() {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude,
                 };
-                new google.maps.Marker({
+                
+                // 現在地マーカー用のHTML要素を作成
+                const userMarkerEl = document.createElement('div');
+                userMarkerEl.className = 'user-marker';
+
+                new AdvancedMarkerElement({
                     position: pos,
                     map: map,
                     title: "あなたの現在地",
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 7,
-                        fillColor: "#4285F4",
-                        fillOpacity: 1,
-                        strokeWeight: 2,
-                        strokeColor: "white",
-                    },
+                    content: userMarkerEl // HTML要素をコンテンツとして指定
                 });
                 map.setCenter(pos);
             },
@@ -118,16 +122,17 @@ function displayUserLocation() {
 }
 
 // 島のマーカーを作成する関数
-function createIslandMarker(key, island) {
-    const marker = new google.maps.Marker({
+function createIslandMarker(key, island, AdvancedMarkerElement) {
+    // 島のマーカー用のHTML要素を作成
+    const islandMarkerEl = document.createElement('div');
+    islandMarkerEl.className = 'island-marker';
+    islandMarkerEl.textContent = '🏝️'; // 絵文字アイコン
+
+    const marker = new AdvancedMarkerElement({
         position: { lat: island.lat, lng: island.lng },
         map: map,
         title: island.name,
-        icon: {
-            // ▼▼▼ URLを修正 ▼▼▼
-            url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png", // 青いピンの画像
-            scaledSize: new google.maps.Size(40, 40) // 画像のサイズを調整
-        }
+        content: islandMarkerEl // HTML要素をコンテンツとして指定
     });
 
     marker.addListener("click", () => {
@@ -139,8 +144,9 @@ function createIslandMarker(key, island) {
                 `<p>スタンプ: ${collectedStamps.includes(key) ? '取得済み ✅' : '未取得 ❌'}</p>` +
             `</div>`;
         
+        infoWindow.close(); // 他のウィンドウを閉じる
         infoWindow.setContent(contentString);
-        infoWindow.open(map, marker);
+        infoWindow.open(marker.map, marker);
     });
 }
 
@@ -172,7 +178,6 @@ function setupApp() {
         });
     });
 }
-
 
 // QRコードモーダルを開く
 function openQRModal() {
