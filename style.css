@@ -230,7 +230,7 @@ body {
     background-color: #f0f0f0;
 }
 
-/* ▼▼▼ 情報ウィンドウのスタイルを追加 ▼▼▼ */
+/* 情報ウィンドウのスタイルを追加 */
 .info-window-content {
     width: 240px; /* カードの横幅 */
 }
@@ -249,8 +249,6 @@ body {
     font-size: 14px;
     color: #333;
 }
-/* ▲▲▲ ここまでを追加 ▲▲▲ */
-
 
 /* 応募セクション */
 .prize-section {
