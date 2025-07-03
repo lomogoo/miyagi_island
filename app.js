@@ -136,16 +136,19 @@ function initializeMap() {
         const userLng = position.coords.longitude;
 
         // 現在地にマーカーを追加
-        L.marker([userLat, userLng], {
-          icon: L.divIcon({
-            html: '📍',
-            className: 'user-location-icon',
-            iconSize: [40, 40],
-            iconAnchor: [20, 40]
-          })
-        }).addTo(map)
-          .bindPopup('現在地')
-          .openPopup();
+        // app.js の initializeMap 関数内
+
+// 現在地にマーカーを追加
+L.marker([userLat, userLng], {
+  icon: L.divIcon({
+    html: '📍',
+    className: 'user-location-icon',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40]
+  })
+}).addTo(map)
+  .bindPopup('現在地')
+  .openPopup();
 
         // マップの中心を現在地に移動
         map.setView([userLat, userLng], 12);
