@@ -4,66 +4,66 @@ const islands = [
   {
     id: "aji",
     name: "網地島",
-    lat: 38.3833,
-    lng: 141.4667,
+    lat: 38.268300, 
+    lng: 141.477809,
     description: "美しい砂浜が広がる島。",
-    image: "https://i.imgur.com/39s93Sn.jpeg"
+    image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area07_img01.jpg"
   },
   {
     id: "tashiro",
     name: "田代島",
-    lat: 38.3167,
-    lng: 141.4167,
+    lat: 38.294285, 
+    lng: 141.424276,
     description: "「猫の島」として有名。",
-    image: "https://i.imgur.com/xJ4l6c2.jpeg"
+    image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area06_img01.jpg"
   },
   {
     id: "katsura",
     name: "桂島",
-    lat: 38.2833,
-    lng: 141.1000,
+    lat: 38.334771, 
+    lng: 141.095541,
     description: "歴史的な見どころも多い風光明媚な島。",
-    image: "https://i.imgur.com/39s93Sn.jpeg"
+    image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg"
   },
   {
     id: "nonoshima",
     name: "野々島",
-    lat: 38.2667,
-    lng: 141.0833,
+    lat: 38.338022, 
+    lng: 141.110935,
     description: "ツバキのトンネルが魅力。",
-    image: "https://i.imgur.com/xJ4l6c2.jpeg"
+    image: "https://urato-island.jp/wp-content/uploads/2023/01/nonoshima12.jpg"
   },
   {
     id: "sabusawa",
     name: "寒風沢島",
-    lat: 38.2500,
-    lng: 141.0667,
+    lat: 38.333481, 
+    lng: 141.124332,
     description: "江戸時代の歴史的な港跡が残る島。",
-    image: "https://i.imgur.com/39s93Sn.jpeg"
+    image: "https://urato-island.jp/wp-content/uploads/2022/11/sabusawa09.jpg"
   },
   {
     id: "ho",
     name: "朴島",
-    lat: 38.2333,
-    lng: 141.0500,
+    lat: 38.349648, 
+    lng: 141.124462,
     description: "静かな時間を過ごせる小さな島。",
-    image: "https://i.imgur.com/xJ4l6c2.jpeg"
+    image: "https://urato-island.jp/wp-content/uploads/2022/10/about10.jpg"
   },
   {
     id: "izushima",
     name: "出島",
-    lat: 38.2167,
-    lng: 140.9667,
+    lat: 38.450176, 
+    lng: 141.522555,
     description: "本土と橋で結ばれた漁業の盛んな島。",
-    image: "https://i.imgur.com/39s93Sn.jpeg"
+    image: "https://www.pref.miyagi.jp/images/55686/100_r.jpg"
   },
   {
     id: "enoshima",
     name: "江島",
-    lat: 38.2000,
-    lng: 140.9500,
+    lat: 38.398743, 
+    lng: 141.593839,
     description: "ウミネコの繁殖地として知られる。",
-    image: "https://i.imgur.com/xJ4l6c2.jpeg"
+    image: "http://seapal-kisen.co.jp/wp-content/uploads/2025/05/1746735867906.jpg"
   }
 ];
 
@@ -97,7 +97,6 @@ let totalPoints = 0;
 let map;
 let markers = [];
 let html5QrcodeScanner;
-let arrowMarker = null; // ← 最寄りの離島
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', function() {
@@ -136,8 +135,6 @@ function initializeMap() {
       (position) => {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
-        const userLatLng = L.latLng(userLat, userLng); // ユーザー位置をオブジェクトとして保持
-        
 
         // 現在地にマーカーを追加
 
@@ -158,8 +155,6 @@ L.marker([userLat, userLng], {
 
         // マップの中心を現在地に移動
         map.setView([userLat, userLng], 12);
-
-        updateNearestIslandArrow(userLatLng); // 矢印を更新
       },
       () => {
         // ユーザーが許可しなかった場合
@@ -637,57 +632,3 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   return (brng + 360) % 360; // 角度を0-360に正規化
 }
 
-
-/**
- * 最寄りの島を指す矢印を更新する関数
- * @param {L.LatLng} userLatLng - ユーザーの現在地
- */
-function updateNearestIslandArrow(userLatLng) {
-  // 未取得の島を探す
-  const uncollectedIslands = islands.filter(island => !collectedStamps.has(island.id));
-
-  // 全て取得済みの場合は矢印を消して終了
-  if (uncollectedIslands.length === 0) {
-    if (arrowMarker) {
-      arrowMarker.remove();
-    }
-    return;
-  }
-
-  // 最も近い未取得の島を見つける
-  let nearestIsland = null;
-  let minDistance = Infinity;
-
-  uncollectedIslands.forEach(island => {
-    const distance = userLatLng.distanceTo([island.lat, island.lng]);
-    if (distance < minDistance) {
-      minDistance = distance;
-      nearestIsland = island;
-    }
-  });
-
-  // 方角を計算
-  const bearing = calculateBearing(userLatLng.lat, userLatLng.lng, nearestIsland.lat, nearestIsland.lng);
-
-  // 矢印マーカーを作成または更新
-  if (!arrowMarker) {
-    arrowMarker = L.marker(userLatLng, {
-      icon: L.divIcon({
-        className: 'direction-arrow-container',
-        html: '<div class="direction-arrow">➤</div>'
-      }),
-      keyboard: false, // 矢印をタブ操作の対象外にする
-      interactive: false // 矢印をクリックできないようにする
-    }).addTo(map);
-  } else {
-    arrowMarker.setLatLng(userLatLng);
-  }
-
-  // 矢印を回転させる
-  const iconElement = arrowMarker.getElement();
-  if (iconElement) {
-    // Leafletのtransformと共存させるため、元のtransformを保持しつつrotateを追加
-    const existingTransform = iconElement.style.transform.replace(/ rotate\([^)]+\)/, '');
-    iconElement.style.transform = `${existingTransform} rotate(${bearing}deg)`;
-  }
-}
