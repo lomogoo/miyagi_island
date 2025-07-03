@@ -558,3 +558,54 @@ function initializeMobileTooltips() {
 
 // Call mobile tooltips initialization
 setTimeout(initializeMobileTooltips, 1000);
+
+
+
+
+
+
+
+// 開発者用スタンプボタン
+// app.js の末尾に追記
+
+// --- 開発者向けツール ---
+function initializeDevTools() {
+  const devBtn = document.getElementById('devAddStampBtn');
+  if (devBtn) {
+    devBtn.addEventListener('click', () => {
+      // 未獲得の島をリストアップ
+      const uncollectedIslands = islands.filter(island => !collectedStamps.has(island.id));
+
+      if (uncollectedIslands.length === 0) {
+        alert('全てのスタンプが収集済みです。');
+        return;
+      }
+
+      // 未獲得の島からランダムに1つ選ぶ
+      const randomIsland = uncollectedIslands[Math.floor(Math.random() * uncollectedIslands.length)];
+
+      console.log(`【開発用】${randomIsland.name}のスタンプを追加しました。`);
+
+      // スタンプを獲得する処理
+      collectedStamps.add(randomIsland.id);
+      totalPoints += 1;
+
+      // UIを更新
+      updatePointsDisplay();
+      updateStampCards();
+      updateMapMarkers();
+      updatePrizes();
+    });
+  }
+}
+
+// 既存の initializeApp の最後に呼び出しを追加
+function initializeApp() {
+  initializeMap();
+  initializeNavigation();
+  initializeQRCamera();
+  initializeStampCards();
+  initializePrizes();
+  updatePointsDisplay();
+  initializeDevTools(); // ← この行を追加
+}
