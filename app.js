@@ -124,21 +124,20 @@ function createIslandMarker(key, island) {
         map: map,
         title: island.name,
         icon: {
-            url: "https://maps.google.com/mapfiles/ms/icons/ltblu-pushpin.png", // 表示したい画像のURL
+            // ▼▼▼ URLを修正 ▼▼▼
+            url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png", // 青いピンの画像
             scaledSize: new google.maps.Size(40, 40) // 画像のサイズを調整
         }
     });
 
     marker.addListener("click", () => {
-        // ▼▼▼ 情報ウィンドウの内容を修正 ▼▼▼
         const contentString = 
             `<div class="info-window-content">` +
-                `<img src="${island.image}" alt="${island.name}">` + // 画像を表示
+                `<img src="${island.image}" alt="${island.name}">` +
                 `<h3>${island.name}</h3>` +
                 `<p>${island.description}</p>` +
                 `<p>スタンプ: ${collectedStamps.includes(key) ? '取得済み ✅' : '未取得 ❌'}</p>` +
             `</div>`;
-        // ▲▲▲ ここまでを修正 ▲▲▲
         
         infoWindow.setContent(contentString);
         infoWindow.open(map, marker);
