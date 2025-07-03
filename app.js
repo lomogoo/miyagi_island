@@ -47,25 +47,41 @@ function getCurrentLocation() {
 // ▼▼▼ 変更箇所 ▼▼▼
 
 // QRコードモーダルを開く
+
+// QRコードモーダルを開く
 function openQRModal() {
     document.getElementById('qrModal').style.display = 'flex';
     
-    // QRコードリーダーの初期化と開始
-    html5QrCode = new Html5Qrcode("qr-reader");
-    html5QrCode.start(
-        { facingMode: "environment" }, // 背面カメラを使用
-        {
-            fps: 10, // 1秒あたりのスキャンフレーム数
-            qrbox: 250 // スキャン領域のサイズ（ピクセル）
-        },
-        onScanSuccess, // スキャン成功時のコールバック
-        onScanFailure  // スキャン失敗時のコールバック
-    ).catch(err => {
-        // カメラの起動失敗などのエラー処理
-        console.error("QRコードリーダーの起動に失敗しました。", err);
-        alert("カメラの起動に失敗しました。ブラウザのカメラアクセスを許可してください。");
+    // Html5Qrcodeが定義されているか確認
+    if (typeof Html5Qrcode === 'undefined') {
+        console.error('Html5Qrcode is not defined. Library may not be loaded.');
+        alert('QRコードリーダーの初期化に失敗しました。ページを再読み込みしてください。');
         closeQRModal();
-    });
+        return;
+    }
+    
+    // QRコードリーダーの初期化と開始
+    try {
+        html5QrCode = new Html5Qrcode("qr-reader");
+        html5QrCode.start(
+            { facingMode: "environment" }, // 背面カメラを使用
+            {
+                fps: 10, // 1秒あたりのスキャンフレーム数
+                qrbox: { width: 250, height: 250 } // スキャン領域のサイズ（ピクセル）
+            },
+            onScanSuccess, // スキャン成功時のコールバック
+            onScanFailure  // スキャン失敗時のコールバック
+        ).catch(err => {
+            // カメラの起動失敗などのエラー処理
+            console.error("QRコードリーダーの起動に失敗しました。", err);
+            alert("カメラの起動に失敗しました。ブラウザのカメラアクセスを許可してください。");
+            closeQRModal();
+        });
+    } catch (error) {
+        console.error("Html5Qrcode initialization error:", error);
+        alert('QRコードリーダーの初期化中にエラーが発生しました。');
+        closeQRModal();
+    }
 }
 
 // QRコードモーダルを閉じる
