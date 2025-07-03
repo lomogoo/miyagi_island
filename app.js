@@ -21,12 +21,22 @@ const islands = {
 document.addEventListener('DOMContentLoaded', function() {
     loadUserData();
     updatePointsDisplay();
-    initializeMap();
     setupUI();
+    // 初期表示はマップセクション
+    switchSection('map-section');
+    // マップの初期化は最初にマップセクションが表示されたときに行う
+    setTimeout(() => {
+        initializeMap();
+    }, 100);
 });
 
 // マップの初期化と表示
 function initializeMap() {
+    // すでに初期化されている場合はスキップ
+    if (map) {
+        return;
+    }
+    
     // マップを作成し、'map'というIDの要素に表示
     map = L.map('map').setView([38.3, 141.15], 10); // 中心座標とズームレベル
 
@@ -43,6 +53,11 @@ function initializeMap() {
     for (const islandKey in islands) {
         createIslandMarker(islandKey, islands[islandKey]);
     }
+    
+    // マップのサイズを再計算（重要）
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 100);
 }
 
 // ユーザーの現在地を表示
@@ -64,7 +79,7 @@ function displayUserLocation() {
                 map.setView(pos, 11); // 現在地を中心にズーム
             },
             () => {
-                alert("位置情報の取得に失敗しました。");
+                console.log("位置情報の取得に失敗しました。");
             }
         );
     }
@@ -98,27 +113,49 @@ function createIslandMarker(key, island) {
 
 // UI関連のイベントリスナーを設定
 function setupUI() {
-    // 島スポットクリック時の処理 (現在はマップに統合)
+    // 島スポットクリック時の処理
     document.querySelectorAll('.island-spot').forEach(spot => {
         spot.addEventListener('click', function() {
             const islandKey = this.dataset.island;
             const island = islands[islandKey];
-            map.setView([island.lat, island.lng], 14);
+            
             // マップタブに切り替え
             switchSection('map-section');
             document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
             document.querySelector('button[data-target="map-section"]').classList.add('active');
+            
+            // マップが初期化されていない場合は初期化
+            if (!map) {
+                initializeMap();
+            }
+            
+            // 少し遅延を入れてから島にズーム
+            setTimeout(() => {
+                map.setView([island.lat, island.lng], 14);
+            }, 200);
         });
     });
 
     // タブ切替ロジック
-    switchSection('map-section');
     document.querySelectorAll('.bottom-nav button').forEach(btn => {
         btn.addEventListener('click', e => {
             const target = btn.dataset.target;
             switchSection(target);
             document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            
+            // マップセクションに切り替えた時、マップが初期化されていなければ初期化
+            if (target === 'map-section' && !map) {
+                setTimeout(() => {
+                    initializeMap();
+                }, 100);
+            }
+            // マップセクションに切り替えた時、マップのサイズを再計算
+            else if (target === 'map-section' && map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
+            }
         });
     });
 }
@@ -181,6 +218,20 @@ function addStamp(islandKey) {
     saveUserData();
     updatePointsDisplay();
     alert(`${islands[islandKey].name}のスタンプを獲得しました！`);
+    
+    // マップ上のマーカーも更新（もしマップが初期化されていれば）
+    if (map) {
+        // すべてのマーカーを再作成して更新
+        map.eachLayer((layer) => {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+        // マーカーを再作成
+        for (const key in islands) {
+            createIslandMarker(key, islands[key]);
+        }
+    }
 }
 
 // ポイント表示の更新
@@ -199,32 +250,4 @@ function applyForPrize(prize, requiredPoints) {
     }
     if (confirm(`${prize}賞に応募しますか？（${requiredPoints}ポイント消費）`)) {
         currentPoints -= requiredPoints;
-        updatePointsDisplay();
-        saveUserData();
-        alert(`${prize}賞への応募が完了しました！`);
-    }
-}
-
-// ユーザーデータの保存
-function saveUserData() {
-    const userData = { collectedStamps, currentPoints };
-    localStorage.setItem('stampRallyData', JSON.stringify(userData));
-}
-
-// ユーザーデータの読み込み
-function loadUserData() {
-    const savedData = localStorage.getItem('stampRallyData');
-    if (savedData) {
-        const userData = JSON.parse(savedData);
-        collectedStamps = userData.collectedStamps || [];
-        currentPoints = userData.currentPoints || 0;
-        collectedStamps.forEach(islandKey => {
-            document.getElementById(`stamp-${islandKey}`).classList.add('collected');
-        });
-    }
-}
-
-function switchSection(sectionId) {
-    document.querySelectorAll('.app-section').forEach(sec => sec.style.display = 'none');
-    document.getElementById(sectionId).style.display = 'block';
-}
+        updatePoints
