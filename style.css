@@ -9,6 +9,7 @@ body {
     background: #f5e6d3;
     min-height: 100vh;
     position: relative;
+    overflow: hidden; /* スクロールを禁止 */
 }
 
 .header {
@@ -18,14 +19,12 @@ body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     text-align: center;
     position: relative;
+    height: 60px; /* ヘッダーの高さを固定 */
 }
 
 .header h1 {
-    font-size: 28px;
-    font-weight: 600;
-    color: #2c5aa0;
-    font-family: 'Rounded Mplus 1c', sans-serif;
-    letter-spacing: 2px;
+    font-size: 20px;
+    line-height: 30px;
 }
 
 .points-display {
@@ -41,7 +40,7 @@ body {
 }
 
 .main-container {
-    padding: 20px;
+    padding: 0; /* 余白を削除 */
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -51,7 +50,7 @@ body {
     background: #fff;
     border-radius: 20px;
     padding: 30px;
-    margin-bottom: 20px;
+    margin: 20px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     position: relative;
     overflow: hidden;
@@ -221,25 +220,44 @@ body {
 
 /* マップセクション（Google Maps用） */
 .map-section {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    padding: 0; /* 余白を削除 */
+    height: calc(100vh - 120px); /* 画面の高さ - (ヘッダー60px + フッター60px) */
 }
 
 #map {
-    height: 400px;
+    height: 100%; /* 親要素いっぱいに表示 */
     width: 100%;
-    border-radius: 10px;
     background-color: #f0f0f0;
 }
+
+/* ▼▼▼ 情報ウィンドウのスタイルを追加 ▼▼▼ */
+.info-window-content {
+    width: 240px; /* カードの横幅 */
+}
+.info-window-content img {
+    width: 100%; /* 横幅いっぱい */
+    height: 120px; /* 高さを指定 */
+    object-fit: cover; /* 画像の比率を保ったままトリミング */
+    border-radius: 5px;
+}
+.info-window-content h3 {
+    margin: 10px 0 5px 0;
+    font-size: 18px;
+}
+.info-window-content p {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    color: #333;
+}
+/* ▲▲▲ ここまでを追加 ▲▲▲ */
+
 
 /* 応募セクション */
 .prize-section {
     background: white;
     border-radius: 15px;
     padding: 30px;
+    margin: 20px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.1);
 }
 
