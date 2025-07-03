@@ -777,10 +777,11 @@ select.form-control {
 /* Stamp Grid */
 .stamp-grid {
   display: grid;
-  /* ↓ この行を書き換える ↓ */
-  grid-template-columns: repeat(2, 1fr); /* auto-fitから変更 */
-  gap: var(--space-20); /* gapを少し広げる */
-  max-width: 450px; /* 2列表示に最適な幅に調整 */
+  /* 4列に変更 */
+  grid-template-columns: repeat(4, 1fr); 
+  gap: var(--space-16);
+  /* 横幅を広げる */
+  max-width: 800px; 
   margin: 0 auto;
   padding: var(--space-16);
 }
@@ -839,7 +840,7 @@ select.form-control {
 
 /* Prizes */
 .prizes-container {
-  max-width: 600px;
+  max-width: 800px; /* 横幅を広げる */
   margin: 0 auto;
   display: flex;
   flex-direction: column;
