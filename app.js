@@ -138,23 +138,20 @@ function initializeMap() {
 
         // 現在地にマーカーを追加
 
-        L.marker([userLat, userLng], {
-  
-          icon: L.divIcon({
-    
-            html: '', // CSSでスタイルを当てるため空にする
-    
-            className: 'user-location-marker', // style.cssで定義したクラス名
-    
-            iconSize: [32, 32],      // CSSで定義したサイズ
-    
-            iconAnchor: [16, 16]     // アイコンの中心を位置の基準にする
-  
-          })
+       // app.js の initializeMap 関数内
 
-        }).addTo(map)
-  
-          .bindPopup('現在地'); // 最初からポップアップを開きたい場合は .openPopup() を追加
+// 現在地にマーカーを追加
+L.marker([userLat, userLng], {
+  icon: L.divIcon({
+    // htmlプロパティにスタイルを適用する要素を直接記述します
+    html: '<div class="user-location-marker"></div>',
+    // コンテナ用のクラス名は、他のアイコンと競合しないように設定します
+    className: 'custom-user-location-container',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
+  })
+}).addTo(map)
+  .bindPopup('現在地');
 
         // マップの中心を現在地に移動
         map.setView([userLat, userLng], 12);
