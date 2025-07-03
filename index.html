@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>宮城県 島めぐりスタンプラリー</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -94,10 +99,11 @@
                 </div>
             </div>
         </section>
+        
         <section id="map-section" class="app-section">
-            <h2 style="margin-bottom: 15px; color: #2c5aa0;">📍 実際の位置を確認</h2>
-            <div class="map-placeholder" id="map">実際のマップはこちらに表示されます</div>
+            <div id="map"></div>
         </section>
+
         <section id="prize-section" class="app-section">
             <h2 style="margin-bottom: 10px; color: #ff6f00;">🎁 賞品に応募</h2>
             <p style="color: #666; margin-bottom: 20px;">集めたポイントを使って賞品に応募できます！</p>
@@ -138,7 +144,10 @@
         <button data-target="stamp-section">🏝️<span>スタンプカード</span></button>
         <button data-target="prize-section">🎁<span>応募</span></button>
     </nav>
-    <script src="config.js"></script> 
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
     <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script src="app.js"></script>
 </body>
