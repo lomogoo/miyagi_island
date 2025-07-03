@@ -1,4 +1,5 @@
 // Island data
+
 const islands = [
   {
     id: "aji",
