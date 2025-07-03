@@ -241,37 +241,87 @@ function initializeQRCamera() {
 }
 
 // QR Code functionality
-function openQRCamera() {
-  const qrModal = document.getElementById('qrModal');
-  const qrStatus = document.getElementById('qrStatus');
-  
-  qrModal.classList.add('active');
-  qrStatus.textContent = 'カメラを起動中...';
-  qrStatus.className = 'qr-status';
+async function openQRCamera() {
+    const qrModal = document.getElementById('qrModal');
+    const qrStatus = document.getElementById('qrStatus');
+    const qrReaderId = "qrReader"; // QRリーダー要素のID
 
-  // Initialize QR scanner
-  // --- 機能改善：背面カメラを優先的に使用する設定を追加 ---
-  html5QrcodeScanner = new Html5QrcodeScanner(
-    "qrReader",
-    {
-      fps: 10,
-      qrbox: { width: 250, height: 250 },
-      aspectRatio: 1.0,
-      facingMode: "environment" // 背面カメラを指定
-    },
-    /* verbose= */ false // ライブラリの冗長なログを無効化
-  );
+    qrModal.classList.add('active');
+    qrStatus.textContent = 'カメラを探しています...';
+    qrStatus.className = 'qr-status';
 
-  html5QrcodeScanner.render(onScanSuccess, onScanError);
+    // 古いインスタンスがスキャン中の場合は停止
+    if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+        try {
+            await html5QrcodeScanner.stop();
+        } catch (e) {
+            console.error("以前のスキャナの停止に失敗しました。", e);
+        }
+    }
+    
+    // 新しいインスタンスを生成
+    const html5QrCode = new Html5Qrcode(qrReaderId);
+    
+    try {
+        // 利用可能なカメラを取得
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length) {
+            let cameraId = devices[0].id; // デフォルトは最初のカメラ
+            
+            // 背面カメラ（rear/back）を探す
+            const rearCamera = devices.find(device => 
+                device.label.toLowerCase().includes('back') || 
+                device.label.toLowerCase().includes('rear') ||
+                device.label.toLowerCase().includes('背面')
+            );
+            
+            if (rearCamera) {
+                cameraId = rearCamera.id;
+                console.log(`背面カメラが見つかりました: ${rearCamera.label}`);
+            } else if (devices.length > 1) {
+                // 背面カメラが見つからない場合、リストの最後のカメラを試す（多くのスマホで最後のものが背面）
+                cameraId = devices[devices.length - 1].id;
+                console.log(`背面カメラが見つからないため、最後のカメラを使用します: ${devices[devices.length - 1].label}`);
+            }
+
+            // 選択したカメラでスキャンを開始
+            html5QrCode.start(
+                cameraId,
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                onScanSuccess,
+                onScanError
+            );
+            // グローバル変数にインスタンスを保存し、後で停止できるようにする
+            html5QrcodeScanner = html5QrCode;
+        } else {
+            qrStatus.textContent = '利用可能なカメラが見つかりません。';
+            qrStatus.className = 'qr-status error';
+        }
+    } catch (err) {
+        console.error("カメラの起動に失敗しました:", err);
+        qrStatus.textContent = 'カメラの起動に失敗しました。サイトにカメラの使用を許可してください。';
+        qrStatus.className = 'qr-status error';
+    }
 }
-function closeQRCamera() {
-  const qrModal = document.getElementById('qrModal');
-  qrModal.classList.remove('active');
 
-  if (html5QrcodeScanner) {
-    html5QrcodeScanner.clear();
+function closeQRCamera() {
+    const qrModal = document.getElementById('qrModal');
+    qrModal.classList.remove('active');
+
+    if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+        html5QrcodeScanner.stop()
+            .then(() => {
+                console.log("QRスキャンを停止しました。");
+            })
+            .catch(err => {
+                console.error("QRスキャンの停止に失敗しました。", err);
+            });
+    }
     html5QrcodeScanner = null;
-  }
 }
 
 function onScanSuccess(decodedText, decodedResult) {
