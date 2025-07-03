@@ -1,5 +1,4 @@
 // app.js の全コード
-
 // グローバル変数
 let currentPoints = 0;
 let collectedStamps = [];
