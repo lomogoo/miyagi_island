@@ -354,7 +354,7 @@ body {
 /* フローティングQRボタン */
 .qr-scan-button {
     position: fixed;
-    bottom: 30px;
+    bottom: 80px; /* 修正箇所 */
     right: 30px;
     width: 60px;
     height: 60px;
