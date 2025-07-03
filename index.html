@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -16,13 +15,11 @@
     </header>
 
     <main class="main-container">
-        <!-- イラストマップスタンプカード -->
         <section id="stamp-section" class="app-section">
             <h2 class="stamp-map-title">スタンプコレクション</h2>
             <div class="illustrated-map">
                 <div class="sea-wave"></div>
                 
-                <!-- 装飾要素 -->
                 <div class="decorative-compass">
                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="50" cy="50" r="45" fill="none" stroke="#2c5aa0" stroke-width="2"/>
@@ -32,7 +29,6 @@
                 </div>
                 <div class="decorative-ship">⛵</div>
                 
-                <!-- 波の装飾 -->
                 <svg class="wave-decoration wave1" viewBox="0 0 100 50">
                     <path d="M0,25 Q25,0 50,25 T100,25" stroke="#64b4dc" fill="none" stroke-width="2"/>
                 </svg>
@@ -43,7 +39,6 @@
                     <path d="M0,25 Q25,0 50,25 T100,25" stroke="#64b4dc" fill="none" stroke-width="2"/>
                 </svg>
                 
-                <!-- 島のスポット -->
                 <div class="island-spot" id="spot-aji" data-island="aji">
                     <div class="island-illustration">
                         🏝️
@@ -150,16 +145,13 @@
             </div>
         </section>
 
-        <!-- マップセクション -->
         <section id="map-section" class="app-section">
             <h2 style="margin-bottom: 15px; color: #2c5aa0;">📍 実際の位置を確認</h2>
             <div class="map-placeholder" id="map">
-                <!-- Google Maps APIをここに組み込む -->
                 実際のマップはこちらに表示されます
             </div>
         </section>
 
-        <!-- 応募セクション -->
         <section id="prize-section" class="app-section">
             <h2 style="margin-bottom: 10px; color: #ff6f00;">🎁 賞品に応募</h2>
             <p style="color: #666; margin-bottom: 20px;">集めたポイントを使って賞品に応募できます！</p>
@@ -188,20 +180,17 @@
         </section>
     </main>
 
-    <!-- QRコードリーダーモーダル -->
     <div class="qr-reader-modal" id="qrModal">
         <div class="qr-reader-content">
             <h2>QRコードを読み取ってください</h2>
             <div class="qr-placeholder" id="qr-reader">
-                <!-- QRコードリーダーライブラリ（例：Html5Qrcode）をここに組み込む -->
-                QRコードリーダー
-            </div>
+                </div>
             <button class="close-modal" onclick="closeQRModal()">閉じる</button>
         </div>
     </div>
 
-    <!-- QRスキャンボタン -->
     <button class="qr-scan-button" onclick="openQRModal()">📷</button>
+    
 <nav class="bottom-nav">
   
   <button data-target="map-section" class="active">🗺️<span>マップ</span></button>
@@ -210,8 +199,8 @@
   <button data-target="prize-section">🎁<span>応募</span></button>
 </nav>
 
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
-    <script src="app.js"></script>
+<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
