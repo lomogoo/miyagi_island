@@ -1,346 +1,240 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+// app.js の全コード
+
+// グローバル変数
+let currentPoints = 0;
+let collectedStamps = [];
+let html5QrCode;
+let map; // Google Mapオブジェクトを保持する変数
+let infoWindow; // 情報ウィンドウを保持する変数
+
+// 島の情報（descriptionプロパティを追加）
+const islands = {
+    aji: { name: '網地島', lat: 38.3833, lng: 141.4667, description: '美しい砂浜が広がる、夏には多くの海水浴客で賑わう島。' },
+    tashiro: { name: '田代島', lat: 38.3167, lng: 141.4167, description: '「猫の島」として有名。多くの猫たちが自由気ままに暮らしている。' },
+    katsura: { name: '桂島', lat: 38.2833, lng: 141.1000, description: '浦戸諸島の一つで、歴史的な見どころも多い風光明媚な島。' },
+    nonoshima: { name: '野々島', lat: 38.2667, lng: 141.0833, description: 'ツバキのトンネルや潟湖など、豊かな自然が魅力の島。' },
+    sabusawa: { name: '寒風沢島', lat: 38.2500, lng: 141.0667, description: '江戸時代の歴史的な港跡が残る、歴史とロマンの島。' },
+    ho: { name: '朴島', lat: 38.2333, lng: 141.0500, description: '比較的小さな島で、静かな時間を過ごすことができる。' },
+    izushima: { name: '出島', lat: 38.2167, lng: 140.9667, description: '本土と橋で結ばれており、アクセスしやすい漁業の盛んな島。' },
+    enoshima: { name: '江島', lat: 38.2000, lng: 140.9500, description: 'ウミネコの繁殖地として知られ、自然豊かな景観が広がる。' }
+};
+
+// ▼▼▼ Google Maps APIによって呼び出されるグローバル関数 ▼▼▼
+function initMap() {
+    // マップの初期位置（宮城県中心あたり）
+    const miyagiPref = { lat: 38.2682, lng: 140.8694 };
+
+    // マップを作成し、'map'というIDの要素に表示
+    map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 10,
+        center: miyagiPref,
+        mapTypeControl: false, // 不要なコントロールを非表示
+        streetViewControl: false,
+    });
+
+    // 情報ウィンドウを初期化（使いまわすため）
+    infoWindow = new google.maps.InfoWindow();
+
+    // ユーザーの現在地を表示
+    displayUserLocation();
+
+    // 各島にマーカーを設置
+    for (const islandKey in islands) {
+        createIslandMarker(islandKey, islands[islandKey]);
+    }
 }
-body {
-    font-family: 'Noto Sans JP', sans-serif;
-    background: #f5e6d3;
-    min-height: 100vh;
-    position: relative;
+// ▲▲▲ ここまでがマップ初期化のメイン関数 ▲▲▲
+
+// ユーザーの現在地を表示する関数
+function displayUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+                // 現在地に青い丸のマーカーを設置
+                new google.maps.Marker({
+                    position: pos,
+                    map: map,
+                    title: "あなたの現在地",
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 7,
+                        fillColor: "#4285F4",
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: "white",
+                    },
+                });
+                map.setCenter(pos); // マップの中心を現在地に移動
+            },
+            () => {
+                // 位置情報の取得に失敗した場合
+                console.error("位置情報の取得に失敗しました。");
+            }
+        );
+    }
 }
-.header {
-    background: #fff;
-    color: #333;
-    padding: 15px 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    text-align: center;
-    position: relative;
+
+// 島のマーカーを作成する関数
+function createIslandMarker(key, island) {
+    const marker = new google.maps.Marker({
+        position: { lat: island.lat, lng: island.lng },
+        map: map,
+        title: island.name,
+    });
+
+    // マーカークリック時のイベント
+    marker.addListener("click", () => {
+        // 情報ウィンドウの内容を作成
+        const contentString = 
+            `<div>` +
+                `<h3 style="margin:0;">${island.name}</h3>` +
+                `<p>${island.description}</p>` +
+                `<p>スタンプ: ${collectedStamps.includes(key) ? '取得済み ✅' : '未取得 ❌'}</p>` +
+            `</div>`;
+        
+        infoWindow.setContent(contentString);
+        infoWindow.open(map, marker);
+    });
 }
-.header h1 {
-    font-size: 28px;
-    font-weight: 600;
-    color: #2c5aa0;
-    font-family: 'Rounded Mplus 1c', sans-serif;
-    letter-spacing: 2px;
+
+
+// DOM読み込み完了時に実行される関数
+document.addEventListener('DOMContentLoaded', function() {
+    setupApp();
+});
+
+// アプリの初期設定
+function setupApp() {
+    loadUserData();
+    updatePointsDisplay();
+    // 島スポットのクリックイベントなどを設定
+    document.querySelectorAll('.island-spot').forEach(spot => {
+        spot.addEventListener('click', function() {
+            const islandKey = this.dataset.island;
+            const island = islands[islandKey];
+            const hasStamp = collectedStamps.includes(islandKey);
+            alert(`${island.name}\n緯度: ${island.lat}\n経度: ${island.lng}\nスタンプ: ${hasStamp ? '取得済み' : '未取得'}`);
+        });
+    });
+    // タブ切替ロジック
+    switchSection('map-section');
+    document.querySelectorAll('.bottom-nav button').forEach(btn => {
+        btn.addEventListener('click', e => {
+            const target = btn.dataset.target;
+            switchSection(target);
+            document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
 }
-.points-display {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    background: #ff6b6b;
-    color: white;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+
+// QRコードモーダルを開く
+function openQRModal() {
+    document.getElementById('qrModal').style.display = 'flex';
+    html5QrCode = new Html5Qrcode("qr-reader");
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        onScanFailure
+    ).catch(err => {
+        console.error("QRコードリーダーの起動に失敗しました。", err);
+        alert("カメラの起動に失敗しました。ブラウザのカメラアクセスを許可してください。");
+        closeQRModal();
+    });
 }
-.main-container {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+
+// QRコードモーダルを閉じる
+function closeQRModal() {
+    document.getElementById('qrModal').style.display = 'none';
+    if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(err => console.error("リーダーの停止に失敗しました。", err));
+    }
 }
-.stamp-map-section {
-    background: #fff;
-    border-radius: 20px;
-    padding: 30px;
-    margin-bottom: 20px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    position: relative;
-    overflow: hidden;
+
+// QRコード読み取り成功
+function onScanSuccess(decodedText, decodedResult) {
+    closeQRModal();
+    processQRCode(decodedText);
 }
-.stamp-map-title {
-    text-align: center;
-    font-size: 24px;
-    color: #2c5aa0;
-    margin-bottom: 20px;
-    font-weight: bold;
-    font-family: 'Rounded Mplus 1c', sans-serif;
+
+// QRコード読み取り失敗
+function onScanFailure(error) {
+    // 連続スキャンのためエラーは無視
 }
-.illustrated-map {
-    position: relative;
-    width: 100%;
-    max-width: 800px;
-    height: 600px;
-    margin: 0 auto;
-    background: linear-gradient(135deg, #e8f4f8 0%, #f0e8dc 100%);
-    border-radius: 15px;
-    overflow: hidden;
+
+// QRコードの処理
+function processQRCode(decodedText) {
+    if (!decodedText || !decodedText.endsWith('_island')) {
+        return alert('無効なQRコードです');
+    }
+    const islandKey = decodedText.replace('_island', '');
+    if (!islands[islandKey]) {
+        return alert('無効なQRコードです');
+    }
+    if (collectedStamps.includes(islandKey)) {
+        return alert('この島のスタンプは既に取得済みです');
+    }
+    addStamp(islandKey);
 }
-.sea-wave {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-image: repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(100, 180, 220, 0.1) 20px, rgba(100, 180, 220, 0.1) 40px);
-    pointer-events: none;
+
+// スタンプを追加
+function addStamp(islandKey) {
+    collectedStamps.push(islandKey);
+    currentPoints++;
+    document.getElementById(`stamp-${islandKey}`).classList.add('collected', 'animating');
+    saveUserData();
+    updatePointsDisplay();
+    alert(`${islands[islandKey].name}のスタンプを獲得しました！`);
 }
-.decorative-compass {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    width: 60px;
-    height: 60px;
-    opacity: 0.6;
+
+// ポイント表示の更新
+function updatePointsDisplay() {
+    document.getElementById('current-points').textContent = currentPoints;
+    document.querySelectorAll('.apply-button').forEach(button => {
+        const requiredPoints = parseInt(button.parentElement.querySelector('.prize-points').textContent.match(/\d+/)[0]);
+        button.disabled = currentPoints < requiredPoints;
+    });
 }
-.decorative-compass::before {
-    content: "N";
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-weight: bold;
-    color: #2c5aa0;
+
+// 賞品に応募
+function applyForPrize(prize, requiredPoints) {
+    if (currentPoints < requiredPoints) {
+        return alert('ポイントが不足しています');
+    }
+    if (confirm(`${prize}賞に応募しますか？（${requiredPoints}ポイント消費）`)) {
+        currentPoints -= requiredPoints;
+        updatePointsDisplay();
+        saveUserData();
+        alert(`${prize}賞への応募が完了しました！`);
+    }
 }
-.decorative-ship {
-    position: absolute;
-    top: 20%;
-    right: 10%;
-    font-size: 30px;
-    opacity: 0.5;
-    animation: float 6s ease-in-out infinite;
+
+// ユーザーデータの保存
+function saveUserData() {
+    const userData = { collectedStamps, currentPoints };
+    localStorage.setItem('stampRallyData', JSON.stringify(userData));
 }
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+
+// ユーザーデータの読み込み
+function loadUserData() {
+    const savedData = localStorage.getItem('stampRallyData');
+    if (savedData) {
+        const userData = JSON.parse(savedData);
+        collectedStamps = userData.collectedStamps || [];
+        currentPoints = userData.currentPoints || 0;
+        collectedStamps.forEach(islandKey => {
+            document.getElementById(`stamp-${islandKey}`).classList.add('collected');
+        });
+    }
 }
-.island-spot {
-    position: absolute;
-    cursor: pointer;
-    transition: all 0.3s ease;
+
+function switchSection(sectionId) {
+    document.querySelectorAll('.app-section').forEach(sec => sec.style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
 }
-.island-spot:hover {
-    transform: scale(1.1);
-}
-.island-illustration {
-    width: 80px;
-    height: 80px;
-    background: #fff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    position: relative;
-    border: 3px solid #2c5aa0;
-}
-.island-name {
-    position: absolute;
-    bottom: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-    white-space: nowrap;
-    background: rgba(255,255,255,0.8);
-    padding: 2px 8px;
-    border-radius: 10px;
-}
-.stamp-mark {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transform: scale(0) rotate(-15deg);
-    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-.stamp-mark.collected {
-    opacity: 1;
-    transform: scale(1) rotate(5deg);
-}
-.stamp-mark img {
-    width: 90%;
-    height: 90%;
-    object-fit: contain;
-}
-#spot-aji { top: 15%; left: 65%; }
-#spot-tashiro { top: 20%; left: 75%; }
-#spot-katsura { top: 45%; left: 25%; }
-#spot-nonoshima { top: 50%; left: 35%; }
-#spot-sabusawa { top: 55%; left: 45%; }
-#spot-ho { top: 65%; left: 40%; }
-#spot-izushima { top: 70%; left: 15%; }
-#spot-enoshima { top: 75%; left: 25%; }
-.stamp-svg {
-    width: 100%;
-    height: 100%;
-}
-.wave-decoration {
-    position: absolute;
-    width: 100px;
-    height: 50px;
-    opacity: 0.3;
-}
-.wave1 { top: 30%; left: 50%; }
-.wave2 { top: 60%; right: 20%; }
-.wave3 { bottom: 20%; left: 60%; }
-.map-section {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-}
-.map-placeholder {
-    background: #f0f0f0;
-    height: 300px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #666;
-}
-.prize-section {
-    background: white;
-    border-radius: 15px;
-    padding: 30px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-}
-.prize-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-.prize-card {
-    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-.prize-card:hover {
-    transform: translateY(-5px);
-    border-color: #ff6f00;
-    box-shadow: 0 5px 20px rgba(255,111,0,0.3);
-}
-.prize-name {
-    font-size: 24px;
-    font-weight: bold;
-    color: #e65100;
-    margin-bottom: 10px;
-}
-.prize-points {
-    font-size: 18px;
-    color: #666;
-    margin-bottom: 15px;
-}
-.apply-button {
-    background: linear-gradient(90deg, #ff6f00 0%, #ff9100 100%);
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 25px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-}
-.apply-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-.apply-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-}
-.qr-reader-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-.qr-reader-content {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    max-width: 500px;
-    width: 90%;
-    text-align: center;
-}
-.qr-placeholder {
-    width: 300px;
-    height: 300px;
-    background: #f0f0f0;
-    margin: 20px auto;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    color: #666;
-}
-.close-modal {
-    background: #f44336;
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 25px;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-}
-.qr-scan-button {
-    position: fixed;
-    bottom: 80px;
-    right: 30px;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-    border-radius: 50%;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-    z-index: 100;
-}
-.qr-scan-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-}
-@media (max-width: 768px) {
-    .illustrated-map { height: 500px; }
-    .island-illustration { width: 60px; height: 60px; font-size: 30px; }
-    .header h1 { font-size: 20px; }
-    .points-display { font-size: 14px; padding: 6px 15px; }
-}
-@keyframes stampAnimation {
-    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
-    50% { transform: scale(1.2) rotate(10deg); }
-    100% { transform: scale(1) rotate(5deg); opacity: 1; }
-}
-.stamp-mark.animating {
-    animation: stampAnimation 0.8s ease-out forwards;
-}
-.bottom-nav{
-  position:fixed; bottom:0; left:0; width:100%;
-  display:flex; justify-content:space-around; align-items:center;
-  background:#ffffff; border-top:1px solid #ddd; z-index:200;
-  height:60px;
-}
-.bottom-nav button{
-  flex:1; background:none; border:none; padding:6px 0; font-size:14px;
-  color:#666; display:flex; flex-direction:column; align-items:center;
-  gap:2px; cursor:pointer;
-}
-.bottom-nav button.active, .bottom-nav button:focus{
-  color:#2c5aa0; font-weight:bold;
-}
-.bottom-nav span{ font-size:11px; }
-.app-section{ display:none; padding-bottom:80px; }
