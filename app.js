@@ -125,6 +125,40 @@ function initializeMap() {
   islands.forEach(island => {
     addIslandMarker(island);
   });
+
+  // --- 機能追加：現在地の取得と表示 ---
+  // ブラウザがGeolocation APIに対応しているかチェック
+  if (navigator.geolocation) {
+    // 現在地を取得
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+
+        // 現在地にマーカーを追加
+        L.marker([userLat, userLng], {
+          icon: L.divIcon({
+            html: '📍',
+            className: 'user-location-icon',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40]
+          })
+        }).addTo(map)
+          .bindPopup('現在地')
+          .openPopup();
+
+        // マップの中心を現在地に移動
+        map.setView([userLat, userLng], 12);
+      },
+      () => {
+        // ユーザーが許可しなかった場合
+        showMessage('現在地の取得が許可されませんでした。', 'warning');
+      }
+    );
+  } else {
+    // ブラウザが対応していない場合
+    console.log('お使いのブラウザはGeolocationをサポートしていません。');
+  }
 }
 
 function addIslandMarker(island) {
@@ -206,6 +240,7 @@ function initializeQRCamera() {
   });
 }
 
+// QR Code functionality
 function openQRCamera() {
   const qrModal = document.getElementById('qrModal');
   const qrStatus = document.getElementById('qrStatus');
@@ -215,18 +250,20 @@ function openQRCamera() {
   qrStatus.className = 'qr-status';
 
   // Initialize QR scanner
+  // --- 機能改善：背面カメラを優先的に使用する設定を追加 ---
   html5QrcodeScanner = new Html5QrcodeScanner(
     "qrReader",
     {
       fps: 10,
       qrbox: { width: 250, height: 250 },
-      aspectRatio: 1.0
-    }
+      aspectRatio: 1.0,
+      facingMode: "environment" // 背面カメラを指定
+    },
+    /* verbose= */ false // ライブラリの冗長なログを無効化
   );
 
   html5QrcodeScanner.render(onScanSuccess, onScanError);
 }
-
 function closeQRCamera() {
   const qrModal = document.getElementById('qrModal');
   qrModal.classList.remove('active');
