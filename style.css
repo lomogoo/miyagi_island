@@ -38,6 +38,8 @@ body {
     padding: 0;
     max-width: 1200px;
     margin: 0 auto;
+    height: calc(100vh - 120px); /* ヘッダーとナビゲーションバーの高さを引く */
+    position: relative;
 }
 .stamp-map-section {
     background: #fff;
@@ -179,21 +181,24 @@ body {
 .wave2 { top: 60%; right: 20%; }
 .wave3 { bottom: 20%; left: 60%; }
 
-.map-section {
+/* マップセクションのスタイル修正 */
+#map-section {
     padding: 0;
-    height: calc(100vh - 120px);
+    height: 100%;
+    width: 100%;
 }
 #map {
-    height: 100%;
+    height: calc(100vh - 120px); /* ヘッダーとボトムナビの高さを引く */
     width: 100%;
     background-color: #f0f0f0;
 }
-.prize-section {
+
+/* 賞品セクションのスタイル */
+#prize-section {
     background: white;
-    border-radius: 15px;
-    padding: 30px;
-    margin: 20px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
 }
 .prize-grid {
     display: grid;
@@ -307,6 +312,15 @@ body {
     transform: scale(1.1);
     box-shadow: 0 8px 30px rgba(0,0,0,0.4);
 }
+
+/* スタンプセクションのスタイル */
+#stamp-section {
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+    background: white;
+}
+
 @media (max-width: 768px) {
     .illustrated-map { height: 500px; }
     .island-illustration { width: 60px; height: 60px; font-size: 30px; }
@@ -336,9 +350,13 @@ body {
   color:#2c5aa0; font-weight:bold;
 }
 .bottom-nav span{ font-size:11px; }
-.app-section{ display:none; padding-bottom:80px; }
+.app-section{ 
+    display:none; 
+    height: calc(100vh - 120px); /* ヘッダーとボトムナビの高さを引く */
+    overflow: hidden;
+}
 
-/* ▼▼▼ Leaflet.js用のスタイルを追加 ▼▼▼ */
+/* Leaflet.js用のスタイル */
 .leaflet-popup-content-wrapper {
     border-radius: 10px;
     box-shadow: 0 3px 15px rgba(0,0,0,0.2);
