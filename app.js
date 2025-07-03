@@ -1,182 +1,117 @@
-// app.js の全コード（マーカーを新しい方式に更新）
-
 // グローバル変数
 let currentPoints = 0;
 let collectedStamps = [];
+let userLocation = null;
 let html5QrCode;
-let map; // Google Mapオブジェクトを保持する変数
-let infoWindow; // 情報ウィンドウを保持する変数
+let map; // Leafletのmapオブジェクトを保持
 
-// 島の情報
+// 島の情報（画像URLを追加）
 const islands = {
-    aji: { 
-        name: '網地島', 
-        lat: 38.3833, 
-        lng: 141.4667, 
-        description: '美しい砂浜が広がる、夏には多くの海水浴客で賑わう島。',
-        image: 'https://i.imgur.com/39s93Sn.jpeg'
-    },
-    tashiro: { 
-        name: '田代島', 
-        lat: 38.3167, 
-        lng: 141.4167, 
-        description: '「猫の島」として有名。多くの猫たちが自由気ままに暮らしている。',
-        image: 'https://i.imgur.com/xJ4l6c2.jpeg'
-    },
-    katsura: { 
-        name: '桂島', 
-        lat: 38.2833, 
-        lng: 141.1000, 
-        description: '浦戸諸島の一つで、歴史的な見どころも多い風光明媚な島。',
-        image: 'https://i.imgur.com/39s93Sn.jpeg'
-    },
-    nonoshima: { 
-        name: '野々島', 
-        lat: 38.2667, 
-        lng: 141.0833, 
-        description: 'ツバキのトンネルや潟湖など、豊かな自然が魅力の島。',
-        image: 'https://i.imgur.com/xJ4l6c2.jpeg'
-    },
-    sabusawa: { 
-        name: '寒風沢島', 
-        lat: 38.2500, 
-        lng: 141.0667, 
-        description: '江戸時代の歴史的な港跡が残る、歴史とロマンの島。',
-        image: 'https://i.imgur.com/39s93Sn.jpeg'
-    },
-    ho: { 
-        name: '朴島', 
-        lat: 38.2333, 
-        lng: 141.0500, 
-        description: '比較的小さな島で、静かな時間を過ごすことができる。',
-        image: 'https://i.imgur.com/xJ4l6c2.jpeg'
-    },
-    izushima: { 
-        name: '出島', 
-        lat: 38.2167, 
-        lng: 140.9667, 
-        description: '本土と橋で結ばれており、アクセスしやすい漁業の盛んな島。',
-        image: 'https://i.imgur.com/39s93Sn.jpeg'
-    },
-    enoshima: { 
-        name: '江島', 
-        lat: 38.2000, 
-        lng: 140.9500, 
-        description: 'ウミネコの繁殖地として知られ、自然豊かな景観が広がる。',
-        image: 'https://i.imgur.com/xJ4l6c2.jpeg'
-    }
+    aji: { name: '網地島', lat: 38.3833, lng: 141.4667, description: '美しい砂浜が広がる島。', image: 'https://i.imgur.com/39s93Sn.jpeg' },
+    tashiro: { name: '田代島', lat: 38.3167, lng: 141.4167, description: '「猫の島」として有名。', image: 'https://i.imgur.com/xJ4l6c2.jpeg' },
+    katsura: { name: '桂島', lat: 38.2833, lng: 141.1000, description: '歴史的な見どころも多い風光明媚な島。', image: 'https://i.imgur.com/39s93Sn.jpeg' },
+    nonoshima: { name: '野々島', lat: 38.2667, lng: 141.0833, description: 'ツバキのトンネルが魅力。', image: 'https://i.imgur.com/xJ4l6c2.jpeg' },
+    sabusawa: { name: '寒風沢島', lat: 38.2500, lng: 141.0667, description: '江戸時代の歴史的な港跡が残る島。', image: 'https://i.imgur.com/39s93Sn.jpeg' },
+    ho: { name: '朴島', lat: 38.2333, lng: 141.0500, description: '静かな時間を過ごせる小さな島。', image: 'https://i.imgur.com/xJ4l6c2.jpeg' },
+    izushima: { name: '出島', lat: 38.2167, lng: 140.9667, description: '本土と橋で結ばれた漁業の盛んな島。', image: 'https://i.imgur.com/39s93Sn.jpeg' },
+    enoshima: { name: '江島', lat: 38.2000, lng: 140.9500, description: 'ウミネコの繁殖地として知られる。', image: 'https://i.imgur.com/xJ4l6c2.jpeg' }
 };
 
-function loadGoogleMaps() {
-    // config.jsからAPI_KEYを読み込んでscriptタグを生成
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap&map_ids=STAMP_RALLY_MAP&libraries=marker`;
-    script.async = true;
-    document.head.appendChild(script);
-}
+// アプリの初期化
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserData();
+    updatePointsDisplay();
+    initializeMap();
+    setupUI();
+});
 
-// Google Maps APIによって呼び出されるグローバル関数
-async function initMap() {
-    const miyagiPref = { lat: 38.2682, lng: 140.8694 };
+// マップの初期化と表示
+function initializeMap() {
+    // マップを作成し、'map'というIDの要素に表示
+    map = L.map('map').setView([38.3, 141.15], 10); // 中心座標とズームレベル
 
-    // AdvancedMarkerElement を使うためにライブラリを読み込む
-    const { Map } = await google.maps.importLibrary("maps");
-    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+    // OpenStreetMapのタイルレイヤーを追加
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
 
-    map = new Map(document.getElementById("map"), {
-        zoom: 10,
-        center: miyagiPref,
-        mapId: "STAMP_RALLY_MAP", // Map IDは必須
-        mapTypeControl: false,
-        streetViewControl: false,
-    });
+    // ユーザーの現在地を表示
+    displayUserLocation();
 
-    infoWindow = new google.maps.InfoWindow();
-
-    displayUserLocation(AdvancedMarkerElement);
-
+    // 各島にマーカーを設置
     for (const islandKey in islands) {
-        createIslandMarker(islandKey, islands[islandKey], AdvancedMarkerElement);
+        createIslandMarker(islandKey, islands[islandKey]);
     }
 }
 
-// ユーザーの現在地を表示する関数
-function displayUserLocation(AdvancedMarkerElement) {
+// ユーザーの現在地を表示
+function displayUserLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                };
+                const pos = [position.coords.latitude, position.coords.longitude];
+                userLocation = pos;
                 
-                // 現在地マーカー用のHTML要素を作成
-                const userMarkerEl = document.createElement('div');
-                userMarkerEl.className = 'user-marker';
-
-                new AdvancedMarkerElement({
-                    position: pos,
-                    map: map,
-                    title: "あなたの現在地",
-                    content: userMarkerEl // HTML要素をコンテンツとして指定
-                });
-                map.setCenter(pos);
+                // 青い丸で現在地を表示
+                L.circle(pos, {
+                    color: '#4285F4',
+                    fillColor: '#4285F4',
+                    fillOpacity: 0.5,
+                    radius: 500
+                }).addTo(map).bindPopup("あなたの現在地");
+                
+                map.setView(pos, 11); // 現在地を中心にズーム
             },
             () => {
-                console.error("位置情報の取得に失敗しました。");
+                alert("位置情報の取得に失敗しました。");
             }
         );
     }
 }
 
-// 島のマーカーを作成する関数
-function createIslandMarker(key, island, AdvancedMarkerElement) {
-    // 島のマーカー用のHTML要素を作成
-    const islandMarkerEl = document.createElement('div');
-    islandMarkerEl.className = 'island-marker';
-    islandMarkerEl.textContent = '🏝️'; // 絵文字アイコン
-
-    const marker = new AdvancedMarkerElement({
-        position: { lat: island.lat, lng: island.lng },
-        map: map,
-        title: island.name,
-        content: islandMarkerEl // HTML要素をコンテンツとして指定
+// 島のマーカーを作成
+function createIslandMarker(key, island) {
+    // 絵文字を使ったカスタムアイコンを作成
+    const customIcon = L.divIcon({
+        className: 'island-marker',
+        html: '🏝️',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
     });
 
-    marker.addListener("click", () => {
-        const contentString = 
-            `<div class="info-window-content">` +
-                `<img src="${island.image}" alt="${island.name}">` +
+    const marker = L.marker([island.lat, island.lng], { icon: customIcon }).addTo(map);
+
+    // ポップアップ（情報ウィンドウ）の内容を作成
+    const popupContent = 
+        `<div class="popup-content">` +
+            `<img src="${island.image}" alt="${island.name}">` +
+            `<div class="popup-text">` +
                 `<h3>${island.name}</h3>` +
                 `<p>${island.description}</p>` +
                 `<p>スタンプ: ${collectedStamps.includes(key) ? '取得済み ✅' : '未取得 ❌'}</p>` +
-            `</div>`;
-        
-        infoWindow.close(); // 他のウィンドウを閉じる
-        infoWindow.setContent(contentString);
-        infoWindow.open(marker.map, marker);
-    });
+            `</div>` +
+        `</div>`;
+
+    marker.bindPopup(popupContent);
 }
 
-
-// DOM読み込み完了時に実行される関数
-document.addEventListener('DOMContentLoaded', function() {
-    setupApp();
-    loadGoogleMaps(); // DOMの準備ができたらマップの読み込みを開始
-});
-
-// アプリの初期設定
-function setupApp() {
-    loadUserData();
-    updatePointsDisplay();
+// UI関連のイベントリスナーを設定
+function setupUI() {
+    // 島スポットクリック時の処理 (現在はマップに統合)
     document.querySelectorAll('.island-spot').forEach(spot => {
         spot.addEventListener('click', function() {
             const islandKey = this.dataset.island;
             const island = islands[islandKey];
-            const hasStamp = collectedStamps.includes(islandKey);
-            alert(`${island.name}\n緯度: ${island.lat}\n経度: ${island.lng}\nスタンプ: ${hasStamp ? '取得済み' : '未取得'}`);
+            map.setView([island.lat, island.lng], 14);
+            // マップタブに切り替え
+            switchSection('map-section');
+            document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+            document.querySelector('button[data-target="map-section"]').classList.add('active');
         });
     });
+
+    // タブ切替ロジック
     switchSection('map-section');
     document.querySelectorAll('.bottom-nav button').forEach(btn => {
         btn.addEventListener('click', e => {
