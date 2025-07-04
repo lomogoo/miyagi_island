@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン処理中...</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .container { text-align: center; padding: 2rem; background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loader"></div>
+        <h1>ログイン処理中です</h1>
+        <p>しばらくお待ちください...</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const state = params.get('state');
+            const container = document.querySelector('.container');
+            const savedState = sessionStorage.getItem('oauth_state');
+            
+            if (!state || state !== savedState) {
+                container.innerHTML = '<h1>エラー</h1><p>不正なアクセスです。認証をやり直してください。</p>';
+                return;
+            }
+            sessionStorage.removeItem('oauth_state');
+
+            if (code) {
+                try {
+                    const { data, error: funcError } = await window.supabaseClient.functions.invoke('login-with-pocketsign', {
+                        body: { code },
+                    });
+
+                    if (funcError) throw funcError;
+                    
+                    const { supabaseJwt } = data;
+                    if (!supabaseJwt) throw new Error('Supabase JWTの取得に失敗しました。');
+
+                    const { error: signInError } = await window.supabaseClient.auth.signInWithJwt(supabaseJwt);
+                    if (signInError) throw signInError;
+                    
+                    window.location.replace('/');
+                } catch (error) {
+                    console.error('Login failed:', error);
+                    container.innerHTML = `<h1>ログインに失敗しました</h1><p>エラー: ${error.message}</p>`;
+                }
+            } else {
+                container.innerHTML = '<h1>エラー</h1><p>認証コードが見つかりませんでした。</p>';
+            }
+        });
+    </script>
+</body>
+</html>

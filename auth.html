@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>認証中...</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+    </style>
+</head>
+<body>
+    <h1>ポケットサインにリダイレクトしています...</h1>
+
+    <script>
+        // ランダムな文字列を生成するヘルパー関数
+        function generateRandomString(length = 32) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function redirectToPocketSign() {
+            // ★★★ ご自身の環境に合わせて設定してください ★★★
+            const clientId = 'YOUR_POCKETSIGN_CLIENT_ID'; 
+            // callback.html をデプロイしたURL
+            const redirectUri = 'https://lomogoo.github.io/miyagi_island/callback.html'; 
+            // ポケットサインの認可エンドポイント（環境に合わせて変更）
+            const authEndpoint = 'https://oidc.core.mock.p8n.app/oauth2/auth'; // モックの例
+
+            const state = generateRandomString();
+            const nonce = generateRandomString();
+
+            sessionStorage.setItem('oauth_state', state);
+            sessionStorage.setItem('oauth_nonce', nonce);
+
+            const params = new URLSearchParams({
+                response_type: 'code',
+                client_id: clientId,
+                redirect_uri: redirectUri,
+                scope: 'openid profile',
+                state: state,
+                nonce: nonce,
+                display: 'psapp'
+            });
+
+            window.location.href = `${authEndpoint}?${params.toString()}`;
+        }
+
+        // ページが読み込まれたらすぐに実行
+        window.addEventListener('DOMContentLoaded', redirectToPocketSign);
+    </script>
+</body>
+</html>

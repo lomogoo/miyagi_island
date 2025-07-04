@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宮城県離島スタンプラリー</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="appContainer" style="display: none; height: 100%; display: flex; flex-direction: column;">
+        <header class="header">
+            <h1 id="userName">読み込み中...</h1>
+            <div id="authSection">
+                <button id="logoutBtn" class="btn btn--secondary btn--sm">ログアウト</button>
+            </div>
+            <div class="points-display">
+                <span class="points-label">ポイント:</span>
+                <span class="points-value" id="pointsValue">0</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section id="mapSection" class="section active">
+                <div class="section-header">
+                    <h2>マップ</h2>
+                    <p>島をタップして詳細を確認しましょう</p>
+                </div>
+                <div id="map" class="map-container"></div>
+            </section>
+            <section id="stampSection" class="section">
+                <div class="section-header">
+                    <h2>スタンプカード</h2>
+                    <p>獲得したスタンプを確認できます</p>
+                    <button id="devAddStampBtn" class="btn btn--secondary btn--sm mt-8">【開発用】スタンプをランダム追加</button>
+                </div>
+                <div class="stamp-grid" id="stampGrid"></div>
+            </section>
+            <section id="entrySection" class="section">
+                <div class="section-header">
+                    <h2>応募</h2>
+                    <p>ポイントを使って賞品に応募しましょう</p>
+                </div>
+                <div class="prizes-container" id="prizesContainer"></div>
+            </section>
+        </main>
+
+        <div id="qrModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>QRコード読み取り</h3>
+                    <button id="closeQrModal" class="btn btn--secondary">閉じる</button>
+                </div>
+                <div id="qrReader" class="qr-reader"></div>
+                <div class="qr-status" id="qrStatus"></div>
+            </div>
+        </div>
+        <button id="qrCameraBtn" class="qr-camera-btn">
+            <span class="camera-icon">📷</span>
+        </button>
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-section="mapSection"><span class="nav-icon">🗺️</span><span class="nav-label">マップ</span></button>
+            <button class="nav-btn" data-section="stampSection"><span class="nav-icon">🏆</span><span class="nav-label">スタンプカード</span></button>
+            <button class="nav-btn" data-section="entrySection"><span class="nav-icon">🎁</span><span class="nav-label">応募</span></button>
+        </nav>
+        <div id="successModal" class="modal">
+            <div class="modal-content">
+                <div class="success-content">
+                    <div class="success-icon">🎉</div>
+                    <h3 id="successTitle">スタンプ獲得！</h3>
+                    <p id="successMessage">おめでとうございます！</p>
+                    <button id="closeSuccessModal" class="btn btn--primary">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginPrompt" style="text-align: center; padding: 50px;">
+        <h2>認証情報がありません</h2>
+        <p>このアプリはポケットサインから起動してください。</p>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
