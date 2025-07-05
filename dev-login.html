@@ -18,7 +18,6 @@
         async function developerLogin() {
             const statusEl = document.getElementById('status');
             try {
-                // ステップ1でデプロイした関数を呼び出す
                 const { data, error } = await window.supabaseClient.functions.invoke('get-dev-session');
 
                 if (error) {
@@ -30,11 +29,9 @@
                 }
 
                 statusEl.textContent = 'トークンを取得しました。Supabaseにサインインしています...';
-
-                // ★★★ 修正点: signInWithJwt から setSession に変更 ★★★
+                
                 const { error: sessionError } = await window.supabaseClient.auth.setSession({
                     access_token: data.supabaseJwt
-                    // refresh_tokenは今回ないので不要
                 });
 
                 if (sessionError) {
@@ -43,8 +40,8 @@
 
                 statusEl.textContent = 'ログインに成功しました。アプリに移動します。';
 
-                // ログイン成功後、メインページにリダイレクト
-                window.location.replace('/'); // index.htmlへ
+                // ★★★ 修正点：リダイレクト先を相対パスに変更 ★★★
+                window.location.replace('./index.html'); 
 
             } catch (error) {
                 console.error('開発者ログインに失敗しました:', error);
@@ -52,8 +49,7 @@
                 statusEl.style.color = 'red';
             }
         }
-
-        // ページが読み込まれたらすぐに実行
+        
         window.addEventListener('DOMContentLoaded', developerLogin);
     </script>
 </body>
