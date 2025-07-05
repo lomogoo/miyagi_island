@@ -31,11 +31,14 @@
 
                 statusEl.textContent = 'トークンを取得しました。Supabaseにサインインしています...';
 
-                // 受け取ったJWTを使ってSupabaseにサインイン
-                const { error: signInError } = await window.supabaseClient.auth.signInWithJwt(data.supabaseJwt);
+                // ★★★ 修正点: signInWithJwt から setSession に変更 ★★★
+                const { error: sessionError } = await window.supabaseClient.auth.setSession({
+                    access_token: data.supabaseJwt
+                    // refresh_tokenは今回ないので不要
+                });
 
-                if (signInError) {
-                    throw signInError;
+                if (sessionError) {
+                    throw sessionError;
                 }
 
                 statusEl.textContent = 'ログインに成功しました。アプリに移動します。';
