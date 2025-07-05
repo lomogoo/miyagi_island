@@ -96,28 +96,40 @@ async function loadAndInitializeApp() {
     initializeApp();
 }
 
+// fetchUserData関数全体をこの新しい内容に置き換えてください
 async function fetchUserData() {
     if (!currentUser) return;
     try {
-        const [profileRes, stampsRes] = await Promise.all([
-            supabaseClient.from('profiles').select('total_points').eq('id', currentUser.id).single(),
-            supabaseClient.from('collected_stamps').select('island_id').eq('user_id', currentUser.id)
-        ]);
+        // 1. プロフィールを取得
+        const { data: profileData, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('total_points')
+            .eq('id', currentUser.id)
+            .single();
 
-        if (profileRes.error) {
-            if (profileRes.error.code === 'PGRST116') {
-                 console.error(`ユーザーID (${currentUser.id}) が 'profiles' テーブルに見つかりません。Supabaseでユーザーを作成してください。`);
-                 showMessage("ユーザーデータが見つかりません。", "error");
-            }
-            throw profileRes.error;
+        // プロフィールが無くても(PGRST116エラー)、処理を止めない。それ以外のエラーは投げる。
+        if (profileError && profileError.code !== 'PGRST116') {
+            throw profileError;
         }
-        if (stampsRes.error) throw stampsRes.error;
+        // プロフィールが見つからない場合は、ポイント0で初期化
+        userProfile = profileData || { total_points: 0 };
 
-        userProfile = profileRes.data;
-        collectedStamps = new Set(stampsRes.data.map(s => s.island_id));
+        // 2. スタンプ取得履歴を取得
+        const { data: stampsData, error: stampsError } = await supabaseClient
+            .from('collected_stamps')
+            .select('island_id')
+            .eq('user_id', currentUser.id);
+
+        if (stampsError) {
+            throw stampsError;
+        }
+        
+        // 取得したスタンプ履歴をセット
+        collectedStamps = new Set(stampsData.map(s => s.island_id));
         
     } catch (error) {
         console.error("ユーザーデータの取得に失敗しました:", error);
+        // エラーが発生した場合は、安全のため両方をリセット
         userProfile = { total_points: 0 };
         collectedStamps = new Set();
     }
