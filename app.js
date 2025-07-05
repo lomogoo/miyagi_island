@@ -9,70 +9,14 @@
 
 // 島の情報
 const islands = [
-  {
-    id: "aji",
-    name: "網地島",
-    lat: 38.268300, 
-    lng: 141.477809,
-    description: "美しい砂浜が広がる島。",
-    image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area07_img01.jpg"
-  },
-  {
-    id: "tashiro",
-    name: "田代島",
-    lat: 38.294285, 
-    lng: 141.424276,
-    description: "「猫の島」として有名。",
-    image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area06_img01.jpg"
-  },
-  {
-    id: "katsura",
-    name: "桂島",
-    lat: 38.334771, 
-    lng: 141.095541,
-    description: "歴史的な見どころも多い風光明媚な島。",
-    image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg"
-  },
-  {
-    id: "nonoshima",
-    name: "野々島",
-    lat: 38.338022, 
-    lng: 141.110935,
-    description: "ツバキのトンネルが魅力。",
-    image: "https://urato-island.jp/wp-content/uploads/2023/01/nonoshima12.jpg"
-  },
-  {
-    id: "sabusawa",
-    name: "寒風沢島",
-    lat: 38.333481, 
-    lng: 141.124332,
-    description: "江戸時代の歴史的な港跡が残る島。",
-    image: "https://urato-island.jp/wp-content/uploads/2022/11/sabusawa09.jpg"
-  },
-  {
-    id: "ho",
-    name: "朴島",
-    lat: 38.349648, 
-    lng: 141.124462,
-    description: "静かな時間を過ごせる小さな島。",
-    image: "https://urato-island.jp/wp-content/uploads/2022/10/about10.jpg"
-  },
-  {
-    id: "izushima",
-    name: "出島",
-    lat: 38.450176, 
-    lng: 141.522555,
-    description: "本土と橋で結ばれた漁業の盛んな島。",
-    image: "https://www.pref.miyagi.jp/images/55686/100_r.jpg"
-  },
-  {
-    id: "enoshima",
-    name: "江島",
-    lat: 38.398743, 
-    lng: 141.593839,
-    description: "ウミネコの繁殖地として知られる。",
-    image: "http://seapal-kisen.co.jp/wp-content/uploads/2025/05/1746735867906.jpg"
-  }
+  { id: "aji", name: "網地島", lat: 38.268300, lng: 141.477809, description: "美しい砂浜が広がる島。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area07_img01.jpg" },
+  { id: "tashiro", name: "田代島", lat: 38.294285, lng: 141.424276, description: "「猫の島」として有名。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area06_img01.jpg" },
+  { id: "katsura", name: "桂島", lat: 38.334771, lng: 141.095541, description: "歴史的な見どころも多い風光明媚な島。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" },
+  { id: "nonoshima", name: "野々島", lat: 38.338022, lng: 141.110935, description: "ツバキのトンネルが魅力。", image: "https://urato-island.jp/wp-content/uploads/2023/01/nonoshima12.jpg" },
+  { id: "sabusawa", name: "寒風沢島", lat: 38.333481, lng: 141.124332, description: "江戸時代の歴史的な港跡が残る島。", image: "https://urato-island.jp/wp-content/uploads/2022/11/sabusawa09.jpg" },
+  { id: "ho", name: "朴島", lat: 38.349648, lng: 141.124462, description: "静かな時間を過ごせる小さな島。", image: "https://urato-island.jp/wp-content/uploads/2022/10/about10.jpg" },
+  { id: "izushima", name: "出島", lat: 38.450176, lng: 141.522555, description: "本土と橋で結ばれた漁業の盛んな島。", image: "https://www.pref.miyagi.jp/images/55686/100_r.jpg" },
+  { id: "enoshima", name: "江島", lat: 38.398743, lng: 141.593839, description: "ウミネコの繁殖地として知られる。", image: "http://seapal-kisen.co.jp/wp-content/uploads/2025/05/1746735867906.jpg" }
 ];
 
 // 賞品の情報
@@ -99,31 +43,54 @@ let html5QrcodeScanner;
 //================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Supabaseの認証状態の変化を監視
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-        if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-            currentUser = session.user;
-            showAuthenticatedUI(); // 先にUIを表示
-            loadAndInitializeApp(); // その後データを読み込み
-        } else if (event === 'SIGNED_OUT') {
-            currentUser = null;
-            userProfile = null;
-            showLoginUI();
-        }
-    });
+    // 開発者モードの処理
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dev') === 'true') {
+        // 開発者モードの場合、擬似的なユーザー情報を作成して強制的にログイン状態にする
+        console.log("🛠️ 開発者モードで起動しました。");
+        
+        // Supabaseで作成した開発者用ユーザーのID
+        const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5'; 
+        
+        currentUser = {
+            id: devUserId,
+            email: 'developer@example.com' // 仮のメールアドレス
+        };
+        showAuthenticatedUI();
+        loadAndInitializeApp();
+    } else {
+        // 通常の認証フロー
+        // Supabaseの認証状態の変化を監視
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+                currentUser = session.user;
+                showAuthenticatedUI();
+                loadAndInitializeApp();
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                userProfile = null;
+                showLoginUI();
+            }
+        });
+    }
 
     // ログアウトボタンのイベントリスナー
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
-            const { error } = await supabaseClient.auth.signOut();
-            if (error) {
-                console.error('Logout failed:', error);
-                showMessage('ログアウトに失敗しました。', 'error');
+            if (params.get('dev') === 'true') {
+                window.location.href = window.location.pathname;
+            } else {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) {
+                    console.error('Logout failed:', error);
+                    showMessage('ログアウトに失敗しました。', 'error');
+                }
             }
         });
     }
 });
+
 
 //================================================================
 // 2. UI表示の切り替え
@@ -162,7 +129,13 @@ async function fetchUserData() {
             supabaseClient.from('collected_stamps').select('island_id').eq('user_id', currentUser.id)
         ]);
 
-        if (profileRes.error) throw profileRes.error;
+        if (profileRes.error) {
+            if (profileRes.error.code === 'PGRST116') {
+                 console.error(`ユーザーID (${currentUser.id}) が 'profiles' テーブルに見つかりません。Supabaseでユーザーを作成してください。`);
+                 showMessage("ユーザーデータが見つかりません。", "error");
+            }
+            throw profileRes.error;
+        }
         if (stampsRes.error) throw stampsRes.error;
 
         userProfile = profileRes.data;
@@ -170,8 +143,6 @@ async function fetchUserData() {
         
     } catch (error) {
         console.error("ユーザーデータの取得に失敗しました:", error);
-        showMessage('ユーザーデータの読み込みに失敗しました。', 'error');
-        // エラーが発生した場合のフォールバック
         userProfile = { total_points: 0 };
         collectedStamps = new Set();
     }
@@ -280,10 +251,12 @@ async function applyForPrize(prizeIndex) {
 
 // --- マップ関連 ---
 function initializeMap() {
+    if (map) { map.remove(); } // 既存のマップを削除
     map = L.map('map').setView([38.3, 141.3], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+    markers = []; // マーカー配列をリセット
     islands.forEach(addIslandMarker);
 }
 
@@ -310,9 +283,26 @@ function addIslandMarker(island) {
 }
 
 function updateMapMarkers() {
-    markers.forEach(({ marker }) => map.removeLayer(marker));
-    markers = [];
-    islands.forEach(addIslandMarker);
+    markers.forEach(({ marker, island }) => {
+        const isCollected = collectedStamps.has(island.id);
+        const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
+        const newIcon = L.divIcon({
+            html: iconHtml,
+            className: 'custom-div-icon',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20],
+            popupAnchor: [0, -20]
+        });
+        marker.setIcon(newIcon);
+        const popupContent = `
+            <div class="island-popup">
+                <img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'">
+                <h3>${island.name}</h3>
+                <p>${island.description}</p>
+                ${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}
+            </div>`;
+        marker.setPopupContent(popupContent);
+    });
 }
 
 // --- ナビゲーション ---
@@ -332,7 +322,7 @@ function switchSection(sectionId) {
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
-        if (sectionId === 'mapSection') {
+        if (sectionId === 'mapSection' && map) {
             map.invalidateSize(); // マップ表示時にサイズを再計算
         }
     }
