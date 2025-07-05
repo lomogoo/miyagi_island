@@ -34,11 +34,14 @@
 
                 statusEl.textContent = 'トークンを取得しました。Supabaseにサインインしています...';
                 
-                // signInWithJwtメソッドを使用（新しい方法）
-                const { error: signInError } = await window.supabaseClient.auth.signInWithJwt(data.supabaseJwt);
+                // setSessionメソッドを使用
+                const { error: sessionError } = await window.supabaseClient.auth.setSession({
+                    access_token: data.supabaseJwt,
+                    refresh_token: data.supabaseJwt // 開発用なのでaccess_tokenと同じ値を使用
+                });
 
-                if (signInError) {
-                    throw signInError;
+                if (sessionError) {
+                    throw sessionError;
                 }
 
                 statusEl.textContent = 'ログインに成功しました。アプリに移動します。';
