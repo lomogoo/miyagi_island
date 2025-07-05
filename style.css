@@ -193,7 +193,14 @@ p { margin: 0; }
 .island-popup p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
 
 /* Stamp Grid */
-.stamp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-16); max-width: 960px; margin: 0 auto; padding: var(--space-16); }
+.stamp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 修正: auto-fitから4列固定に変更 */
+  gap: var(--space-16);
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-16);
+}
 .stamp-card { background: var(--color-surface); border: 2px dashed var(--color-border); border-radius: var(--radius-lg); padding: var(--space-16); text-align: center; transition: all var(--duration-normal) var(--ease-standard); cursor: pointer; box-shadow: var(--shadow-sm); }
 .stamp-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); }
 .stamp-card.collected { border-color: var(--color-success); background: rgba(var(--color-success-rgb), 0.1); border-style: solid; animation: stamp-effect 0.4s ease-out forwards; }
@@ -206,11 +213,22 @@ p { margin: 0; }
 
 /* Prizes */
 .prizes-container { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-16); padding: var(--space-16); }
-.prize-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-20); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); }
+.prize-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-20);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+  width: 100%; /* 修正: 幅をコンテナいっぱいに広げる */
+}
+.prize-info { text-align: left; flex-grow: 1; } /* 修正: テキストを左揃えに */
 .prize-info h3 { color: var(--color-primary); margin: 0 0 var(--space-4) 0; }
 .prize-info p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
-.prize-points { color: var(--color-error); font-weight: var(--font-weight-bold); font-size: var(--font-size-lg); }
-.prize-btn { padding: var(--space-8) var(--space-16); border-radius: var(--radius-base); border: none; cursor: pointer; font-weight: var(--font-weight-medium); transition: all var(--duration-normal) var(--ease-standard); }
+.prize-points { color: var(--color-error); font-weight: var(--font-weight-bold); font-size: var(--font-size-lg); padding: 0 var(--space-16); } /* 修正: パディング調整 */
+.prize-btn { padding: var(--space-8) var(--space-16); border-radius: var(--radius-base); border: none; cursor: pointer; font-weight: var(--font-weight-medium); transition: all var(--duration-normal) var(--ease-standard); flex-shrink: 0; } /* 修正: ボタンが縮まないようにする */
 .prize-btn:enabled { background: var(--color-primary); color: var(--color-btn-primary-text); }
 .prize-btn:enabled:hover { background: var(--color-primary-hover); }
 .prize-btn:disabled { background: var(--color-secondary); color: var(--color-text-secondary); cursor: not-allowed; }
@@ -234,9 +252,12 @@ p { margin: 0; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: var(--space-16); border-bottom: 1px solid var(--color-border); }
 .modal-header h3 { margin: 0; color: var(--color-primary); }
 .qr-reader { padding: var(--space-16); text-align: center; }
+#qrReader video { width: 100% !important; height: auto !important; border-radius: var(--radius-base); } /* 修正: QRカメラの表示を調整 */
 .qr-status { padding: var(--space-16); text-align: center; color: var(--color-text-secondary); }
 .qr-status.success { color: var(--color-success); }
 .qr-status.error { color: var(--color-error); }
+.qr-status.warning { color: var(--color-warning); }
+.qr-status.info { color: var(--color-info); }
 .success-content { padding: var(--space-32); text-align: center; }
 .success-icon { font-size: 64px; margin-bottom: var(--space-16); }
 .success-content h3 { color: var(--color-success); margin-bottom: var(--space-8); }
@@ -270,7 +291,12 @@ p { margin: 0; }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .stamp-grid { grid-template-columns: repeat(2, 1fr); } /* 修正: スマホでは2列にする */
   .prize-card { flex-direction: column; gap: var(--space-16); text-align: center; }
+  .prize-info { text-align: center; } /* 修正: スマホでは中央揃えに */
   .qr-camera-btn { bottom: 90px; right: var(--space-12); width: 50px; height: 50px; }
   .camera-icon { font-size: 20px; }
+}
+@media (max-width: 380px) {
+  .header h1 { font-size: var(--font-size-base); } /* 修正: 小さい画面でヘッダー文字サイズ調整 */
 }
