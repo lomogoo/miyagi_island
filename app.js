@@ -150,9 +150,23 @@ async function onScanSuccess(decodedText) {
         }
 
         try {
-            const { error } = await supabaseClient.rpc('add_stamp_and_point', {
+            // ★★★ ここから修正 ★★★
+            const params = new URLSearchParams(window.location.search);
+            const isDevMode = params.get('dev') === 'true';
+
+            // RPCに渡すパラメータを定義
+            const rpcParams = {
                 p_island_id: matchedIsland.id
-            });
+            };
+
+            // 開発者モードの場合、明示的にユーザーIDを渡す
+            if (isDevMode && currentUser) {
+                rpcParams.p_user_id = currentUser.id;
+            }
+
+            const { error } = await supabaseClient.rpc('add_stamp_and_point', rpcParams);
+            // ★★★ ここまで修正 ★★★
+
             if (error) throw error;
             
             collectedStamps.add(matchedIsland.id);
