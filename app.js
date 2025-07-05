@@ -36,6 +36,7 @@ let userProfile = null;
 let collectedStamps = new Set();
 let map;
 let markers = [];
+let userLocationMarker = null; // ★★★ 現在地マーカー用の変数を追加 ★★★
 let html5QrcodeScanner;
 
 //================================================================
@@ -46,21 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 開発者モードの処理
     const params = new URLSearchParams(window.location.search);
     if (params.get('dev') === 'true') {
-        // 開発者モードの場合、擬似的なユーザー情報を作成して強制的にログイン状態にする
         console.log("🛠️ 開発者モードで起動しました。");
-        
-        // Supabaseで作成した開発者用ユーザーのID
         const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5'; 
-        
         currentUser = {
             id: devUserId,
-            email: 'developer@example.com' // 仮のメールアドレス
+            email: 'developer@example.com'
         };
         showAuthenticatedUI();
         loadAndInitializeApp();
     } else {
         // 通常の認証フロー
-        // Supabaseの認証状態の変化を監視
         supabaseClient.auth.onAuthStateChange((event, session) => {
             if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
                 currentUser = session.user;
@@ -70,22 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentUser = null;
                 userProfile = null;
                 showLoginUI();
-            }
-        });
-    }
-
-    // ログアウトボタンのイベントリスナー
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            if (params.get('dev') === 'true') {
-                window.location.href = window.location.pathname;
-            } else {
-                const { error } = await supabaseClient.auth.signOut();
-                if (error) {
-                    console.error('Logout failed:', error);
-                    showMessage('ログアウトに失敗しました。', 'error');
-                }
             }
         });
     }
@@ -99,11 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function showAuthenticatedUI() {
     document.getElementById('loginPrompt').style.display = 'none';
     document.getElementById('appContainer').style.display = 'flex';
-    if (currentUser && currentUser.email) {
-        document.getElementById('userName').textContent = currentUser.email.split('@')[0];
-    } else {
-        document.getElementById('userName').textContent = 'ようこそ';
-    }
+    // ★★★ ユーザー名表示のロジックを削除 ★★★
 }
 
 function showLoginUI() {
@@ -123,7 +99,6 @@ async function loadAndInitializeApp() {
 async function fetchUserData() {
     if (!currentUser) return;
     try {
-        // プロフィール(ポイント)と獲得済みスタンプ情報を並行して取得
         const [profileRes, stampsRes] = await Promise.all([
             supabaseClient.from('profiles').select('total_points').eq('id', currentUser.id).single(),
             supabaseClient.from('collected_stamps').select('island_id').eq('user_id', currentUser.id)
@@ -155,7 +130,8 @@ function initializeApp() {
     initializeStampCards();
     initializePrizes();
     updatePointsDisplay();
-    initializeDevTools();
+    initializeGeolocation(); // ★★★ 現在地表示の初期化を追加 ★★★
+    // ★★★ 開発者ツールの初期化を削除 ★★★
 }
 
 //================================================================
@@ -174,20 +150,17 @@ async function onScanSuccess(decodedText) {
         }
 
         try {
-            // SupabaseのRPCを呼び出して、スタンプ追加とポイント加算をトランザクションとして実行
             const { error } = await supabaseClient.rpc('add_stamp_and_point', {
                 p_island_id: matchedIsland.id
             });
             if (error) throw error;
             
-            // 成功したらローカルの状態を更新
             collectedStamps.add(matchedIsland.id);
             userProfile.total_points += 1;
 
             qrStatus.textContent = `${matchedIsland.name}のスタンプを獲得しました！`;
             qrStatus.className = 'qr-status success';
             
-            // UIを更新
             updatePointsDisplay();
             updateStampCards();
             updateMapMarkers();
@@ -222,7 +195,6 @@ async function applyForPrize(prizeIndex) {
     try {
         const newPoints = userProfile.total_points - prize.points;
         
-        // 応募履歴の保存とポイント更新を並行して実行
         const [entryRes, profileRes] = await Promise.all([
             supabaseClient.from('prize_entries').insert({ prize_name: prize.name, points_spent: prize.points, user_id: currentUser.id }),
             supabaseClient.from('profiles').update({ total_points: newPoints }).eq('id', currentUser.id)
@@ -231,10 +203,8 @@ async function applyForPrize(prizeIndex) {
         if (entryRes.error) throw entryRes.error;
         if (profileRes.error) throw profileRes.error;
         
-        // ローカルの状態を更新
         userProfile.total_points = newPoints;
         
-        // UIを更新
         updatePointsDisplay();
         updatePrizes();
         showMessage(`${prize.name}に応募しました！`, 'success');
@@ -251,12 +221,12 @@ async function applyForPrize(prizeIndex) {
 
 // --- マップ関連 ---
 function initializeMap() {
-    if (map) { map.remove(); } // 既存のマップを削除
+    if (map) { map.remove(); }
     map = L.map('map').setView([38.3, 141.3], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    markers = []; // マーカー配列をリセット
+    markers = [];
     islands.forEach(addIslandMarker);
 }
 
@@ -305,6 +275,50 @@ function updateMapMarkers() {
     });
 }
 
+// --- ★★★ 現在地表示機能を追加 ★★★ ---
+function initializeGeolocation() {
+    if (!navigator.geolocation) {
+        console.log("お使いのブラウザは位置情報機能に対応していません。");
+        return;
+    }
+
+    const locationOptions = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+    };
+
+    navigator.geolocation.watchPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            const latLng = [latitude, longitude];
+
+            if (userLocationMarker) {
+                // 既にマーカーがあれば位置を更新
+                userLocationMarker.setLatLng(latLng);
+            } else {
+                // マーカーがなければ新規作成
+                const userIcon = L.divIcon({
+                    html: '<div class="user-location-marker"></div>',
+                    className: 'custom-user-location-container',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+                userLocationMarker = L.marker(latLng, { icon: userIcon }).addTo(map);
+                map.setView(latLng, 13); // 最初の位置取得時にマップを中央に移動
+            }
+        },
+        (error) => {
+            console.error("位置情報の取得に失敗しました: ", error);
+            if (error.code === 1) {
+                showMessage("位置情報の利用が許可されていません。", "warning");
+            }
+        },
+        locationOptions
+    );
+}
+
+
 // --- ナビゲーション ---
 function initializeNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
@@ -323,7 +337,7 @@ function switchSection(sectionId) {
     if (targetSection) {
         targetSection.classList.add('active');
         if (sectionId === 'mapSection' && map) {
-            map.invalidateSize(); // マップ表示時にサイズを再計算
+            map.invalidateSize();
         }
     }
 }
@@ -370,14 +384,12 @@ function closeQRCamera() {
     document.getElementById('qrModal').classList.remove('active');
 }
 
-function onScanError(error) {
-    // console.log('QR scan error:', error); // デバッグ時以外は静かにする
-}
+function onScanError(error) { /* デバッグ時以外は静かにする */ }
 
 // --- スタンプカード ---
 function initializeStampCards() {
     const stampGrid = document.getElementById('stampGrid');
-    stampGrid.innerHTML = ''; // 初期化
+    stampGrid.innerHTML = '';
     islands.forEach(island => {
         const stampCard = document.createElement('div');
         stampCard.className = 'stamp-card';
@@ -405,7 +417,7 @@ function updateStampCards() {
 // --- 賞品応募 ---
 function initializePrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
-    prizesContainer.innerHTML = ''; // 初期化
+    prizesContainer.innerHTML = '';
     prizes.forEach((prize, index) => {
         const prizeCard = document.createElement('div');
         prizeCard.className = 'prize-card';
@@ -441,7 +453,7 @@ function updatePointsDisplay() {
 }
 
 //================================================================
-// 6. ユーティリティと開発者ツール
+// 6. ユーティリティ
 //================================================================
 
 function showSuccessModal(islandName) {
@@ -461,22 +473,4 @@ function showMessage(message, type = 'info') {
     setTimeout(() => messageDiv.remove(), 3000);
 }
 
-function initializeDevTools() {
-    const devBtn = document.getElementById('devAddStampBtn');
-    if (devBtn) {
-        devBtn.addEventListener('click', async () => {
-            if (!currentUser) {
-                showMessage('ログインしていません。', 'warning');
-                return;
-            }
-            const uncollected = islands.filter(island => !collectedStamps.has(island.id));
-            if (uncollected.length === 0) {
-                showMessage('全てのスタンプが収集済みです。', 'info');
-                return;
-            }
-            const randomIsland = uncollected[Math.floor(Math.random() * uncollected.length)];
-            await onScanSuccess(randomIsland.name);
-            console.log(`【開発用】${randomIsland.name}のスタンプを追加しました。`);
-        });
-    }
-}
+// ★★★ 開発者ツール関連の関数をすべて削除 ★★★
