@@ -351,31 +351,41 @@ function initializeQRCamera() {
     });
 }
 
+// 修正: QRカメラの起動ロジックを更新
 async function openQRCamera() {
     const qrModal = document.getElementById('qrModal');
     const qrStatus = document.getElementById('qrStatus');
     qrModal.classList.add('active');
-    qrStatus.textContent = 'カメラを探しています...';
-    qrStatus.className = 'qr-status';
+    qrStatus.textContent = 'カメラを起動しています...';
+    qrStatus.className = 'qr-status info';
 
     if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
-        await html5QrcodeScanner.stop().catch(e => console.error("Scanner stop failed", e));
+        await html5QrcodeScanner.stop().catch(e => console.error("スキャナーの停止に失敗しました", e));
     }
     
     html5QrcodeScanner = new Html5Qrcode("qrReader");
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+    };
+
     try {
-        const devices = await Html5Qrcode.getCameras();
-        if (devices && devices.length) {
-            const cameraId = devices.find(d => d.label.toLowerCase().includes('back'))?.id || devices[devices.length - 1].id;
-            html5QrcodeScanner.start(cameraId, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, onScanError);
-        } else {
-            qrStatus.textContent = 'カメラが見つかりません。';
-        }
+        // 背面カメラ（environment）を優先して起動する
+        await html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            config,
+            onScanSuccess,
+            onScanError
+        );
+        qrStatus.textContent = 'QRコードを枠内に収めてください';
+        qrStatus.className = 'qr-status info';
     } catch (err) {
+        console.error("背面カメラでの起動に失敗しました:", err);
         qrStatus.textContent = 'カメラの起動に失敗しました。';
-        console.error("Camera start failed:", err);
+        qrStatus.className = 'qr-status error';
     }
 }
+
 
 function closeQRCamera() {
     if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
