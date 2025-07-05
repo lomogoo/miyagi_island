@@ -196,6 +196,7 @@ async function onScanSuccess(decodedText) {
     }
 }
 
+// try...catchブロック全体をこの新しい内容に置き換えてください
 async function applyForPrize(prizeIndex) {
     const prize = prizes[prizeIndex];
     if (userProfile.total_points < prize.points) {
@@ -207,17 +208,32 @@ async function applyForPrize(prizeIndex) {
     if (!confirmed) return;
 
     try {
-        const newPoints = userProfile.total_points - prize.points;
+        const params = new URLSearchParams(window.location.search);
+        const isDevMode = params.get('dev') === 'true';
+
+        // RPCに渡すパラメータを定義
+        const rpcParams = {
+            p_prize_name: prize.name,
+            p_points_spent: prize.points
+        };
+
+        // 開発者モードの場合、明示的にユーザーIDを渡す
+        if (isDevMode && currentUser) {
+            rpcParams.p_user_id = currentUser.id;
+        }
+
+        // データベース関数を呼び出す
+        const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
+
+        if (error) throw error;
         
-        const [entryRes, profileRes] = await Promise.all([
-            supabaseClient.from('prize_entries').insert({ prize_name: prize.name, points_spent: prize.points, user_id: currentUser.id }),
-            supabaseClient.from('profiles').update({ total_points: newPoints }).eq('id', currentUser.id)
-        ]);
+        // 関数からの戻り値をチェック
+        if (data !== '応募に成功しました。') {
+            throw new Error(data); // 'ポイントが不足しています。'などのメッセージをエラーとして表示
+        }
         
-        if (entryRes.error) throw entryRes.error;
-        if (profileRes.error) throw profileRes.error;
-        
-        userProfile.total_points = newPoints;
+        // フロントエンドの状態を更新
+        userProfile.total_points -= prize.points;
         
         updatePointsDisplay();
         updatePrizes();
