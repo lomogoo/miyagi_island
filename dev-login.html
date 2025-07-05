@@ -5,6 +5,9 @@
     <title>開発者ログイン中...</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+        #status { margin: 20px; padding: 10px; }
+        .error { color: red; }
+        .success { color: green; }
     </style>
 </head>
 <body>
@@ -18,35 +21,43 @@
         async function developerLogin() {
             const statusEl = document.getElementById('status');
             try {
+                // Edge Functionを呼び出す
                 const { data, error } = await window.supabaseClient.functions.invoke('get-dev-session');
 
                 if (error) {
                     throw error;
                 }
 
-                if (!data.supabaseJwt) {
-                    throw new Error('関数からJWTが返されませんでした。');
+                if (!data || !data.supabaseJwt) {
+                    throw new Error('JWTトークンが返されませんでした。');
                 }
 
                 statusEl.textContent = 'トークンを取得しました。Supabaseにサインインしています...';
                 
-                const { error: sessionError } = await window.supabaseClient.auth.setSession({
-                    access_token: data.supabaseJwt
-                });
+                // signInWithJwtメソッドを使用（新しい方法）
+                const { error: signInError } = await window.supabaseClient.auth.signInWithJwt(data.supabaseJwt);
 
-                if (sessionError) {
-                    throw sessionError;
+                if (signInError) {
+                    throw signInError;
                 }
 
                 statusEl.textContent = 'ログインに成功しました。アプリに移動します。';
+                statusEl.className = 'success';
 
-                // ★★★ 修正点：リダイレクト先を相対パスに変更 ★★★
-                window.location.replace('./index.html'); 
+                // 少し待ってからリダイレクト
+                setTimeout(() => {
+                    window.location.replace('./index.html?dev=true');
+                }, 1000);
 
             } catch (error) {
                 console.error('開発者ログインに失敗しました:', error);
                 statusEl.textContent = `エラー: ${error.message}`;
-                statusEl.style.color = 'red';
+                statusEl.className = 'error';
+                
+                // より詳細なエラー情報を表示
+                if (error.message.includes('CUSTOM_JWT_SECRET')) {
+                    statusEl.innerHTML += '<br><br>Supabaseの管理画面でCUSTOM_JWT_SECRETを設定してください。';
+                }
             }
         }
         
