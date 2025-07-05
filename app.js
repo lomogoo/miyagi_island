@@ -36,8 +36,9 @@ let userProfile = null;
 let collectedStamps = new Set();
 let map;
 let markers = [];
-let userLocationMarker = null; // ★★★ 現在地マーカー用の変数を追加 ★★★
+let userLocationMarker = null; // ★★★ 現在地マーカー用の変数
 let html5QrcodeScanner;
+let isProcessingQR = false; // 
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -151,47 +152,54 @@ function initializeApp() {
 //================================================================
 
 async function onScanSuccess(decodedText) {
+    // 処理中の場合は重複実行を防ぐ
+    if (isProcessingQR) {
+        return;
+    }
+    // 処理中フラグを立てる
+    isProcessingQR = true;
+
     const qrStatus = document.getElementById('qrStatus');
     const matchedIsland = islands.find(island => island.name === decodedText.trim());
 
     if (matchedIsland) {
+        // 既にスタンプを持っているかチェック
         if (collectedStamps.has(matchedIsland.id)) {
             qrStatus.textContent = `${matchedIsland.name}のスタンプは既に獲得済みです。`;
             qrStatus.className = 'qr-status warning';
+            // ユーザーがメッセージを読めるように少し待ってから再スキャンを許可
+            setTimeout(() => { isProcessingQR = false; }, 2000);
             return;
         }
 
         try {
-            // ★★★ ここから修正 ★★★
+            // SupabaseのRPCを呼び出してスタンプを登録
             const params = new URLSearchParams(window.location.search);
             const isDevMode = params.get('dev') === 'true';
-
-            // RPCに渡すパラメータを定義
-            const rpcParams = {
-                p_island_id: matchedIsland.id
-            };
-
-            // 開発者モードの場合、明示的にユーザーIDを渡す
+            const rpcParams = { p_island_id: matchedIsland.id };
             if (isDevMode && currentUser) {
                 rpcParams.p_user_id = currentUser.id;
             }
-
             const { error } = await supabaseClient.rpc('add_stamp_and_point', rpcParams);
-            // ★★★ ここまで修正 ★★★
 
-            if (error) throw error;
-            
+            if (error) {
+                throw error;
+            }
+
+            // フロントエンドの状態を更新
             collectedStamps.add(matchedIsland.id);
             userProfile.total_points += 1;
 
             qrStatus.textContent = `${matchedIsland.name}のスタンプを獲得しました！`;
             qrStatus.className = 'qr-status success';
-            
+
             updatePointsDisplay();
             updateStampCards();
             updateMapMarkers();
             updatePrizes();
-            
+
+            // 成功メッセージを表示し、少し待ってからカメラを閉じる
+            // この場合、カメラが閉じるのでフラグのリセットは不要です
             setTimeout(() => {
                 closeQRCamera();
                 showSuccessModal(matchedIsland.name);
@@ -201,10 +209,15 @@ async function onScanSuccess(decodedText) {
             console.error("スタンプ追加処理に失敗しました:", error);
             qrStatus.textContent = `エラーが発生しました: ${error.message}`;
             qrStatus.className = 'qr-status error';
+            // エラー発生時も、少し待ってから再スキャンを許可
+            setTimeout(() => { isProcessingQR = false; }, 2000);
         }
     } else {
+        // 対象外のQRコードの場合
         qrStatus.textContent = '対象外のQRコードです。';
         qrStatus.className = 'qr-status error';
+        // 少し待ってから再スキャンを許可
+        setTimeout(() => { isProcessingQR = false; }, 2000);
     }
 }
 
@@ -395,6 +408,7 @@ function initializeQRCamera() {
 
 // 修正: QRカメラの起動ロジックを更新
 async function openQRCamera() {
+  isProcessingQR = false;
     const qrModal = document.getElementById('qrModal');
     const qrStatus = document.getElementById('qrStatus');
     qrModal.classList.add('active');
