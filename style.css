@@ -1,54 +1,67 @@
 :root {
-  /* Colors */
-  --color-background: rgba(252, 252, 249, 1);
-  --color-surface: rgba(255, 255, 253, 1);
-  --color-text: rgba(19, 52, 59, 1);
-  --color-text-secondary: rgba(98, 108, 113, 1);
-  --color-primary: rgba(33, 128, 141, 1);
-  --color-primary-hover: rgba(29, 116, 128, 1);
-  --color-primary-active: rgba(26, 104, 115, 1);
-  --color-secondary: rgba(94, 82, 64, 0.12);
-  --color-secondary-hover: rgba(94, 82, 64, 0.2);
-  --color-secondary-active: rgba(94, 82, 64, 0.25);
-  --color-border: rgba(94, 82, 64, 0.2);
-  --color-btn-primary-text: rgba(252, 252, 249, 1);
-  --color-card-border: rgba(94, 82, 64, 0.12);
-  --color-card-border-inner: rgba(94, 82, 64, 0.12);
-  --color-error: rgba(192, 21, 47, 1);
-  --color-success: rgba(33, 128, 141, 1);
-  --color-warning: rgba(168, 75, 47, 1);
-  --color-info: rgba(98, 108, 113, 1);
-  --color-focus-ring: rgba(33, 128, 141, 0.4);
+  /* Colors - ポスターのカラーパレットに基づく */
+  --color-background: #FFF8DC; /* クリーム色の背景 */
+  --color-surface: #FFFFFF;
+  --color-text: #2C3E50; /* ダークブルーグレー */
+  --color-text-secondary: #34495E;
+  
+  /* ターコイズブルー系 */
+  --color-primary: #1ABC9C; /* 明るいターコイズ */
+  --color-primary-hover: #16A085;
+  --color-primary-active: #149174;
+  
+  /* イエロー系 */
+  --color-accent: #F1C40F; /* 鮮やかな黄色 */
+  --color-accent-light: #F9E79F;
+  
+  /* ピンク系 */
+  --color-secondary: #EC407A; /* ビビッドピンク */
+  --color-secondary-hover: #E91E63;
+  --color-secondary-active: #D81B60;
+  
+  /* その他の色 */
+  --color-border: rgba(52, 73, 94, 0.2);
+  --color-btn-primary-text: #FFFFFF;
+  --color-card-border: rgba(26, 188, 156, 0.3);
+  --color-card-border-inner: rgba(26, 188, 156, 0.2);
+  --color-error: #E74C3C;
+  --color-success: #27AE60;
+  --color-warning: #F39C12;
+  --color-info: #3498DB;
+  --color-focus-ring: rgba(26, 188, 156, 0.4);
 
-  /* Common style patterns */
-  --focus-ring: 0 0 0 3px var(--color-focus-ring);
+  /* RGB versions */
+  --color-success-rgb: 39, 174, 96;
+  --color-error-rgb: 231, 76, 60;
+  --color-warning-rgb: 243, 156, 18;
+  --color-info-rgb: 52, 152, 219;
 
-  /* RGB versions for opacity control */
-  --color-success-rgb: 33, 128, 141;
-  --color-error-rgb: 192, 21, 47;
-  --color-warning-rgb: 168, 75, 47;
-  --color-info-rgb: 98, 108, 113;
-
-  /* Typography */
-  --font-family-base: "FKGroteskNeue", "Geist", "Inter", -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Typography - より丸みのあるフォント */
+  --font-family-base: "Rounded Mplus 1c", "Noto Sans JP", "Hiragino Kaku Gothic ProN",
+    "Hiragino Sans", Meiryo, sans-serif;
   --font-family-mono: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo,
     Monaco, Consolas, monospace;
-  --font-size-xs: 11px;
-  --font-size-sm: 12px;
-  --font-size-base: 14px;
-  --font-size-md: 14px;
-  --font-size-lg: 16px;
-  --font-size-xl: 18px;
-  --font-size-2xl: 20px;
-  --font-size-3xl: 24px;
-  --font-size-4xl: 30px;
+  
+  /* Font sizes - 少し大きめに */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 28px;
+  --font-size-4xl: 36px;
+  
+  /* Font weights */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
-  --font-weight-semibold: 550;
-  --font-weight-bold: 600;
-  --line-height-tight: 1.2;
-  --line-height-normal: 1.5;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Line heights */
+  --line-height-tight: 1.3;
+  --line-height-normal: 1.6;
   --letter-spacing-tight: -0.01em;
 
   /* Spacing */
@@ -60,21 +73,19 @@
   --space-24: 24px;
   --space-32: 32px;
 
-  /* Border Radius */
-  --radius-base: 8px;
-  --radius-lg: 12px;
+  /* Border Radius - より丸みを帯びた形状 */
+  --radius-base: 16px;
+  --radius-lg: 24px;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
-    0 2px 4px -1px rgba(0, 0, 0, 0.02);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04),
-    0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  /* Shadows - よりソフトに */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
 
   /* Animation */
-  --duration-normal: 250ms;
-  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-normal: 300ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Base styles */
@@ -95,8 +106,13 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' ='80' height='40' viewBox='0 0 80 40'%3E%3Cpath d='M 0 20 Q 20 5, 40 20 T 80 20' stroke='rgba(33, 128, 141, 0.08)' fill='none' stroke-width='2'/%3E%3C/svg%3E");
-  background-size: 80px 40px;
+  /* 雲のパターン背景 */
+  background-image: 
+    radial-gradient(circle at 20% 80%, var(--color-accent-light) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(26, 188, 156, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(236, 64, 122, 0.08) 0%, transparent 50%);
+  background-size: 600px 600px, 800px 800px, 700px 700px;
+  background-position: 0 0, 100px 100px, -100px 50px;
 }
 
 *,
@@ -108,84 +124,133 @@ body {
 /* Typography */
 h1, h2, h3 {
   margin: 0;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   color: var(--color-text);
   letter-spacing: var(--letter-spacing-tight);
 }
 
-h1 { font-size: var(--font-size-lg); }
+h1 { font-size: var(--font-size-xl); }
 h2 { font-size: var(--font-size-3xl); }
 h3 { font-size: var(--font-size-2xl); }
 p { margin: 0; }
 
-/* Buttons */
+/* Buttons - より丸みのあるポップなデザイン */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8) var(--space-16);
-  border-radius: var(--radius-base);
+  padding: var(--space-12) var(--space-24);
+  border-radius: var(--radius-full);
   font-size: var(--font-size-base);
-  font-weight: 500;
+  font-weight: var(--font-weight-semibold);
   line-height: 1.5;
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-standard);
   border: none;
   text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(0);
 }
 
-.btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.btn--primary { background: var(--color-primary); color: var(--color-btn-primary-text); }
-.btn--primary:hover { background: var(--color-primary-hover); }
-.btn--secondary { background: var(--color-secondary); color: var(--color-text); }
-.btn--secondary:hover { background: var(--color-secondary-hover); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
 
-/* --- Application-specific styles --- */
+.btn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
 
+.btn:focus-visible { 
+  outline: none; 
+  box-shadow: 0 0 0 4px var(--color-focus-ring); 
+}
+
+.btn--primary { 
+  background: var(--color-primary); 
+  color: var(--color-btn-primary-text); 
+}
+.btn--primary:hover { 
+  background: var(--color-primary-hover); 
+}
+
+.btn--secondary { 
+  background: var(--color-secondary); 
+  color: var(--color-btn-primary-text); 
+}
+.btn--secondary:hover { 
+  background: var(--color-secondary-hover); 
+}
+
+.btn:disabled { 
+  opacity: 0.6; 
+  cursor: not-allowed; 
+  transform: none;
+}
+
+/* Header - よりポップなデザイン */
 .header {
-  background: var(--color-surface);
-  padding: var(--space-8) var(--space-16);
-  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  padding: var(--space-16) var(--space-20);
+  box-shadow: var(--shadow-md);
   z-index: 1000;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-}
-
-/* header h1 の既存スタイルを削除するか、コメントアウト */
-/*
-.header h1 {
-  color: var(--color-primary);
-  margin: 0;
-  white-space: nowrap;
+  position: relative;
   overflow: hidden;
-  text-overflow: ellipsis;
-  flex-grow: 1;
 }
-*/
 
-/* 新しく追加するスタイル */
+/* 雲の装飾 */
+.header::before,
+.header::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.header::before {
+  width: 100px;
+  height: 40px;
+  top: -20px;
+  left: 10%;
+}
+
+.header::after {
+  width: 80px;
+  height: 30px;
+  bottom: -15px;
+  right: 15%;
+}
+
+/* タイトル画像のスタイル */
 .header .app-title-image {
-  height: 500px; /* 画像の高さに合わせて調整 */
-  width: auto; /* 幅はアスペクト比を維持して自動調整 */
-  object-fit: contain; /* 画像が歪まないように調整 */
-  flex-shrink: 0; /* 縮小しないように設定 */
-  margin-right: var(--space-16); /* ポイント表示との間に余白を追加 */
+  height: 45px; /* 適切なサイズに調整 */
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin-right: var(--space-16);
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-/* レスポンシブ対応の調整 */
+/* レスポンシブ対応 */
 @media (max-width: 768px) {
   .header .app-title-image {
-    height: 30px; /* 小さい画面での高さ */
+    height: 35px;
     margin-right: var(--space-8);
   }
 }
+
 @media (max-width: 480px) {
+  .header {
+    padding: var(--space-12) var(--space-16);
+  }
   .header .app-title-image {
-    height: 25px; /* さらに小さい画面での高さ */
+    height: 30px;
     margin-right: var(--space-4);
   }
 }
@@ -194,49 +259,116 @@ p { margin: 0; }
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  background: var(--color-secondary);
-  padding: var(--space-4) var(--space-12);
+  background: var(--color-accent);
+  padding: var(--space-8) var(--space-16);
   border-radius: var(--radius-full);
   flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+  border: 3px solid #FFFFFF;
 }
 
-.points-label { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
-.points-value { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-error); }
+.points-label { 
+  font-size: var(--font-size-sm); 
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+.points-value { 
+  font-size: var(--font-size-xl); 
+  font-weight: var(--font-weight-bold); 
+  color: var(--color-text);
+}
 
-.main-content { flex-grow: 1; overflow-y: auto; position: relative; }
-.section { display: none; height: 100%; width: 100%; }
-.section.active { display: flex; flex-direction: column; }
-.section-header { text-align: center; padding: var(--space-12) var(--space-8); flex-shrink: 0; }
-.section-header h2 { color: var(--color-primary); margin-bottom: var(--space-8); }
-.section-header p { color: var(--color-text-secondary); }
+.main-content { 
+  flex-grow: 1; 
+  overflow-y: auto; 
+  position: relative; 
+}
+
+.section { 
+  display: none; 
+  height: 100%; 
+  width: 100%; 
+}
+.section.active { 
+  display: flex; 
+  flex-direction: column; 
+}
+
+.section-header { 
+  text-align: center; 
+  padding: var(--space-20) var(--space-16); 
+  flex-shrink: 0; 
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  margin: var(--space-16);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.section-header h2 { 
+  color: var(--color-primary); 
+  margin-bottom: var(--space-8); 
+  font-size: var(--font-size-3xl);
+}
+.section-header p { 
+  color: var(--color-text-secondary); 
+  font-weight: var(--font-weight-medium);
+}
 
 /* Map Styles */
-.map-container { flex-grow: 1; }
-.leaflet-popup-content { font-family: var(--font-family-base); }
-.island-popup { text-align: center; max-width: 200px; }
-.island-popup img { width: 100%; height: 120px; object-fit: cover; border-radius: var(--radius-base); margin-bottom: var(--space-8); }
-.island-popup h3 { color: var(--color-primary); margin: 0 0 var(--space-8) 0; font-size: var(--font-size-lg); }
-.island-popup p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.map-container { 
+  flex-grow: 1; 
+  margin: var(--space-16);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
 
-/* Stamp Grid - 8つの島を4列×2行で表示 */
+.leaflet-container {
+  font-family: var(--font-family-base);
+  border-radius: var(--radius-lg);
+}
+
+.island-popup { 
+  text-align: center; 
+  max-width: 200px; 
+}
+.island-popup img { 
+  width: 100%; 
+  height: 120px; 
+  object-fit: cover; 
+  border-radius: var(--radius-base); 
+  margin-bottom: var(--space-8); 
+}
+.island-popup h3 { 
+  color: var(--color-primary); 
+  margin: 0 0 var(--space-8) 0; 
+  font-size: var(--font-size-lg); 
+}
+.island-popup p { 
+  color: var(--color-text-secondary); 
+  font-size: var(--font-size-sm); 
+}
+
+/* Stamp Grid - ポップなカードデザイン */
 .stamp-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: var(--space-12);
+  gap: var(--space-16);
   max-width: 100%;
   margin: 0;
-  padding: var(--space-12);
+  padding: var(--space-16);
   width: 100%;
   box-sizing: border-box;
-  /* 8つのアイテムを確実に4×2のレイアウトにする */
   grid-auto-flow: row;
 }
+
 .stamp-card {
-  background: var(--color-surface);
-  border: 2px dashed var(--color-border);
+  background: #FFFFFF;
+  border: 3px solid var(--color-primary);
   border-radius: var(--radius-lg);
-  padding: var(--space-8);
+  padding: var(--space-12);
   text-align: center;
   transition: all var(--duration-normal) var(--ease-standard);
   cursor: pointer;
@@ -245,173 +377,736 @@ p { margin: 0; }
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100px;
-  aspect-ratio: 1; /* 正方形に近い形にする */
+  min-height: 120px;
+  aspect-ratio: 1;
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
 }
-.stamp-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); }
-.stamp-card.collected { border-color: var(--color-success); background: rgba(var(--color-success-rgb), 0.1); border-style: solid; animation: stamp-effect 0.4s ease-out forwards; }
-.stamp-icon { font-size: 32px; margin-bottom: var(--space-4); display: block; }
-.stamp-card:not(.collected) .stamp-icon { filter: grayscale(100%) opacity(0.5); }
-/* 新しい .stamp-image スタイル (獲得済み画像) */
-.stamp-card .stamp-image {
-    width: 60%; /* 親要素に対する幅の割合 */
-    height: auto; /* 高さを自動調整 */
-    max-width: 100px; /* 最大幅を設定 */
-    max-height: 100px; /* 最大高さを設定 */
-    object-fit: contain; /* 画像が歪まないように調整 */
-    margin-bottom: var(--space-4);
-    display: block; /* ブロック要素にして中央揃えやマージンが効くように */
-}
-.stamp-name { font-weight: var(--font-weight-medium); color: var(--color-text); margin-bottom: var(--space-4); font-size: var(--font-size-sm); }
-.stamp-status { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
-.stamp-card.collected .stamp-status { color: var(--color-success); font-weight: var(--font-weight-medium); }
-@keyframes stamp-effect { 0% { transform: scale(0.9); opacity: 0; } 60% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
 
-/* Prizes - 画面幅に合わせて幅を広げる */
+/* 未獲得スタンプの点線ボーダー */
+.stamp-card:not(.collected) {
+  border-style: dashed;
+  border-color: var(--color-border);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.stamp-card:hover { 
+  transform: translateY(-4px) scale(1.05); 
+  box-shadow: var(--shadow-lg); 
+}
+
+.stamp-card.collected { 
+  border-color: var(--color-accent); 
+  background: linear-gradient(135deg, #FFFFFF 0%, var(--color-accent-light) 100%);
+  border-style: solid; 
+  animation: stamp-bounce 0.6s ease-out forwards; 
+}
+
+/* 獲得済みマーク */
+.stamp-card.collected::after {
+  content: '✨';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 20px;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(180deg); }
+}
+
+.stamp-icon { 
+  font-size: 40px; 
+  margin-bottom: var(--space-8); 
+  display: block; 
+  transition: transform var(--duration-normal) ease;
+}
+
+.stamp-card:not(.collected) .stamp-icon { 
+  filter: grayscale(100%) opacity(0.4); 
+}
+
+.stamp-card .stamp-image {
+  width: 70%;
+  height: auto;
+  max-width: 100px;
+  max-height: 100px;
+  object-fit: contain;
+  margin-bottom: var(--space-8);
+  display: block;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.stamp-name { 
+  font-weight: var(--font-weight-bold); 
+  color: var(--color-text); 
+  margin-bottom: var(--space-4); 
+  font-size: var(--font-size-sm); 
+}
+
+.stamp-status { 
+  font-size: var(--font-size-xs); 
+  color: var(--color-text-secondary); 
+  font-weight: var(--font-weight-medium);
+}
+
+.stamp-card.collected .stamp-status { 
+  color: var(--color-success); 
+  font-weight: var(--font-weight-bold); 
+}
+
+@keyframes stamp-bounce { 
+  0% { transform: scale(0.8) rotate(-10deg); opacity: 0; } 
+  50% { transform: scale(1.1) rotate(5deg); opacity: 1; } 
+  100% { transform: scale(1) rotate(0deg); } 
+}
+
+/* Prizes - カラフルなカードデザイン */
 .prizes-container {
   max-width: 100%;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
-  padding: var(--space-12);
+  gap: var(--space-20);
+  padding: var(--space-16);
   width: 100%;
 }
+
 .prize-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: #FFFFFF;
+  border: 3px solid var(--color-secondary);
   border-radius: var(--radius-lg);
-  padding: var(--space-20);
+  padding: var(--space-24);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   width: 100%;
   max-width: 100%;
+  transition: all var(--duration-normal) ease;
+  position: relative;
+  overflow: hidden;
 }
+
+/* 賞品カードの背景装飾 */
+.prize-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
+  opacity: 0.05;
+  transform: rotate(45deg);
+}
+
+.prize-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
 .prize-info {
   text-align: left;
   flex-grow: 1;
   margin-right: var(--space-16);
+  z-index: 1;
 }
-.prize-info h3 { color: var(--color-primary); margin: 0 0 var(--space-4) 0; }
-.prize-info p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+
+.prize-info h3 { 
+  color: var(--color-secondary); 
+  margin: 0 0 var(--space-8) 0; 
+  font-size: var(--font-size-2xl);
+}
+.prize-info p { 
+  color: var(--color-text-secondary); 
+  font-size: var(--font-size-base); 
+  font-weight: var(--font-weight-medium);
+}
+
 .prize-points {
-  color: var(--color-error);
+  color: var(--color-text);
+  background: var(--color-accent);
   font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-lg);
-  padding: 0 var(--space-16);
-  flex-shrink: 0;
-}
-.prize-btn {
+  font-size: var(--font-size-xl);
   padding: var(--space-8) var(--space-16);
-  border-radius: var(--radius-base);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.prize-btn {
+  padding: var(--space-12) var(--space-24);
+  border-radius: var(--radius-full);
   border: none;
   cursor: pointer;
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
   transition: all var(--duration-normal) var(--ease-standard);
   flex-shrink: 0;
   min-width: 120px;
+  box-shadow: var(--shadow-sm);
 }
-.prize-btn:enabled { background: var(--color-primary); color: var(--color-btn-primary-text); }
-.prize-btn:enabled:hover { background: var(--color-primary-hover); }
-.prize-btn:disabled { background: var(--color-secondary); color: var(--color-text-secondary); cursor: not-allowed; }
 
-/* QR Camera Button & Bottom Nav */
-.qr-camera-btn { position: fixed; bottom: 100px; right: var(--space-16); width: 60px; height: 60px; border-radius: var(--radius-full); background: var(--color-primary); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); z-index: 1000; transition: all var(--duration-normal) var(--ease-standard); }
-.qr-camera-btn:hover { background: var(--color-primary-hover); transform: scale(1.1); }
-.camera-icon { font-size: 24px; color: var(--color-btn-primary-text); }
-.bottom-nav { position: relative; background: var(--color-surface); border-top: 1px solid var(--color-border); display: flex; justify-content: space-around; padding: var(--space-8) 0; z-index: 1000; flex-shrink: 0; }
-.nav-btn { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); background: none; border: none; cursor: pointer; padding: var(--space-8); border-radius: var(--radius-base); transition: all var(--duration-normal) var(--ease-standard); min-width: 60px; }
-.nav-btn:hover { background: var(--color-secondary); }
-.nav-btn.active { background: var(--color-secondary); }
-.nav-icon { font-size: 20px; }
-.nav-label { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
-.nav-btn.active .nav-label { color: var(--color-primary); font-weight: var(--font-weight-medium); }
+.prize-btn:enabled { 
+  background: var(--color-secondary); 
+  color: #FFFFFF; 
+}
+.prize-btn:enabled:hover { 
+  background: var(--color-secondary-hover); 
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.prize-btn:disabled { 
+  background: #E0E0E0; 
+  color: #9E9E9E; 
+  cursor: not-allowed; 
+}
 
-/* Modal Styles */
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 2000; justify-content: center; align-items: center; }
-.modal.active { display: flex; }
-.modal-content { background: var(--color-surface); border-radius: var(--radius-lg); max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: var(--space-16); border-bottom: 1px solid var(--color-border); }
-.modal-header h3 { margin: 0; color: var(--color-primary); }
-.qr-reader { padding: var(--space-16); text-align: center; }
-#qrReader video { width: 100% !important; height: auto !important; border-radius: var(--radius-base); }
-.qr-status { padding: var(--space-16); text-align: center; color: var(--color-text-secondary); }
-.qr-status.success { color: var(--color-success); }
-.qr-status.error { color: var(--color-error); }
-.qr-status.warning { color: var(--color-warning); }
-.qr-status.info { color: var(--color-info); }
-.success-content { padding: var(--space-32); text-align: center; }
-.success-icon { font-size: 64px; margin-bottom: var(--space-16); }
-.success-content h3 { color: var(--color-success); margin-bottom: var(--space-8); }
-.success-content p { color: var(--color-text-secondary); margin-bottom: var(--space-24); }
+/* QR Camera Button */
+.qr-camera-btn { 
+  position: fixed; 
+  bottom: 100px; 
+  right: var(--space-20); 
+  width: 70px; 
+  height: 70px; 
+  border-radius: var(--radius-full); 
+  background: var(--color-accent); 
+  border: 4px solid #FFFFFF;
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  box-shadow: var(--shadow-lg); 
+  z-index: 1000; 
+  transition: all var(--duration-normal) var(--ease-standard); 
+}
+
+.qr-camera-btn:hover { 
+  background: var(--color-accent-light); 
+  transform: scale(1.1) rotate(10deg); 
+}
+
+.qr-camera-btn:active { 
+  transform: scale(0.95); 
+}
+
+.camera-icon { 
+  font-size: 32px; 
+  color: var(--color-text); 
+}
+
+/* Bottom Navigation - より楽しいデザイン */
+.bottom-nav { 
+  position: relative; 
+  background: #FFFFFF; 
+  border-top: 3px solid var(--color-primary); 
+  display: flex; 
+  justify-content: space-around; 
+  padding: var(--space-12) 0; 
+  z-index: 1000; 
+  flex-shrink: 0; 
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.nav-btn { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: var(--space-4); 
+  background: none; 
+  border: none; 
+  cursor: pointer; 
+  padding: var(--space-8) var(--space-16); 
+  border-radius: var(--radius-lg); 
+  transition: all var(--duration-normal) var(--ease-standard); 
+  min-width: 80px; 
+  position: relative;
+}
+
+.nav-btn:hover { 
+  background: var(--color-accent-light); 
+  transform: translateY(-2px);
+}
+
+.nav-btn.active { 
+  background: var(--color-primary); 
+}
+
+.nav-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+}
+
+.nav-icon { 
+  font-size: 24px; 
+  transition: transform var(--duration-normal) ease;
+}
+
+.nav-btn:hover .nav-icon {
+  transform: scale(1.2);
+}
+
+.nav-btn.active .nav-icon {
+  color: #FFFFFF;
+}
+
+.nav-label { 
+  font-size: var(--font-size-xs); 
+  color: var(--color-text-secondary); 
+  font-weight: var(--font-weight-semibold);
+}
+
+.nav-btn.active .nav-label { 
+  color: #FFFFFF; 
+  font-weight: var(--font-weight-bold); 
+}
+
+/* Modal Styles - よりポップに */
+.modal { 
+  display: none; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0, 0, 0, 0.6); 
+  z-index: 2000; 
+  justify-content: center; 
+  align-items: center; 
+  backdrop-filter: blur(4px);
+}
+
+.modal.active { 
+  display: flex; 
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content { 
+  background: #FFFFFF; 
+  border-radius: var(--radius-lg); 
+  max-width: 400px; 
+  width: 90%; 
+  max-height: 80vh; 
+  overflow-y: auto; 
+  box-shadow: var(--shadow-lg); 
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: var(--space-20); 
+  border-bottom: 2px solid var(--color-primary); 
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+}
+
+.modal-header h3 { 
+  margin: 0; 
+  color: #FFFFFF; 
+  font-size: var(--font-size-2xl);
+}
+
+.qr-reader { 
+  padding: var(--space-20); 
+  text-align: center; 
+}
+
+#qrReader video { 
+  width: 100% !important; 
+  height: auto !important; 
+  border-radius: var(--radius-base); 
+  border: 3px solid var(--color-primary);
+}
+
+.qr-status { 
+  padding: var(--space-20); 
+  text-align: center; 
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+}
+
+.qr-status.success { 
+  color: var(--color-success); 
+  background: rgba(39, 174, 96, 0.1);
+  border-radius: var(--radius-base);
+  padding: var(--space-16);
+}
+.qr-status.error { 
+  color: var(--color-error); 
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: var(--radius-base);
+  padding: var(--space-16);
+}
+.qr-status.warning { 
+  color: var(--color-warning); 
+  background: rgba(243, 156, 18, 0.1);
+  border-radius: var(--radius-base);
+  padding: var(--space-16);
+}
+.qr-status.info { 
+  color: var(--color-info); 
+}
+
+/* Success Modal */
+.success-content { 
+  padding: var(--space-32); 
+  text-align: center; 
+}
+
+.success-icon { 
+  font-size: 80px; 
+  margin-bottom: var(--space-20); 
+  animation: bounce 0.6s ease;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-20px); }
+  50% { transform: translateY(-10px); }
+  75% { transform: translateY(-15px); }
+}
+
+.success-content h3 { 
+  color: var(--color-success); 
+  margin-bottom: var(--space-12); 
+  font-size: var(--font-size-3xl);
+}
+
+.success-content p { 
+  color: var(--color-text-secondary); 
+  margin-bottom: var(--space-24); 
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+}
 
 /* Custom marker styles */
-.island-marker { background: var(--color-surface); border: 2px solid var(--color-primary); color: var(--color-primary); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: var(--shadow-md); transition: all 0.3s ease; }
-.island-marker.collected { background: var(--color-success); border-color: var(--color-success); }
-.island-marker.collected::after { content: '✓'; color: var(--color-btn-primary-text); font-weight: var(--font-weight-bold); position: absolute; top: -2px; right: -2px; background: var(--color-success); border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+.island-marker { 
+  background: var(--color-accent); 
+  border: 3px solid #FFFFFF; 
+  color: var(--color-text); 
+  border-radius: 50%; 
+  width: 48px; 
+  height: 48px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 24px; 
+  box-shadow: var(--shadow-md); 
+  transition: all 0.3s ease; 
+}
+
+.island-marker.collected { 
+  background: var(--color-primary); 
+  border-color: #FFFFFF; 
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(26, 188, 156, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(26, 188, 156, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(26, 188, 156, 0); }
+}
+
+.island-marker.collected::after { 
+  content: '✓'; 
+  color: #FFFFFF; 
+  font-weight: var(--font-weight-bold); 
+  position: absolute; 
+  top: -4px; 
+  right: -4px; 
+  background: var(--color-success); 
+  border-radius: 50%; 
+  width: 20px; 
+  height: 20px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 12px; 
+  border: 2px solid #FFFFFF;
+}
 
 /* 現在地のマーカースタイル */
 .user-location-marker {
-  width: 24px;
-  height: 24px;
-  background-color: #007bff;
+  width: 32px;
+  height: 32px;
+  background-color: var(--color-secondary);
   border-radius: 50%;
-  border: 3px solid white;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-  animation: pulse 2s infinite;
+  border: 4px solid #FFFFFF;
+  box-shadow: var(--shadow-lg);
+  animation: location-pulse 2s infinite;
 }
-.custom-user-location-container { background: none; border: none; }
-@keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); } }
+
+.custom-user-location-container { 
+  background: none; 
+  border: none; 
+}
+
+@keyframes location-pulse { 
+  0% { 
+    transform: scale(1); 
+    box-shadow: 0 0 0 0 rgba(236, 64, 122, 0.7); 
+  } 
+  70% { 
+    transform: scale(1.05); 
+    box-shadow: 0 0 0 15px rgba(236, 64, 122, 0); 
+  } 
+  100% { 
+    transform: scale(1); 
+    box-shadow: 0 0 0 0 rgba(236, 64, 122, 0); 
+  } 
+}
 
 /* メッセージ表示用のスタイル */
-.message { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 8px; color: white; font-weight: 500; z-index: 3000; box-shadow: var(--shadow-lg); opacity: 0; animation: fade-in-out 3s ease-in-out; }
-.message-success { background-color: var(--color-success); }
-.message-error { background-color: var(--color-error); }
-.message-warning { background-color: var(--color-warning); }
-.message-info { background-color: var(--color-info); }
-@keyframes fade-in-out { 0% { opacity: 0; top: 0; } 10% { opacity: 1; top: 20px; } 90% { opacity: 1; top: 20px; } 100% { opacity: 0; top: 0; } }
+.message { 
+  position: fixed; 
+  top: 20px; 
+  left: 50%; 
+  transform: translateX(-50%); 
+  padding: var(--space-16) var(--space-24); 
+  border-radius: var(--radius-full); 
+  color: #FFFFFF; 
+  font-weight: var(--font-weight-bold); 
+  z-index: 3000; 
+  box-shadow: var(--shadow-lg); 
+  opacity: 0; 
+  animation: message-slide 3s ease-in-out; 
+  border: 3px solid #FFFFFF;
+}
+
+.message-success { 
+  background: var(--color-success); 
+}
+.message-error { 
+  background: var(--color-error); 
+}
+.message-warning { 
+  background: var(--color-warning); 
+}
+.message-info { 
+  background: var(--color-info); 
+}
+
+@keyframes message-slide { 
+  0% { 
+    opacity: 0; 
+    top: -50px; 
+  } 
+  10% { 
+    opacity: 1; 
+    top: 20px; 
+  } 
+  90% { 
+    opacity: 1; 
+    top: 20px; 
+  } 
+  100% { 
+    opacity: 0; 
+    top: -50px; 
+  } 
+}
+
+/* ログインプロンプト画面 */
+#loginPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-32);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 背景の装飾 */
+#loginPrompt::before,
+#loginPrompt::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+#loginPrompt::before {
+  width: 300px;
+  height: 300px;
+  top: -150px;
+  left: -150px;
+}
+
+#loginPrompt::after {
+  width: 200px;
+  height: 200px;
+  bottom: -100px;
+  right: -100px;
+}
+
+#loginPrompt h2 {
+  color: #FFFFFF;
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-16);
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#loginPrompt p {
+  color: #FFFFFF;
+  font-size: var(--font-size-lg);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.2);
+  padding: var(--space-20) var(--space-32);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-md);
+  font-weight: var(--font-weight-medium);
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .stamp-grid {
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    gap: var(--space-8);
+    gap: var(--space-12);
+    padding: var(--space-12);
   }
+  
   .stamp-card {
-    min-height: 80px;
-    padding: var(--space-4);
+    min-height: 100px;
+    padding: var(--space-8);
   }
-  .stamp-icon { font-size: 24px; }
-  .stamp-name { font-size: var(--font-size-xs); }
+  
+  .stamp-icon { 
+    font-size: 32px; 
+  }
+  
+  .stamp-name { 
+    font-size: var(--font-size-xs); 
+  }
+  
   .prize-card {
     flex-direction: column;
     gap: var(--space-16);
     text-align: center;
+    padding: var(--space-20);
   }
+  
   .prize-info {
     text-align: center;
     margin-right: 0;
   }
-  .qr-camera-btn { bottom: 90px; right: var(--space-12); width: 50px; height: 50px; }
-  .camera-icon { font-size: 20px; }
-}
-@media (max-width: 480px) {
-  .stamp-grid {
-    gap: var(--space-4);
+  
+  .prize-info h3 {
+    font-size: var(--font-size-xl);
+  }
+  
+  .prize-points {
+    margin: var(--space-8) 0;
+  }
+  
+  .qr-camera-btn { 
+    bottom: 90px; 
+    right: var(--space-12); 
+    width: 60px; 
+    height: 60px; 
+  }
+  
+  .camera-icon { 
+    font-size: 24px; 
+  }
+  
+  .nav-btn {
+    min-width: 60px;
     padding: var(--space-8);
   }
-  .stamp-card {
-    padding: var(--space-4);
-    min-height: 70px;
+  
+  .nav-icon {
+    font-size: 20px;
   }
-  .stamp-icon { font-size: 20px; }
-  .stamp-name { font-size: 10px; }
-  .stamp-status { font-size: 9px; }
+  
+  .section-header {
+    margin: var(--space-12);
+    padding: var(--space-16) var(--space-12);
+  }
+  
+  .section-header h2 {
+    font-size: var(--font-size-2xl);
+  }
 }
+
+@media (max-width: 480px) {
+  .stamp-grid {
+    gap: var(--space-8);
+    padding: var(--space-8);
+  }
+  
+  .stamp-card {
+    padding: var(--space-8);
+    min-height: 90px;
+  }
+  
+  .stamp-icon { 
+    font-size: 28px; 
+  }
+  
+  .stamp-name { 
+    font-size: 11px; 
+  }
+  
+  .stamp-status { 
+    font-size: 10px; 
+  }
+  
+  .points-display {
+    padding: var(--space-4) var(--space-12);
+  }
+  
+  .points-value {
+    font-size: var(--font-size-lg);
+  }
+  
+  .map-container {
+    margin: var(--space-8);
+  }
+  
+  .prizes-container {
+    padding: var(--space-8);
+    gap: var(--space-16);
+  }
+  
+  .modal-content {
+    width: 95%;
+  }
+}
+
 @media (max-width: 380px) {
-  .header h1 { font-size: var(--font-size-base); }
+  .stamp-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+  
+  .nav-label {
+    font-size: 10px;
+  }
 }
