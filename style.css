@@ -818,7 +818,7 @@ p { margin: 0; }
 
 /* Custom marker styles */
 .island-marker { 
-  background: var(--color-accent); 
+  background: #FFFFFF; 
   border: 3px solid #FFFFFF; 
   color: var(--color-text); 
   border-radius: 50%; 
