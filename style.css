@@ -180,7 +180,7 @@ p { margin: 0; }
 .main-content { flex-grow: 1; overflow-y: auto; position: relative; }
 .section { display: none; height: 100%; width: 100%; }
 .section.active { display: flex; flex-direction: column; }
-.section-header { text-align: center; padding: var(--space-12) var(--space-8); flex-shrink: 0; } /* paddingを小さく */
+.section-header { text-align: center; padding: var(--space-12) var(--space-8); flex-shrink: 0; }
 .section-header h2 { color: var(--color-primary); margin-bottom: var(--space-8); }
 .section-header p { color: var(--color-text-secondary); }
 
@@ -206,14 +206,14 @@ p { margin: 0; }
   /* 8つのアイテムを確実に4×2のレイアウトにする */
   grid-auto-flow: row;
 }
-.stamp-card { 
-  background: var(--color-surface); 
-  border: 2px dashed var(--color-border); 
-  border-radius: var(--radius-lg); 
-  padding: var(--space-8); 
-  text-align: center; 
-  transition: all var(--duration-normal) var(--ease-standard); 
-  cursor: pointer; 
+.stamp-card {
+  background: var(--color-surface);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  text-align: center;
+  transition: all var(--duration-normal) var(--ease-standard);
+  cursor: pointer;
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
@@ -227,20 +227,30 @@ p { margin: 0; }
 .stamp-card.collected { border-color: var(--color-success); background: rgba(var(--color-success-rgb), 0.1); border-style: solid; animation: stamp-effect 0.4s ease-out forwards; }
 .stamp-icon { font-size: 32px; margin-bottom: var(--space-4); display: block; }
 .stamp-card:not(.collected) .stamp-icon { filter: grayscale(100%) opacity(0.5); }
+/* 新しい .stamp-image スタイル (獲得済み画像) */
+.stamp-card .stamp-image {
+    width: 60%; /* 親要素に対する幅の割合 */
+    height: auto; /* 高さを自動調整 */
+    max-width: 80px; /* 最大幅を設定 */
+    max-height: 80px; /* 最大高さを設定 */
+    object-fit: contain; /* 画像が歪まないように調整 */
+    margin-bottom: var(--space-4);
+    display: block; /* ブロック要素にして中央揃えやマージンが効くように */
+}
 .stamp-name { font-weight: var(--font-weight-medium); color: var(--color-text); margin-bottom: var(--space-4); font-size: var(--font-size-sm); }
 .stamp-status { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
 .stamp-card.collected .stamp-status { color: var(--color-success); font-weight: var(--font-weight-medium); }
 @keyframes stamp-effect { 0% { transform: scale(0.9); opacity: 0; } 60% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
 
 /* Prizes - 画面幅に合わせて幅を広げる */
-.prizes-container { 
-  max-width: 100%; 
-  margin: 0; 
-  display: flex; 
-  flex-direction: column; 
-  gap: var(--space-16); 
-  padding: var(--space-12); /* paddingを小さく */
-  width: 100%; /* 明示的に100%幅を指定 */
+.prizes-container {
+  max-width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-12);
+  width: 100%;
 }
 .prize-card {
   background: var(--color-surface);
@@ -254,29 +264,29 @@ p { margin: 0; }
   width: 100%;
   max-width: 100%;
 }
-.prize-info { 
-  text-align: left; 
-  flex-grow: 1; 
+.prize-info {
+  text-align: left;
+  flex-grow: 1;
   margin-right: var(--space-16);
 }
 .prize-info h3 { color: var(--color-primary); margin: 0 0 var(--space-4) 0; }
 .prize-info p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
-.prize-points { 
-  color: var(--color-error); 
-  font-weight: var(--font-weight-bold); 
-  font-size: var(--font-size-lg); 
+.prize-points {
+  color: var(--color-error);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
   padding: 0 var(--space-16);
   flex-shrink: 0;
 }
-.prize-btn { 
-  padding: var(--space-8) var(--space-16); 
-  border-radius: var(--radius-base); 
-  border: none; 
-  cursor: pointer; 
-  font-weight: var(--font-weight-medium); 
-  transition: all var(--duration-normal) var(--ease-standard); 
+.prize-btn {
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-base);
+  border: none;
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+  transition: all var(--duration-normal) var(--ease-standard);
   flex-shrink: 0;
-  min-width: 120px; /* 最小幅を設定 */
+  min-width: 120px;
 }
 .prize-btn:enabled { background: var(--color-primary); color: var(--color-btn-primary-text); }
 .prize-btn:enabled:hover { background: var(--color-primary-hover); }
@@ -340,7 +350,7 @@ p { margin: 0; }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .stamp-grid { 
+  .stamp-grid {
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(4, 1fr);
     gap: var(--space-8);
@@ -351,13 +361,13 @@ p { margin: 0; }
   }
   .stamp-icon { font-size: 24px; }
   .stamp-name { font-size: var(--font-size-xs); }
-  .prize-card { 
-    flex-direction: column; 
-    gap: var(--space-16); 
-    text-align: center; 
+  .prize-card {
+    flex-direction: column;
+    gap: var(--space-16);
+    text-align: center;
   }
-  .prize-info { 
-    text-align: center; 
+  .prize-info {
+    text-align: center;
     margin-right: 0;
   }
   .qr-camera-btn { bottom: 90px; right: var(--space-12); width: 50px; height: 50px; }
@@ -368,8 +378,8 @@ p { margin: 0; }
     gap: var(--space-4);
     padding: var(--space-8);
   }
-  .stamp-card { 
-    padding: var(--space-4); 
+  .stamp-card {
+    padding: var(--space-4);
     min-height: 70px;
   }
   .stamp-icon { font-size: 20px; }
