@@ -155,6 +155,8 @@ p { margin: 0; }
   flex-shrink: 0;
 }
 
+/* header h1 の既存スタイルを削除するか、コメントアウト */
+/*
 .header h1 {
   color: var(--color-primary);
   margin: 0;
@@ -162,6 +164,30 @@ p { margin: 0; }
   overflow: hidden;
   text-overflow: ellipsis;
   flex-grow: 1;
+}
+*/
+
+/* 新しく追加するスタイル */
+.header .app-title-image {
+  height: 40px; /* 画像の高さに合わせて調整 */
+  width: auto; /* 幅はアスペクト比を維持して自動調整 */
+  object-fit: contain; /* 画像が歪まないように調整 */
+  flex-shrink: 0; /* 縮小しないように設定 */
+  margin-right: var(--space-16); /* ポイント表示との間に余白を追加 */
+}
+
+/* レスポンシブ対応の調整 */
+@media (max-width: 768px) {
+  .header .app-title-image {
+    height: 30px; /* 小さい画面での高さ */
+    margin-right: var(--space-8);
+  }
+}
+@media (max-width: 480px) {
+  .header .app-title-image {
+    height: 25px; /* さらに小さい画面での高さ */
+    margin-right: var(--space-4);
+  }
 }
 
 .points-display {
