@@ -354,24 +354,38 @@ p { margin: 0; }
 /* Stamp Grid - ポップなカードデザイン */
 .stamp-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  /* grid-template-rows: repeat(2, 1fr);  <- この行を削除 */
   gap: var(--space-12);
-  max-width: 100%;
-  margin: 0 auto; /* 中央揃え */
   padding: var(--space-16);
   width: 100%;
+  height: 100%; /* 高さをコンテナに合わせる */
   box-sizing: border-box;
-  grid-auto-flow: row;
-  grid-template-rows: repeat(2, minmax(140px, 1fr));
-  overflow-x: hidden; /* 横スクロールを防ぐ */
-  justify-content: center; 
+
+  /* ★★★ PC向けの新しいグリッドレイアウト定義 ★★★ */
+  /* 4x4のグリッドエリアを定義し、各島を割り当て */
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  grid-template-areas:
+    "katsura nonoshima tashiro tashiro"
+    "sabusawa ho       tashiro tashiro"
+    "aji     aji       izushima enoshima"
+    "aji     aji       izushima enoshima";
 }
+
+/* ★★★ 各スタンプカードを定義したエリアに配置 ★★★ */
+#stamp-katsura  { grid-area: katsura; }
+#stamp-nonoshima{ grid-area: nonoshima; }
+#stamp-sabusawa { grid-area: sabusawa; }
+#stamp-ho       { grid-area: ho; }
+#stamp-tashiro  { grid-area: tashiro; }
+#stamp-aji      { grid-area: aji; }
+#stamp-izushima { grid-area: izushima; }
+#stamp-enoshima { grid-area: enoshima; }
+
 
 /* スタンプセクション全体のオーバーフロー制御 */
 #stampSection {
-  overflow-x: hidden; /* 横方向のオーバーフローを隠す */
-  overflow-y: auto; /* 縦方向のスクロールは許可 */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .stamp-card {
@@ -383,19 +397,16 @@ p { margin: 0; }
   transition: all var(--duration-normal) var(--ease-standard);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  display: grid;
-  grid-template-rows: 1fr auto auto; /* 画像を 1fr で中央に */
-  justify-items: center;
+  display: flex; /* flexに変更して中央揃えを容易に */
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  min-height: 140px;
-  aspect-ratio: 1;
-  box-sizing: border-box;
   overflow: hidden;
-  z-index: 1; /* 重なり順の基準を設定 */
-  aspect-ratio: 1;              /* 新ブラウザ用の本命 */
-  height: 100%;                 /* grid-auto-rows:1fr と組み合わせ行高を埋める */
-  position: relative;           /* fallback レイアウト用 */
+  position: relative;
+  width: 100%;
+  height: 100%; /* 親のグリッドエリアを埋める */
 }
+
 
 /* 未獲得スタンプの点線ボーダー */
 .stamp-card:not(.collected) {
@@ -1002,11 +1013,18 @@ p { margin: 0; }
 /* Responsive Design */
 @media (max-width: 768px) {
   .stamp-grid {
+    /* ★★★ スマホではシンプルな2列グリッドに戻す ★★★ */
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(4, minmax(120px, 1fr)); /* 4 行固定 */
+    grid-template-rows: repeat(4, minmax(120px, auto)); /* 行の高さを自動調整 */
+    grid-template-areas: none; /* エリア定義を解除 */
     gap: var(--space-12);
     padding: var(--space-12);
-    grid-auto-rows: 1fr; 
+  }
+
+  /* ★★★ スマホではエリア指定を解除 ★★★ */
+  #stamp-katsura, #stamp-nonoshima, #stamp-sabusawa, #stamp-ho,
+  #stamp-tashiro, #stamp-aji, #stamp-izushima, #stamp-enoshima {
+      grid-area: auto;
   }
   
   .stamp-card {
@@ -1018,19 +1036,15 @@ p { margin: 0; }
     font-size: 32px; 
   }
 
-/* 画像・アイコンの行配置とサイズ調整 */
-.stamp-image,
-.stamp-icon {
-  grid-row: 1;                  /* 最上段 (中央寄せフレックス領域) */
-  margin-bottom: var(--space-8);
-  width: 60%;                   /* 少し余裕を持たせる */
-  max-width: 90px;
-  height: auto;
-}
-
-/* ラベル行を明示 */
-.stamp-name   { grid-row: 2; }
-.stamp-status { grid-row: 3; }
+  /* 画像・アイコンの行配置とサイズ調整 */
+  .stamp-image,
+  .stamp-icon {
+    /* grid-row: 1; を削除（flexboxで管理するため） */
+    margin-bottom: var(--space-8);
+    width: 60%;                   /* 少し余裕を持たせる */
+    max-width: 90px;
+    height: auto;
+  }
   
   .stamp-name { 
     font-size: var(--font-size-xs); 
@@ -1145,14 +1159,11 @@ p { margin: 0; }
 /* --- ★ 古いブラウザ用フォールバック（aspect-ratio 非対応時） --- */
 @supports not (aspect-ratio: 1/1) {
 .stamp-card {
-  height: 0;                  /* 高さをゼロにして padding で正方形を作る */
-  padding-top: 100%;
+  /* height/padding-top はグリッドレイアウトで不要なため削除 */
 }
-  .stamp-card > * {               /* 内部コンテンツを中央に戻す */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  .stamp-card > * {
+    /* flexboxでの中央揃えに変更したため、このハックは不要 */
+    position: static;
+    transform: none;
   }
 }
-
