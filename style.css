@@ -1003,7 +1003,7 @@ p { margin: 0; }
 @media (max-width: 768px) {
   .stamp-grid {
     grid-template-columns: repeat(2, 1fr);
-    /* grid-template-rows: repeat(4, 1fr); <- この行を削除 */
+    grid-template-rows: repeat(4, minmax(120px, 1fr)); /* 4 行固定 */
     gap: var(--space-12);
     padding: var(--space-12);
     grid-auto-rows: 1fr; 
