@@ -453,29 +453,33 @@ function closeQRCamera() {
 function onScanError(error) { /* デバッグ時以外は静かにする */ }
 
 // --- スタンプカード ---
-function initializeStampCards() {
-    const stampGrid = document.getElementById('stampGrid');
-    stampGrid.innerHTML = '';
-    islands.forEach(island => {
-        const stampCard = document.createElement('div');
-        stampCard.className = 'stamp-card';
-        stampCard.id = `stamp-${island.id}`;
-        stampCard.innerHTML = `<span class="stamp-icon">🏝️</span><div class="stamp-name">${island.name}</div><div class="stamp-status">未獲得</div>`;
-        stampGrid.appendChild(stampCard);
-    });
-    updateStampCards();
-}
+initializeStampCards
 
 function updateStampCards() {
     islands.forEach(island => {
         const stampCard = document.getElementById(`stamp-${island.id}`);
         const statusElement = stampCard.querySelector('.stamp-status');
+        const stampIconElement = stampCard.querySelector('.stamp-icon'); // 既存のspan要素
+
         if (collectedStamps.has(island.id)) {
             stampCard.classList.add('collected');
             statusElement.textContent = '獲得済み';
+
+            // スタンプが獲得済みの場合、画像を動的に作成して置き換える
+            if (stampIconElement) { // stamp-icon要素が存在することを確認
+                const img = document.createElement('img');
+                img.src = `./assets/${island.id}.png`; // assetsフォルダ内の画像パス
+                img.alt = `${island.name} スタンプ`;
+                img.className = 'stamp-image'; // CSSでスタイルを適用するためのクラス
+
+                stampIconElement.replaceWith(img); // span要素をimg要素に置き換え
+            }
         } else {
             stampCard.classList.remove('collected');
             statusElement.textContent = '未獲得';
+            // 未獲得の場合、画像からテキストアイコンに戻す処理が必要になるが、
+            // 通常は一度獲得したら未獲得に戻ることはないので、この分岐では何もしない
+            // あるいは、初期化時に毎回テキストアイコンをセットし、ここで上書きする形でも良い
         }
     });
 }
