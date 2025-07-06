@@ -95,7 +95,7 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'%3E%3Cpath d='M 0 20 Q 20 5, 40 20 T 80 20' stroke='rgba(33, 128, 141, 0.08)' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' ='80' height='40' viewBox='0 0 80 40'%3E%3Cpath d='M 0 20 Q 20 5, 40 20 T 80 20' stroke='rgba(33, 128, 141, 0.08)' fill='none' stroke-width='2'/%3E%3C/svg%3E");
   background-size: 80px 40px;
 }
 
@@ -169,7 +169,7 @@ p { margin: 0; }
 
 /* 新しく追加するスタイル */
 .header .app-title-image {
-  height: 160px; /* 画像の高さに合わせて調整 */
+  height: 500px; /* 画像の高さに合わせて調整 */
   width: auto; /* 幅はアスペクト比を維持して自動調整 */
   object-fit: contain; /* 画像が歪まないように調整 */
   flex-shrink: 0; /* 縮小しないように設定 */
