@@ -138,8 +138,8 @@ function initializeApp() {
     initializeMap();
     initializeNavigation();
     initializeQRCamera();
-    initializeStampCards(); // ここで呼び出されていることを確認
-    initializePrizes();    // ここで呼び出されていることを確認
+    initializeStampCards();
+    initializePrizes();
     updatePointsDisplay();
     initializeGeolocation();
 }
@@ -184,23 +184,25 @@ async function onScanSuccess(decodedText) {
             }
 
             // フロントエンドの状態を更新
+            // この時点ではまだアニメーションは実行しない
             collectedStamps.add(matchedIsland.id);
             userProfile.total_points += 1;
 
-            qrStatus.textContent = `${matchedIsland.name}のスタンプを獲得しました！`;
+            qrStatus.textContent = `${matchedIsland.name}のQRコードを読み取りました。`;
             qrStatus.className = 'qr-status success';
 
-            updatePointsDisplay();
-            updateStampCards();
-            updateMapMarkers();
-            updatePrizes();
+            // QRカメラを閉じる
+            closeQRCamera();
 
-            // 成功メッセージを表示し、少し待ってからカメラを閉じる
-            // この場合、カメラが閉じるのでフラグのリセットは不要です
-            setTimeout(() => {
-                closeQRCamera();
-                showSuccessModal(matchedIsland.name);
-            }, 1500);
+            // 「スタンプ獲得！」ポップアップを表示し、ユーザーが閉じた後にアニメーションを実行
+            showSuccessModal(matchedIsland.name, () => {
+                // ポップアップが閉じられた後に実行されるコールバック
+                updatePointsDisplay();
+                updateStampCards(); // ここでスタンプカードが更新され、アニメーションが走る
+                updateMapMarkers();
+                updatePrizes();
+                isProcessingQR = false; // 処理完了フラグをリセット
+            });
 
         } catch (error) {
             console.error("スタンプ追加処理に失敗しました:", error);
@@ -449,60 +451,52 @@ function closeQRCamera() {
 function onScanError(error) { /* デバッグ時以外は静かにする */ }
 
 // --- スタンプカード ---
-// initializeStampCards 関数の修正
 function initializeStampCards() {
     const stampGrid = document.getElementById('stampGrid');
-    stampGrid.innerHTML = ''; // 既存の内容をクリア
+    stampGrid.innerHTML = '';
     islands.forEach(island => {
         const stampCard = document.createElement('div');
         stampCard.className = 'stamp-card';
         stampCard.id = `stamp-${island.id}`;
-        // 初期状態ではテキストアイコンを表示
         stampCard.innerHTML = `<span class="stamp-icon">🏝️</span><div class="stamp-name">${island.name}</div><div class="stamp-status">未獲得</div>`;
         stampGrid.appendChild(stampCard);
     });
-    updateStampCards(); // 初期表示で正しい状態に更新
+    updateStampCards();
 }
 
 function updateStampCards() {
     islands.forEach(island => {
         const stampCard = document.getElementById(`stamp-${island.id}`);
         const statusElement = stampCard.querySelector('.stamp-status');
-        let currentIconElement = stampCard.querySelector('.stamp-icon, .stamp-image'); // spanまたはimgを取得
+        let currentIconElement = stampCard.querySelector('.stamp-icon, .stamp-image');
 
         if (collectedStamps.has(island.id)) {
             stampCard.classList.add('collected');
             statusElement.textContent = '獲得済み';
 
-            // スタンプが獲得済みの場合、画像を動的に作成して置き換える
-            // 既に画像が表示されている場合は何もしない
             if (currentIconElement && currentIconElement.tagName !== 'IMG') {
                 const img = document.createElement('img');
-                img.src = `./assets/${island.id}.png`; // assetsフォルダ内の画像パス
+                img.src = `./assets/${island.id}.png`;
                 img.alt = `${island.name} スタンプ`;
-                img.className = 'stamp-image'; // CSSでスタイルを適用するためのクラス
+                img.className = 'stamp-image';
 
-                currentIconElement.replaceWith(img); // span要素をimg要素に置き換え
-            } else if (!currentIconElement) { // 要素が全くない場合（予期しないが念のため）
+                currentIconElement.replaceWith(img);
+            } else if (!currentIconElement) {
                  const img = document.createElement('img');
                  img.src = `./assets/${island.id}.png`;
                  img.alt = `${island.name} スタンプ`;
                  img.className = 'stamp-image';
-                 // stamp-nameの前に挿入するなど、適切な位置に挿入
                  stampCard.prepend(img);
             }
         } else {
             stampCard.classList.remove('collected');
             statusElement.textContent = '未獲得';
-            // 未獲得の場合、画像からテキストアイコンに戻す処理
-            // ここで元に戻す必要があるが、一度獲得したら戻さない運用なら不要
-            // もし必要なら、imgを削除して新しいspanを挿入するロジックを追加
             if (currentIconElement && currentIconElement.tagName === 'IMG') {
                 const span = document.createElement('span');
                 span.className = 'stamp-icon';
                 span.textContent = '🏝️';
                 currentIconElement.replaceWith(span);
-            } else if (!currentIconElement) { // 要素が全くない場合（予期しないが念のため）
+            } else if (!currentIconElement) {
                 const span = document.createElement('span');
                 span.className = 'stamp-icon';
                 span.textContent = '🏝️';
@@ -515,7 +509,7 @@ function updateStampCards() {
 // --- 賞品応募 ---
 function initializePrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
-    prizesContainer.innerHTML = ''; // 既存の内容をクリア
+    prizesContainer.innerHTML = '';
     prizes.forEach((prize, index) => {
         const prizeCard = document.createElement('div');
         prizeCard.className = 'prize-card';
@@ -554,13 +548,24 @@ function updatePointsDisplay() {
 // 6. ユーティリティ
 //================================================================
 
-function showSuccessModal(islandName) {
+// showSuccessModal 関数にコールバック引数を追加
+function showSuccessModal(islandName, callback) {
     const successModal = document.getElementById('successModal');
     document.getElementById('successTitle').textContent = 'スタンプ獲得！';
     document.getElementById('successMessage').textContent = `${islandName}のスタンプを獲得しました！ポイントが1つ増えました。`;
     successModal.classList.add('active');
-    document.getElementById('closeSuccessModal').onclick = () => successModal.classList.remove('active');
-    setTimeout(() => successModal.classList.remove('active'), 3000);
+
+    // 閉じるボタンがクリックされた時の処理
+    const closeButton = document.getElementById('closeSuccessModal');
+    closeButton.onclick = () => {
+        successModal.classList.remove('active');
+        if (callback && typeof callback === 'function') {
+            callback(); // コールバック関数を実行
+        }
+        // イベントリスナーを一度削除し、重複登録を防ぐ
+        closeButton.onclick = null;
+    };
+    // 自動で閉じないように setTimeout を削除
 }
 
 function showMessage(message, type = 'info') {
