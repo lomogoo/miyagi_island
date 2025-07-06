@@ -170,7 +170,7 @@ p { margin: 0; }
 /* 新しく追加するスタイル */
 .header .app-title-image {
   height: 40px; /* 画像の高さに合わせて調整 */
-  width: auto; /* 幅はアスペクト比を維持して自動調整 */
+  width: 50%; /* 幅はアスペクト比を維持して自動調整 */
   object-fit: contain; /* 画像が歪まないように調整 */
   flex-shrink: 0; /* 縮小しないように設定 */
   margin-right: var(--space-16); /* ポイント表示との間に余白を追加 */
