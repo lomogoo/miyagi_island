@@ -363,6 +363,7 @@ p { margin: 0; }
   width: 100%;
   box-sizing: border-box;
   grid-auto-flow: row;
+  grid-auto-rows: minmax(120px, auto);
   overflow-x: hidden; /* 横スクロールを防ぐ */
 }
 
@@ -512,6 +513,8 @@ p { margin: 0; }
   background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
   opacity: 0.05;
   transform: rotate(45deg);
+  pointer-events: none; /* 背景はクリックを受け取らない */
+  z-index: -1;          /* ボタンより背面に配置 */
 }
 
 .prize-card:hover {
