@@ -229,7 +229,7 @@ p { margin: 0; }
 
 /* タイトル画像のスタイル */
 .header .app-title-image {
-  height: 60px; /* より大きなサイズに調整 */
+  height: 120px; /* より大きなサイズに調整 */
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
@@ -240,7 +240,7 @@ p { margin: 0; }
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .header .app-title-image {
-    height: 45px;
+    height: 60px;
     margin-right: var(--space-8);
   }
 }
@@ -250,7 +250,7 @@ p { margin: 0; }
     padding: var(--space-12) var(--space-16);
   }
   .header .app-title-image {
-    height: 40px;
+    height: 60px;
     margin-right: var(--space-4);
   }
 }
