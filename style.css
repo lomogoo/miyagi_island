@@ -356,15 +356,16 @@ p { margin: 0; }
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   /* grid-template-rows: repeat(2, 1fr);  <- この行を削除 */
-  gap: var(--space-16);
+  gap: var(--space-12);
   max-width: 100%;
   margin: 0 auto; /* 中央揃え */
   padding: var(--space-16);
   width: 100%;
   box-sizing: border-box;
   grid-auto-flow: row;
-  grid-auto-rows: 1fr;
+  grid-template-rows: repeat(2, minmax(140px, 1fr));
   overflow-x: hidden; /* 横スクロールを防ぐ */
+  justify-content: center; 
 }
 
 /* スタンプセクション全体のオーバーフロー制御 */
@@ -382,11 +383,11 @@ p { margin: 0; }
   transition: all var(--duration-normal) var(--ease-standard);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  display: grid;
+  grid-template-rows: 1fr auto auto; /* 画像を 1fr で中央に */
+  justify-items: center;
   align-items: center;
-  min-height: 120px;
+  min-height: 140px;
   aspect-ratio: 1;
   box-sizing: border-box;
   overflow: hidden;
@@ -1016,6 +1017,20 @@ p { margin: 0; }
   .stamp-icon { 
     font-size: 32px; 
   }
+
+/* 画像・アイコンの行配置とサイズ調整 */
+.stamp-image,
+.stamp-icon {
+  grid-row: 1;                  /* 最上段 (中央寄せフレックス領域) */
+  margin-bottom: var(--space-8);
+  width: 60%;                   /* 少し余裕を持たせる */
+  max-width: 90px;
+  height: auto;
+}
+
+/* ラベル行を明示 */
+.stamp-name   { grid-row: 2; }
+.stamp-status { grid-row: 3; }
   
   .stamp-name { 
     font-size: var(--font-size-xs); 
