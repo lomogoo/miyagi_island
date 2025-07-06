@@ -36,9 +36,9 @@ let userProfile = null;
 let collectedStamps = new Set();
 let map;
 let markers = [];
-let userLocationMarker = null; // ★★★ 現在地マーカー用の変数
+let userLocationMarker = null;
 let html5QrcodeScanner;
-let isProcessingQR = false; // 
+let isProcessingQR = false;
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('dev') === 'true') {
         console.log("🛠️ 開発者モードで起動しました。");
-        const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5'; 
+        const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
         currentUser = {
             id: devUserId,
             email: 'developer@example.com'
@@ -80,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function showAuthenticatedUI() {
     document.getElementById('loginPrompt').style.display = 'none';
     document.getElementById('appContainer').style.display = 'flex';
-    // ★★★ ユーザー名表示のロジックを削除 ★★★
 }
 
 function showLoginUI() {
@@ -97,7 +96,6 @@ async function loadAndInitializeApp() {
     initializeApp();
 }
 
-// fetchUserData関数全体をこの新しい内容に置き換えてください
 async function fetchUserData() {
     if (!currentUser) return;
     try {
@@ -124,10 +122,10 @@ async function fetchUserData() {
         if (stampsError) {
             throw stampsError;
         }
-        
+
         // 取得したスタンプ履歴をセット
         collectedStamps = new Set(stampsData.map(s => s.island_id));
-        
+
     } catch (error) {
         console.error("ユーザーデータの取得に失敗しました:", error);
         // エラーが発生した場合は、安全のため両方をリセット
@@ -140,11 +138,10 @@ function initializeApp() {
     initializeMap();
     initializeNavigation();
     initializeQRCamera();
-    initializeStampCards();
-    initializePrizes();
+    initializeStampCards(); // ここで呼び出されていることを確認
+    initializePrizes();    // ここで呼び出されていることを確認
     updatePointsDisplay();
-    initializeGeolocation(); // ★★★ 現在地表示の初期化を追加 ★★★
-    // ★★★ 開発者ツールの初期化を削除 ★★★
+    initializeGeolocation();
 }
 
 //================================================================
@@ -221,7 +218,6 @@ async function onScanSuccess(decodedText) {
     }
 }
 
-// try...catchブロック全体をこの新しい内容に置き換えてください
 async function applyForPrize(prizeIndex) {
     const prize = prizes[prizeIndex];
     if (userProfile.total_points < prize.points) {
@@ -251,15 +247,15 @@ async function applyForPrize(prizeIndex) {
         const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
 
         if (error) throw error;
-        
+
         // 関数からの戻り値をチェック
         if (data !== '応募に成功しました。') {
             throw new Error(data); // 'ポイントが不足しています。'などのメッセージをエラーとして表示
         }
-        
+
         // フロントエンドの状態を更新
         userProfile.total_points -= prize.points;
-        
+
         updatePointsDisplay();
         updatePrizes();
         showMessage(`${prize.name}に応募しました！`, 'success');
@@ -330,7 +326,7 @@ function updateMapMarkers() {
     });
 }
 
-// --- ★★★ 現在地表示機能を追加 ★★★ ---
+// --- 現在地表示機能を追加 ---
 function initializeGeolocation() {
     if (!navigator.geolocation) {
         console.log("お使いのブラウザは位置情報機能に対応していません。");
@@ -418,7 +414,7 @@ async function openQRCamera() {
     if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
         await html5QrcodeScanner.stop().catch(e => console.error("スキャナーの停止に失敗しました", e));
     }
-    
+
     html5QrcodeScanner = new Html5Qrcode("qrReader");
     const config = {
         fps: 10,
@@ -453,33 +449,65 @@ function closeQRCamera() {
 function onScanError(error) { /* デバッグ時以外は静かにする */ }
 
 // --- スタンプカード ---
-initializeStampCards
+// initializeStampCards 関数の修正
+function initializeStampCards() {
+    const stampGrid = document.getElementById('stampGrid');
+    stampGrid.innerHTML = ''; // 既存の内容をクリア
+    islands.forEach(island => {
+        const stampCard = document.createElement('div');
+        stampCard.className = 'stamp-card';
+        stampCard.id = `stamp-${island.id}`;
+        // 初期状態ではテキストアイコンを表示
+        stampCard.innerHTML = `<span class="stamp-icon">🏝️</span><div class="stamp-name">${island.name}</div><div class="stamp-status">未獲得</div>`;
+        stampGrid.appendChild(stampCard);
+    });
+    updateStampCards(); // 初期表示で正しい状態に更新
+}
 
 function updateStampCards() {
     islands.forEach(island => {
         const stampCard = document.getElementById(`stamp-${island.id}`);
         const statusElement = stampCard.querySelector('.stamp-status');
-        const stampIconElement = stampCard.querySelector('.stamp-icon'); // 既存のspan要素
+        let currentIconElement = stampCard.querySelector('.stamp-icon, .stamp-image'); // spanまたはimgを取得
 
         if (collectedStamps.has(island.id)) {
             stampCard.classList.add('collected');
             statusElement.textContent = '獲得済み';
 
             // スタンプが獲得済みの場合、画像を動的に作成して置き換える
-            if (stampIconElement) { // stamp-icon要素が存在することを確認
+            // 既に画像が表示されている場合は何もしない
+            if (currentIconElement && currentIconElement.tagName !== 'IMG') {
                 const img = document.createElement('img');
                 img.src = `./assets/${island.id}.png`; // assetsフォルダ内の画像パス
                 img.alt = `${island.name} スタンプ`;
                 img.className = 'stamp-image'; // CSSでスタイルを適用するためのクラス
 
-                stampIconElement.replaceWith(img); // span要素をimg要素に置き換え
+                currentIconElement.replaceWith(img); // span要素をimg要素に置き換え
+            } else if (!currentIconElement) { // 要素が全くない場合（予期しないが念のため）
+                 const img = document.createElement('img');
+                 img.src = `./assets/${island.id}.png`;
+                 img.alt = `${island.name} スタンプ`;
+                 img.className = 'stamp-image';
+                 // stamp-nameの前に挿入するなど、適切な位置に挿入
+                 stampCard.prepend(img);
             }
         } else {
             stampCard.classList.remove('collected');
             statusElement.textContent = '未獲得';
-            // 未獲得の場合、画像からテキストアイコンに戻す処理が必要になるが、
-            // 通常は一度獲得したら未獲得に戻ることはないので、この分岐では何もしない
-            // あるいは、初期化時に毎回テキストアイコンをセットし、ここで上書きする形でも良い
+            // 未獲得の場合、画像からテキストアイコンに戻す処理
+            // ここで元に戻す必要があるが、一度獲得したら戻さない運用なら不要
+            // もし必要なら、imgを削除して新しいspanを挿入するロジックを追加
+            if (currentIconElement && currentIconElement.tagName === 'IMG') {
+                const span = document.createElement('span');
+                span.className = 'stamp-icon';
+                span.textContent = '🏝️';
+                currentIconElement.replaceWith(span);
+            } else if (!currentIconElement) { // 要素が全くない場合（予期しないが念のため）
+                const span = document.createElement('span');
+                span.className = 'stamp-icon';
+                span.textContent = '🏝️';
+                stampCard.prepend(span);
+            }
         }
     });
 }
@@ -487,7 +515,7 @@ function updateStampCards() {
 // --- 賞品応募 ---
 function initializePrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
-    prizesContainer.innerHTML = '';
+    prizesContainer.innerHTML = ''; // 既存の内容をクリア
     prizes.forEach((prize, index) => {
         const prizeCard = document.createElement('div');
         prizeCard.className = 'prize-card';
@@ -542,5 +570,3 @@ function showMessage(message, type = 'info') {
     document.body.appendChild(messageDiv);
     setTimeout(() => messageDiv.remove(), 3000);
 }
-
-// ★★★ 開発者ツール関連の関数をすべて削除 ★★★
