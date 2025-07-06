@@ -231,8 +231,8 @@ p { margin: 0; }
 .stamp-card .stamp-image {
     width: 60%; /* 親要素に対する幅の割合 */
     height: auto; /* 高さを自動調整 */
-    max-width: 80px; /* 最大幅を設定 */
-    max-height: 80px; /* 最大高さを設定 */
+    max-width: 100px; /* 最大幅を設定 */
+    max-height: 100px; /* 最大高さを設定 */
     object-fit: contain; /* 画像が歪まないように調整 */
     margin-bottom: var(--space-4);
     display: block; /* ブロック要素にして中央揃えやマージンが効くように */
