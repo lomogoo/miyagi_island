@@ -360,7 +360,7 @@ p { margin: 0; }
   height: 100%; /* 高さをコンテナに合わせる */
   box-sizing: border-box;
 
-  /* ★★★ PC向けの新しいグリッドレイアウト定義 ★★★ */
+  /* PC向けの新しいグリッドレイアウト定義 */
   /* 4x4のグリッドエリアを定義し、各島を割り当て */
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);
@@ -371,7 +371,7 @@ p { margin: 0; }
     "aji     aji       izushima enoshima";
 }
 
-/* ★★★ 各スタンプカードを定義したエリアに配置 ★★★ */
+/* 各スタンプカードを定義したエリアに配置 */
 #stamp-katsura  { grid-area: katsura; }
 #stamp-nonoshima{ grid-area: nonoshima; }
 #stamp-sabusawa { grid-area: sabusawa; }
@@ -426,6 +426,7 @@ p { margin: 0; }
   background: linear-gradient(135deg, #FFFFFF 0%, var(--color-accent-light) 100%);
   border-style: solid; 
   animation: stamp-bounce 0.6s ease-out forwards; 
+  padding: var(--space-8); /* 獲得後は少しパディングを詰める */
 }
 
 /* 獲得済みマーク */
@@ -463,6 +464,7 @@ p { margin: 0; }
   margin-bottom: var(--space-8);
   display: block;
   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+  transition: all var(--duration-normal) ease;
 }
 
 .stamp-name { 
@@ -481,6 +483,24 @@ p { margin: 0; }
 .stamp-card.collected .stamp-status { 
   color: var(--color-success); 
   font-weight: var(--font-weight-bold); 
+}
+
+/* ★★★ 追加 ★★★ */
+/* 獲得済みスタンプのテキストを非表示にする */
+.stamp-card.collected .stamp-name,
+.stamp-card.collected .stamp-status {
+  display: none;
+}
+
+/* ★★★ 追加 ★★★ */
+/* 獲得済みスタンプの画像を大きく表示する */
+.stamp-card.collected .stamp-image {
+  width: 90%;
+  height: 90%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  margin-bottom: 0;
 }
 
 @keyframes stamp-bounce { 
@@ -1013,7 +1033,7 @@ p { margin: 0; }
 /* Responsive Design */
 @media (max-width: 768px) {
   .stamp-grid {
-    /* ★★★ スマホではシンプルな2列グリッドに戻す ★★★ */
+    /* スマホではシンプルな2列グリッドに戻す */
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(4, minmax(120px, auto)); /* 行の高さを自動調整 */
     grid-template-areas: none; /* エリア定義を解除 */
@@ -1021,7 +1041,7 @@ p { margin: 0; }
     padding: var(--space-12);
   }
 
-  /* ★★★ スマホではエリア指定を解除 ★★★ */
+  /* スマホではエリア指定を解除 */
   #stamp-katsura, #stamp-nonoshima, #stamp-sabusawa, #stamp-ho,
   #stamp-tashiro, #stamp-aji, #stamp-izushima, #stamp-enoshima {
       grid-area: auto;
