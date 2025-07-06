@@ -355,7 +355,7 @@ p { margin: 0; }
 .stamp-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  /* grid-template-rows: repeat(2, 1fr);  <- この行を削除 */
   gap: var(--space-16);
   max-width: 100%;
   margin: 0 auto; /* 中央揃え */
@@ -997,7 +997,7 @@ p { margin: 0; }
 @media (max-width: 768px) {
   .stamp-grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(4, 1fr);
+    /* grid-template-rows: repeat(4, 1fr); <- この行を削除 */
     gap: var(--space-12);
     padding: var(--space-12);
   }
