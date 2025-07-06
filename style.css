@@ -229,7 +229,7 @@ p { margin: 0; }
 
 /* タイトル画像のスタイル */
 .header .app-title-image {
-  height: 45px; /* 適切なサイズに調整 */
+  height: 60px; /* より大きなサイズに調整 */
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
@@ -240,7 +240,7 @@ p { margin: 0; }
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .header .app-title-image {
-    height: 35px;
+    height: 45px;
     margin-right: var(--space-8);
   }
 }
@@ -250,7 +250,7 @@ p { margin: 0; }
     padding: var(--space-12) var(--space-16);
   }
   .header .app-title-image {
-    height: 30px;
+    height: 40px;
     margin-right: var(--space-4);
   }
 }
@@ -281,7 +281,8 @@ p { margin: 0; }
 .main-content { 
   flex-grow: 1; 
   overflow-y: auto; 
-  position: relative; 
+  position: relative;
+  overflow-x: hidden; /* 横方向のオーバーフローを防ぐ */
 }
 
 .section { 
@@ -357,11 +358,18 @@ p { margin: 0; }
   grid-template-rows: repeat(2, 1fr);
   gap: var(--space-16);
   max-width: 100%;
-  margin: 0;
+  margin: 0 auto; /* 中央揃え */
   padding: var(--space-16);
   width: 100%;
   box-sizing: border-box;
   grid-auto-flow: row;
+  overflow-x: hidden; /* 横スクロールを防ぐ */
+}
+
+/* スタンプセクション全体のオーバーフロー制御 */
+#stampSection {
+  overflow-x: hidden; /* 横方向のオーバーフローを隠す */
+  overflow-y: auto; /* 縦方向のスクロールは許可 */
 }
 
 .stamp-card {
