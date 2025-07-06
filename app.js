@@ -507,9 +507,10 @@ function updateStampCards() {
 }
 
 // --- 賞品応募 ---
+// --- 賞品応募 ---
 function initializePrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
-    prizesContainer.innerHTML = '';
+    prizesContainer.innerHTML = ''; // コンテナをクリア
     prizes.forEach((prize, index) => {
         const prizeCard = document.createElement('div');
         prizeCard.className = 'prize-card';
@@ -519,21 +520,29 @@ function initializePrizes() {
             <button class="prize-btn" data-prize-index="${index}">応募する</button>`;
         prizesContainer.appendChild(prizeCard);
     });
-    updatePrizes();
+
+    // イベントリスナーをコンテナに委譲する（イベントデリゲーション）
+    prizesContainer.addEventListener('click', (event) => {
+        const prizeButton = event.target.closest('.prize-btn');
+        if (prizeButton && !prizeButton.disabled) {
+            const prizeIndex = parseInt(prizeButton.dataset.prizeIndex, 10);
+            applyForPrize(prizeIndex);
+        }
+    });
+
+    updatePrizes(); // 初期状態の更新
 }
 
 function updatePrizes() {
     const prizeButtons = document.querySelectorAll('.prize-btn');
     const currentPoints = userProfile ? userProfile.total_points : 0;
-    prizeButtons.forEach((btn, index) => {
-        const prize = prizes[index];
-        const canApply = currentPoints >= prize.points;
-        btn.disabled = !canApply;
-        btn.textContent = canApply ? '応募する' : `${prize.points}P必要`;
-        if (canApply) {
-            btn.onclick = () => applyForPrize(index);
-        } else {
-            btn.onclick = null;
+    prizeButtons.forEach((btn) => {
+        const prizeIndex = parseInt(btn.dataset.prizeIndex, 10);
+        const prize = prizes[prizeIndex];
+        if (prize) {
+            const canApply = currentPoints >= prize.points;
+            btn.disabled = !canApply;
+            btn.textContent = canApply ? '応募する' : `${prize.points}P必要`;
         }
     });
 }
