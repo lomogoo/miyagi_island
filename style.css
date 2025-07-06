@@ -240,7 +240,7 @@ p { margin: 0; }
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .header .app-title-image {
-    height: 60px;
+    height: 100px;
     margin-right: var(--space-8);
   }
 }
@@ -250,7 +250,7 @@ p { margin: 0; }
     padding: var(--space-12) var(--space-16);
   }
   .header .app-title-image {
-    height: 60px;
+    height: 100px;
     margin-right: var(--space-4);
   }
 }
@@ -390,6 +390,7 @@ p { margin: 0; }
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
+  z-index: 1; /* 重なり順の基準を設定 */
 }
 
 /* 未獲得スタンプの点線ボーダー */
@@ -401,7 +402,8 @@ p { margin: 0; }
 
 .stamp-card:hover { 
   transform: translateY(-4px) scale(1.05); 
-  box-shadow: var(--shadow-lg); 
+  box-shadow: var(--shadow-lg);
+  z-index: 10; /* ホバー時は前面に */
 }
 
 .stamp-card.collected { 
