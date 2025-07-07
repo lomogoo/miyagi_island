@@ -143,23 +143,23 @@ function initializeApp() {
 // 4. 主要機能 (Supabase連携)
 //================================================================
 
+// app.js
+
 async function onScanSuccess(decodedText) {
-    if (isProcessingQR || !decodedText) {
-        if(isProcessingQR) console.log("Processing another QR, ignoring.");
-        isProcessingQR = false;
+    // スキャンしたテキストが無い場合はここで処理を終了
+    if (!decodedText) {
+        isProcessingQR = false; // 次のスキャンに備える
         return;
     }
-    isProcessingQR = true;
 
-    // QRスキャン成功後、カメラモーダルを閉じる
-    closeQRCamera();
+    // QRカメラを閉じる処理は openQRCamera 側に移ったため、ここでは不要
 
     const matchedIsland = islands.find(island => island.name === decodedText.trim());
 
     if (matchedIsland) {
         if (collectedStamps.has(matchedIsland.id)) {
             showMessage(`${matchedIsland.name}のスタンプは既に獲得済みです。`, 'warning');
-            isProcessingQR = false;
+            isProcessingQR = false; // 処理完了のためフラグをリセット
             return;
         }
         try {
@@ -172,6 +172,7 @@ async function onScanSuccess(decodedText) {
             userProfile.total_points += 1;
 
             showSuccessModal(matchedIsland.name, () => {
+                // ポップアップを閉じた後に、すべての更新処理とフラグのリセットを行う
                 updatePointsDisplay();
                 updateStampCards();
                 updateMapMarkers();
@@ -181,11 +182,11 @@ async function onScanSuccess(decodedText) {
         } catch (error) {
             console.error("スタンプ追加処理に失敗しました:", error);
             showMessage(`エラーが発生しました: ${error.message}`, 'error');
-            isProcessingQR = false;
+            isProcessingQR = false; // エラー時もフラグをリセット
         }
     } else {
         showMessage(`「${decodedText}」は対象外のQRコードです。`, 'error');
-        isProcessingQR = false;
+        isProcessingQR = false; // 対象外でもフラグをリセット
     }
 }
 
@@ -323,6 +324,7 @@ function initializeQRCamera() {
     html5Qrcode = new Html5Qrcode("qrReader");
 }
 
+// app.js -> openQRCamera
 async function openQRCamera() {
     isProcessingQR = false;
     const qrModal = document.getElementById('qrModal');
@@ -332,18 +334,28 @@ async function openQRCamera() {
     qrStatus.className = 'qr-status info';
 
     const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-    const onScanSuccessCallback = (decodedText, decodedResult) => {
-        if (isProcessingQR) return;
-        // スキャン成功後、すぐにスキャナを停止
-        closeQRCamera();
-        onScanSuccess(decodedText);
-    };
 
     try {
         await html5Qrcode.start(
             { facingMode: "environment" },
             config,
-            onScanSuccessCallback
+            (decodedText, decodedResult) => {
+                // ★★★ 成功したら、まずスキャナを停止 ★★★
+                // isProcessingQRフラグで、複数回呼び出されるのを防ぐ
+                if (isProcessingQR) return;
+                isProcessingQR = true;
+
+                html5Qrcode.stop()
+                    .then(() => {
+                        // 停止が完了してから、メインの処理を呼び出す
+                        onScanSuccess(decodedText);
+                    })
+                    .catch((err) => {
+                        console.error("QRスキャナの停止に失敗しました。", err);
+                        // 停止に失敗しても、スキャンは成功しているので処理は続行
+                        onScanSuccess(decodedText);
+                    });
+            }
         );
         qrStatus.textContent = 'QRコードを枠内に収めてください';
         qrStatus.className = 'qr-status info';
