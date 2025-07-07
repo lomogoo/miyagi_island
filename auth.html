@@ -39,7 +39,8 @@
                 response_type: 'code',
                 client_id: clientId,
                 redirect_uri: redirectUri,
-                scope: 'openid profile',
+                // 標準的なOIDCスコープに基づき、住所情報を追加で要求
+                scope: 'openid profile address',
                 state: state,
                 nonce: nonce,
                 display: 'psapp'
