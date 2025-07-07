@@ -106,11 +106,9 @@ async function fetchUserData() {
             .eq('id', currentUser.id)
             .single();
 
-        // プロフィールが無くても(PGRST116エラー)、処理を止めない。それ以外のエラーは投げる。
         if (profileError && profileError.code !== 'PGRST116') {
             throw profileError;
         }
-        // プロフィールが見つからない場合は、ポイント0で初期化
         userProfile = profileData || { total_points: 0 };
 
         // 2. スタンプ取得履歴を取得
@@ -123,12 +121,10 @@ async function fetchUserData() {
             throw stampsError;
         }
 
-        // 取得したスタンプ履歴をセット
         collectedStamps = new Set(stampsData.map(s => s.island_id));
 
     } catch (error) {
         console.error("ユーザーデータの取得に失敗しました:", error);
-        // エラーが発生した場合は、安全のため両方をリセット
         userProfile = { total_points: 0 };
         collectedStamps = new Set();
     }
@@ -139,7 +135,8 @@ function initializeApp() {
     initializeNavigation();
     initializeQRCamera();
     initializeStampCards();
-    initializePrizes();
+    initializePrizeSection(); // イベントリスナーを登録
+    renderPrizes();           // 初回の表示を描画
     updatePointsDisplay();
     initializeGeolocation();
 }
@@ -149,73 +146,56 @@ function initializeApp() {
 //================================================================
 
 async function onScanSuccess(decodedText) {
-    // 処理中の場合は重複実行を防ぐ
     if (isProcessingQR) {
         return;
     }
-    // 処理中フラグを立てる
     isProcessingQR = true;
 
     const qrStatus = document.getElementById('qrStatus');
     const matchedIsland = islands.find(island => island.name === decodedText.trim());
 
     if (matchedIsland) {
-        // 既にスタンプを持っているかチェック
         if (collectedStamps.has(matchedIsland.id)) {
             qrStatus.textContent = `${matchedIsland.name}のスタンプは既に獲得済みです。`;
             qrStatus.className = 'qr-status warning';
-            // ユーザーがメッセージを読めるように少し待ってから再スキャンを許可
             setTimeout(() => { isProcessingQR = false; }, 2000);
             return;
         }
 
         try {
-            // SupabaseのRPCを呼び出してスタンプを登録
-            const params = new URLSearchParams(window.location.search);
-            const isDevMode = params.get('dev') === 'true';
-            const rpcParams = { p_island_id: matchedIsland.id };
-            if (isDevMode && currentUser) {
-                rpcParams.p_user_id = currentUser.id;
-            }
-            const { error } = await supabaseClient.rpc('add_stamp_and_point', rpcParams);
+            const { error } = await supabaseClient.rpc('add_stamp_and_point', { 
+                p_island_id: matchedIsland.id 
+            });
 
             if (error) {
                 throw error;
             }
 
-            // フロントエンドの状態を更新
-            // この時点ではまだアニメーションは実行しない
             collectedStamps.add(matchedIsland.id);
             userProfile.total_points += 1;
 
             qrStatus.textContent = `${matchedIsland.name}のQRコードを読み取りました。`;
             qrStatus.className = 'qr-status success';
 
-            // QRカメラを閉じる
             closeQRCamera();
 
-            // 「スタンプ獲得！」ポップアップを表示し、ユーザーが閉じた後にアニメーションを実行
             showSuccessModal(matchedIsland.name, () => {
-                // ポップアップが閉じられた後に実行されるコールバック
                 updatePointsDisplay();
-                updateStampCards(); // ここでスタンプカードが更新され、アニメーションが走る
+                updateStampCards();
                 updateMapMarkers();
                 updatePrizes();
-                isProcessingQR = false; // 処理完了フラグをリセット
+                isProcessingQR = false;
             });
 
         } catch (error) {
             console.error("スタンプ追加処理に失敗しました:", error);
             qrStatus.textContent = `エラーが発生しました: ${error.message}`;
             qrStatus.className = 'qr-status error';
-            // エラー発生時も、少し待ってから再スキャンを許可
             setTimeout(() => { isProcessingQR = false; }, 2000);
         }
     } else {
-        // 対象外のQRコードの場合
         qrStatus.textContent = '対象外のQRコードです。';
         qrStatus.className = 'qr-status error';
-        // 少し待ってから再スキャンを許可
         setTimeout(() => { isProcessingQR = false; }, 2000);
     }
 }
@@ -231,31 +211,19 @@ async function applyForPrize(prizeIndex) {
     if (!confirmed) return;
 
     try {
-        const params = new URLSearchParams(window.location.search);
-        const isDevMode = params.get('dev') === 'true';
-
-        // RPCに渡すパラメータを定義
         const rpcParams = {
             p_prize_name: prize.name,
             p_points_spent: prize.points
         };
 
-        // 開発者モードの場合、明示的にユーザーIDを渡す
-        if (isDevMode && currentUser) {
-            rpcParams.p_user_id = currentUser.id;
-        }
-
-        // データベース関数を呼び出す
         const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
 
         if (error) throw error;
 
-        // 関数からの戻り値をチェック
         if (data !== '応募に成功しました。') {
-            throw new Error(data); // 'ポイントが不足しています。'などのメッセージをエラーとして表示
+            throw new Error(data);
         }
 
-        // フロントエンドの状態を更新
         userProfile.total_points -= prize.points;
 
         updatePointsDisplay();
@@ -328,7 +296,7 @@ function updateMapMarkers() {
     });
 }
 
-// --- 現在地表示機能を追加 ---
+// --- 現在地表示機能 ---
 function initializeGeolocation() {
     if (!navigator.geolocation) {
         console.log("お使いのブラウザは位置情報機能に対応していません。");
@@ -347,10 +315,8 @@ function initializeGeolocation() {
             const latLng = [latitude, longitude];
 
             if (userLocationMarker) {
-                // 既にマーカーがあれば位置を更新
                 userLocationMarker.setLatLng(latLng);
             } else {
-                // マーカーがなければ新規作成
                 const userIcon = L.divIcon({
                     html: '<div class="user-location-marker"></div>',
                     className: 'custom-user-location-container',
@@ -358,7 +324,7 @@ function initializeGeolocation() {
                     iconAnchor: [12, 12]
                 });
                 userLocationMarker = L.marker(latLng, { icon: userIcon }).addTo(map);
-                map.setView(latLng, 13); // 最初の位置取得時にマップを中央に移動
+                map.setView(latLng, 13);
             }
         },
         (error) => {
@@ -370,7 +336,6 @@ function initializeGeolocation() {
         locationOptions
     );
 }
-
 
 // --- ナビゲーション ---
 function initializeNavigation() {
@@ -404,9 +369,8 @@ function initializeQRCamera() {
     });
 }
 
-// 修正: QRカメラの起動ロジックを更新
 async function openQRCamera() {
-  isProcessingQR = false;
+    isProcessingQR = false;
     const qrModal = document.getElementById('qrModal');
     const qrStatus = document.getElementById('qrStatus');
     qrModal.classList.add('active');
@@ -424,7 +388,6 @@ async function openQRCamera() {
     };
 
     try {
-        // 背面カメラ（environment）を優先して起動する
         await html5QrcodeScanner.start(
             { facingMode: "environment" },
             config,
@@ -439,7 +402,6 @@ async function openQRCamera() {
         qrStatus.className = 'qr-status error';
     }
 }
-
 
 function closeQRCamera() {
     if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
@@ -479,7 +441,6 @@ function updateStampCards() {
                 img.src = `./assets/${island.id}.png`;
                 img.alt = `${island.name} スタンプ`;
                 img.className = 'stamp-image';
-
                 currentIconElement.replaceWith(img);
             } else if (!currentIconElement) {
                  const img = document.createElement('img');
@@ -507,10 +468,9 @@ function updateStampCards() {
 }
 
 // --- 賞品応募 ---
-// --- 賞品応募 ---
-function initializePrizes() {
+function renderPrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
-    prizesContainer.innerHTML = ''; // コンテナをクリア
+    prizesContainer.innerHTML = '';
     prizes.forEach((prize, index) => {
         const prizeCard = document.createElement('div');
         prizeCard.className = 'prize-card';
@@ -520,8 +480,11 @@ function initializePrizes() {
             <button class="prize-btn" data-prize-index="${index}">応募する</button>`;
         prizesContainer.appendChild(prizeCard);
     });
+    updatePrizes();
+}
 
-    // イベントリスナーをコンテナに委譲する（イベントデリゲーション）
+function initializePrizeSection() {
+    const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.addEventListener('click', (event) => {
         const prizeButton = event.target.closest('.prize-btn');
         if (prizeButton && !prizeButton.disabled) {
@@ -529,8 +492,6 @@ function initializePrizes() {
             applyForPrize(prizeIndex);
         }
     });
-
-    updatePrizes(); // 初期状態の更新
 }
 
 function updatePrizes() {
@@ -557,24 +518,20 @@ function updatePointsDisplay() {
 // 6. ユーティリティ
 //================================================================
 
-// showSuccessModal 関数にコールバック引数を追加
 function showSuccessModal(islandName, callback) {
     const successModal = document.getElementById('successModal');
     document.getElementById('successTitle').textContent = 'スタンプ獲得！';
     document.getElementById('successMessage').textContent = `${islandName}のスタンプを獲得しました！ポイントが1つ増えました。`;
     successModal.classList.add('active');
 
-    // 閉じるボタンがクリックされた時の処理
     const closeButton = document.getElementById('closeSuccessModal');
     closeButton.onclick = () => {
         successModal.classList.remove('active');
         if (callback && typeof callback === 'function') {
-            callback(); // コールバック関数を実行
+            callback();
         }
-        // イベントリスナーを一度削除し、重複登録を防ぐ
         closeButton.onclick = null;
     };
-    // 自動で閉じないように setTimeout を削除
 }
 
 function showMessage(message, type = 'info') {
