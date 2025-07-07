@@ -37,23 +37,28 @@ let collectedStamps = new Set();
 let map;
 let markers = [];
 let userLocationMarker = null;
-let html5Qrcode;
+let html5Qrcode; // html5-qrcodeのインスタンスを保持
 let isProcessingQR = false;
-let isAppInitialized = false;
+let isAppInitialized = false; // ★★★ 初期化済みフラグ
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
 //================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 開発者モードの処理
     const params = new URLSearchParams(window.location.search);
     if (params.get('dev') === 'true') {
         console.log("🛠️ 開発者モードで起動しました。");
         const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
-        currentUser = { id: devUserId, email: 'developer@example.com' };
+        currentUser = {
+            id: devUserId,
+            email: 'developer@example.com'
+        };
         showAuthenticatedUI();
         loadAndInitializeApp();
     } else {
+        // 通常の認証フロー
         supabaseClient.auth.onAuthStateChange((event, session) => {
             if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
                 currentUser = session.user;
@@ -100,6 +105,7 @@ async function fetchUserData() {
             .select('total_points')
             .eq('id', currentUser.id)
             .single();
+
         if (profileError && profileError.code !== 'PGRST116') throw profileError;
         userProfile = profileData || { total_points: 0 };
 
@@ -107,8 +113,10 @@ async function fetchUserData() {
             .from('collected_stamps')
             .select('island_id')
             .eq('user_id', currentUser.id);
+
         if (stampsError) throw stampsError;
         collectedStamps = new Set(stampsData.map(s => s.island_id));
+
     } catch (error) {
         console.error("ユーザーデータの取得に失敗しました:", error);
         userProfile = { total_points: 0 };
@@ -117,15 +125,18 @@ async function fetchUserData() {
 }
 
 function initializeApp() {
+    // ★★★ 初期化処理が複数回実行されるのを防ぐ
     if (isAppInitialized) return;
+
     initializeMap();
     initializeNavigation();
     initializeQRCamera();
     initializeStampCards();
-    initializePrizeSection();
-    renderPrizes();
+    initializePrizeSection(); // イベントリスナー登録
+    renderPrizes();           // 初回表示の描画
     updatePointsDisplay();
     initializeGeolocation();
+    
     isAppInitialized = true;
 }
 
@@ -134,17 +145,14 @@ function initializeApp() {
 //================================================================
 
 async function onScanSuccess(decodedText) {
-    // ★★★ スキャン成功後、すぐにカメラモーダルを閉じる ★★★
-    closeQRCamera();
-
-    if (isProcessingQR || !decodedText) {
-        if(isProcessingQR) console.log("Processing another QR, ignoring.");
-        isProcessingQR = false;
+    // isProcessingQRのチェックは openQRCamera 側で行うため、ここでは主にnullチェック
+    if (!decodedText) {
+        isProcessingQR = false; // 次のスキャンに備える
         return;
     }
-    isProcessingQR = true;
-
+    
     const matchedIsland = islands.find(island => island.name === decodedText.trim());
+
     if (matchedIsland) {
         if (collectedStamps.has(matchedIsland.id)) {
             showMessage(`${matchedIsland.name}のスタンプは既に獲得済みです。`, 'warning');
@@ -152,10 +160,15 @@ async function onScanSuccess(decodedText) {
             return;
         }
         try {
-            const { error } = await supabaseClient.rpc('add_stamp_and_point', { p_island_id: matchedIsland.id });
+            // ★★★ データベース関数呼び出しをシンプルな形式に統一
+            const { error } = await supabaseClient.rpc('add_stamp_and_point', { 
+                p_island_id: matchedIsland.id 
+            });
             if (error) throw error;
+
             collectedStamps.add(matchedIsland.id);
             userProfile.total_points += 1;
+
             showSuccessModal(matchedIsland.name, () => {
                 updatePointsDisplay();
                 updateStampCards();
@@ -180,9 +193,14 @@ async function applyForPrize(prizeIndex) {
         showMessage("ポイントが足りません。", 'warning');
         return;
     }
+
+    // ★★★ カスタム確認モーダルを呼び出す
     showConfirmModal(prize, async () => {
         try {
-            const rpcParams = { p_prize_name: prize.name, p_points_spent: prize.points };
+            const rpcParams = {
+                p_prize_name: prize.name,
+                p_points_spent: prize.points
+            };
             const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
             if (error) throw error;
             if (data !== '応募に成功しました。') throw new Error(data);
@@ -201,10 +219,13 @@ async function applyForPrize(prizeIndex) {
 // 5. UIコンポーネントの初期化と更新
 //================================================================
 
+// --- マップ関連 ---
 function initializeMap() {
     if (map) { map.remove(); }
     map = L.map('map').setView([38.3, 141.3], 10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
     markers = [];
     islands.forEach(addIslandMarker);
 }
@@ -242,6 +263,7 @@ function updateMapMarkers() {
     });
 }
 
+// --- 現在地表示機能 ---
 function initializeGeolocation() {
     if (!navigator.geolocation) {
         console.log("お使いのブラウザは位置情報機能に対応していません。");
@@ -268,6 +290,7 @@ function initializeGeolocation() {
     );
 }
 
+// --- ナビゲーション ---
 function initializeNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(btn => {
@@ -288,6 +311,7 @@ function switchSection(sectionId) {
     }
 }
 
+// --- QRカメラ (堅牢版) ---
 function initializeQRCamera() {
     document.getElementById('qrCameraBtn').addEventListener('click', openQRCamera);
     document.getElementById('closeQrModal').addEventListener('click', closeQRCamera);
@@ -304,16 +328,23 @@ async function openQRCamera() {
     qrModal.classList.add('active');
     qrStatus.textContent = 'カメラの許可をリクエストしています...';
     qrStatus.className = 'qr-status info';
+
     const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
     try {
         await html5Qrcode.start(
             { facingMode: "environment" },
             config,
             (decodedText, decodedResult) => {
+                // 複数回呼び出されるのを防ぐ
                 if (isProcessingQR) return;
                 isProcessingQR = true;
+
+                // スキャンを即座に停止
                 html5Qrcode.stop()
-                    .then(() => { onScanSuccess(decodedText); })
+                    .then(() => {
+                        onScanSuccess(decodedText);
+                    })
                     .catch((err) => {
                         console.error("QRスキャナの停止に失敗しました。", err);
                         onScanSuccess(decodedText);
@@ -340,6 +371,7 @@ function closeQRCamera() {
     document.getElementById('qrModal').classList.remove('active');
 }
 
+// --- スタンプカード ---
 function initializeStampCards() {
     const stampGrid = document.getElementById('stampGrid');
     stampGrid.innerHTML = '';
@@ -392,6 +424,8 @@ function updateStampCards() {
     });
 }
 
+// --- 賞品応募 ---
+// 表示を更新するための関数
 function renderPrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.innerHTML = '';
@@ -407,6 +441,7 @@ function renderPrizes() {
     updatePrizes();
 }
 
+// イベントリスナーを一度だけ登録するための関数
 function initializePrizeSection() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.addEventListener('click', (event) => {
@@ -432,6 +467,7 @@ function updatePrizes() {
     });
 }
 
+// --- ポイント表示 ---
 function updatePointsDisplay() {
     const pointsValue = document.getElementById('pointsValue');
     pointsValue.textContent = userProfile ? userProfile.total_points : 0;
@@ -454,6 +490,7 @@ function showSuccessModal(islandName, callback) {
     };
 }
 
+// ★★★ カスタム確認モーダルの制御関数 ★★★
 function showConfirmModal(prize, onConfirm) {
     const confirmModal = document.getElementById('confirmModal');
     const confirmTitle = document.getElementById('confirmTitle');
