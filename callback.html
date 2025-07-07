@@ -47,8 +47,11 @@
                     const { supabaseJwt } = data;
                     if (!supabaseJwt) throw new Error('Supabase JWTの取得に失敗しました。');
 
-                    const { error: signInError } = await window.supabaseClient.auth.signInWithJwt(supabaseJwt);
-                    if (signInError) throw signInError;
+                    const { error: sessionError } = await window.supabaseClient.auth.setSession({
+                        access_token: supabaseJwt,
+                        refresh_token: supabaseJwt
+                    });
+                    if (sessionError) throw sessionError;
                     
                     window.location.replace('/');
                 } catch (error) {
