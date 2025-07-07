@@ -1,6 +1,6 @@
 /**
  * 宮城県離島スタンプラリー アプリケーション
- * メインスクリプト
+ * メインスクリプト (標準ブラウザ向け堅牢版)
  */
 
 //================================================================
@@ -38,7 +38,8 @@ let map;
 let markers = [];
 let userLocationMarker = null;
 let isProcessingQR = false;
-let sdk; // PocketSign SDKのインスタンスを保持する変数
+let html5Qrcode; // html5-qrcodeのインスタンスを保持
+let isAppInitialized = false;
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -99,28 +100,21 @@ async function loadAndInitializeApp() {
 async function fetchUserData() {
     if (!currentUser) return;
     try {
-        // 1. プロフィールを取得
         const { data: profileData, error: profileError } = await supabaseClient
             .from('profiles')
             .select('total_points')
             .eq('id', currentUser.id)
             .single();
 
-        if (profileError && profileError.code !== 'PGRST116') {
-            throw profileError;
-        }
+        if (profileError && profileError.code !== 'PGRST116') throw profileError;
         userProfile = profileData || { total_points: 0 };
 
-        // 2. スタンプ取得履歴を取得
         const { data: stampsData, error: stampsError } = await supabaseClient
             .from('collected_stamps')
             .select('island_id')
             .eq('user_id', currentUser.id);
 
-        if (stampsError) {
-            throw stampsError;
-        }
-
+        if (stampsError) throw stampsError;
         collectedStamps = new Set(stampsData.map(s => s.island_id));
 
     } catch (error) {
@@ -130,34 +124,19 @@ async function fetchUserData() {
     }
 }
 
-async function initializeApp() {
-    // ★★★ SDKの初期化処理 ★★★
-    //     ドキュメントに従い、SDKが利用可能な状態になったらインスタンスを作成します。
-    //     ここでは、SDKが`window.pocketsign.inAppSdk`にロードされていると仮定します。
-    if (window.pocketsign && window.pocketsign.inAppSdk) {
-        const { createSDKInstance, createAppBackend } = window.pocketsign.inAppSdk;
-        try {
-            sdk = await createSDKInstance({
-                serviceId: '2fd2bc48-de60-4145-934f-9bbcabd42cf6', // あなたのサービスID
-                backend: createAppBackend()
-            });
-            console.log("PocketSign SDK has been initialized successfully.");
-        } catch(error) {
-            console.error("Failed to initialize PocketSign SDK:", error);
-            showMessage("ポケットサインSDKの初期化に失敗しました。", "error");
-        }
-    } else {
-        console.warn("PocketSign SDK not found. QR Scanner will not work in PocketSign App.");
-    }
-    
+function initializeApp() {
+    if (isAppInitialized) return;
+
     initializeMap();
     initializeNavigation();
     initializeQRCamera();
     initializeStampCards();
-    initializePrizeSection(); // イベントリスナー登録
-    renderPrizes();           // 初回表示の描画
+    initializePrizeSection();
+    renderPrizes();
     updatePointsDisplay();
     initializeGeolocation();
+    
+    isAppInitialized = true;
 }
 
 //================================================================
@@ -171,7 +150,10 @@ async function onScanSuccess(decodedText) {
         return;
     }
     isProcessingQR = true;
-    
+
+    // QRスキャン成功後、カメラモーダルを閉じる
+    closeQRCamera();
+
     const matchedIsland = islands.find(island => island.name === decodedText.trim());
 
     if (matchedIsland) {
@@ -180,15 +162,11 @@ async function onScanSuccess(decodedText) {
             isProcessingQR = false;
             return;
         }
-
         try {
             const { error } = await supabaseClient.rpc('add_stamp_and_point', { 
                 p_island_id: matchedIsland.id 
             });
-
-            if (error) {
-                throw error;
-            }
+            if (error) throw error;
 
             collectedStamps.add(matchedIsland.id);
             userProfile.total_points += 1;
@@ -200,7 +178,6 @@ async function onScanSuccess(decodedText) {
                 updatePrizes();
                 isProcessingQR = false;
             });
-
         } catch (error) {
             console.error("スタンプ追加処理に失敗しました:", error);
             showMessage(`エラーが発生しました: ${error.message}`, 'error');
@@ -212,7 +189,6 @@ async function onScanSuccess(decodedText) {
     }
 }
 
-// app.js
 async function applyForPrize(prizeIndex) {
     const prize = prizes[prizeIndex];
     if (userProfile.total_points < prize.points) {
@@ -220,24 +196,19 @@ async function applyForPrize(prizeIndex) {
         return;
     }
 
-    // ★★★ confirm() の代わりに新しい関数を呼び出す ★★★
     showConfirmModal(prize, async () => {
-        // この中の処理は、ユーザーが「はい」を押した後に実行される
         try {
             const rpcParams = {
                 p_prize_name: prize.name,
                 p_points_spent: prize.points
             };
             const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
-
             if (error) throw error;
             if (data !== '応募に成功しました。') throw new Error(data);
-
             userProfile.total_points -= prize.points;
             updatePointsDisplay();
             updatePrizes();
             showMessage(`${prize.name}に応募しました！`, 'success');
-
         } catch (error) {
             console.error("応募処理に失敗しました:", error);
             showMessage(`応募処理中にエラーが発生しました: ${error.message}`, 'error');
@@ -263,13 +234,7 @@ function initializeMap() {
 function addIslandMarker(island) {
     const isCollected = collectedStamps.has(island.id);
     const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
-    const customIcon = L.divIcon({
-        html: iconHtml,
-        className: 'custom-div-icon',
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
-        popupAnchor: [0, -20]
-    });
+    const customIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
     const marker = L.marker([island.lat, island.lng], { icon: customIcon }).addTo(map);
     const popupContent = `
         <div class="island-popup">
@@ -286,13 +251,7 @@ function updateMapMarkers() {
     markers.forEach(({ marker, island }) => {
         const isCollected = collectedStamps.has(island.id);
         const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
-        const newIcon = L.divIcon({
-            html: iconHtml,
-            className: 'custom-div-icon',
-            iconSize: [40, 40],
-            iconAnchor: [20, 20],
-            popupAnchor: [0, -20]
-        });
+        const newIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
         marker.setIcon(newIcon);
         const popupContent = `
             <div class="island-popup">
@@ -311,36 +270,22 @@ function initializeGeolocation() {
         console.log("お使いのブラウザは位置情報機能に対応していません。");
         return;
     }
-
-    const locationOptions = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-    };
-
+    const locationOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
     navigator.geolocation.watchPosition(
         (position) => {
             const { latitude, longitude } = position.coords;
             const latLng = [latitude, longitude];
-
             if (userLocationMarker) {
                 userLocationMarker.setLatLng(latLng);
             } else {
-                const userIcon = L.divIcon({
-                    html: '<div class="user-location-marker"></div>',
-                    className: 'custom-user-location-container',
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12]
-                });
+                const userIcon = L.divIcon({ html: '<div class="user-location-marker"></div>', className: 'custom-user-location-container', iconSize: [24, 24], iconAnchor: [12, 12] });
                 userLocationMarker = L.marker(latLng, { icon: userIcon }).addTo(map);
                 map.setView(latLng, 13);
             }
         },
         (error) => {
             console.error("位置情報の取得に失敗しました: ", error);
-            if (error.code === 1) {
-                showMessage("位置情報の利用が許可されていません。", "warning");
-            }
+            if (error.code === 1) showMessage("位置情報の利用が許可されていません。", "warning");
         },
         locationOptions
     );
@@ -363,45 +308,61 @@ function switchSection(sectionId) {
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
-        if (sectionId === 'mapSection' && map) {
-            map.invalidateSize();
-        }
+        if (sectionId === 'mapSection' && map) map.invalidateSize();
     }
 }
 
-// --- QRカメラ ---
+// --- QRカメラ (堅牢版) ---
 function initializeQRCamera() {
     document.getElementById('qrCameraBtn').addEventListener('click', openQRCamera);
+    document.getElementById('closeQrModal').addEventListener('click', closeQRCamera);
+    document.getElementById('qrModal').addEventListener('click', (e) => {
+        if (e.target.id === 'qrModal') closeQRCamera();
+    });
+    // html5-qrcodeのインスタンスを生成
+    html5Qrcode = new Html5Qrcode("qrReader");
 }
 
 async function openQRCamera() {
-    if (!sdk) {
-        showMessage("SDKが初期化されていません。標準ブラウザでテストします。", "warning");
-        // 標準ブラウザ用のフォールバック（デバッグ用）
-        const testData = prompt("【テスト用】QRコードの内容（島の名）を入力してください:");
-        if (testData) onScanSuccess(testData);
-        return;
-    }
+    isProcessingQR = false;
+    const qrModal = document.getElementById('qrModal');
+    const qrStatus = document.getElementById('qrStatus');
+    qrModal.classList.add('active');
+    qrStatus.textContent = 'カメラの許可をリクエストしています...';
+    qrStatus.className = 'qr-status info';
+
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    const onScanSuccessCallback = (decodedText, decodedResult) => {
+        if (isProcessingQR) return;
+        // スキャン成功後、すぐにスキャナを停止
+        closeQRCamera();
+        onScanSuccess(decodedText);
+    };
 
     try {
-        const { readWithQrScanner } = window.pocketsign.inAppSdk;
-        console.log("Calling PocketSign's readWithQrScanner function...");
-        
-        // 第2引数に空オブジェクトを渡して、デフォルトのフィルタ挙動を利用
-        const result = await readWithQrScanner(sdk, {});
-
-        // 返り値の構造はドキュメントで要確認
-        // ここでは、result.data にスキャンした文字列そのものが入っていると仮定
-        if (result && result.result === 'success' && result.data) {
-            onScanSuccess(result.data);
-        } else {
-            console.log("QR scan was canceled or returned no data.", result);
-            showMessage("QRスキャンがキャンセルされました。", "info");
+        await html5Qrcode.start(
+            { facingMode: "environment" },
+            config,
+            onScanSuccessCallback
+        );
+        qrStatus.textContent = 'QRコードを枠内に収めてください';
+        qrStatus.className = 'qr-status info';
+    } catch (err) {
+        console.error("html5-qrcode.start() failed", err);
+        let message = 'カメラの起動に失敗しました。';
+        if (err.name === 'NotAllowedError') {
+            message = 'カメラの利用が許可されていません。ブラウザの設定を確認してください。';
         }
-    } catch (error) {
-        console.error("An error occurred during the QR scan process:", error);
-        showMessage("QRスキャンの起動に失敗しました。", "error");
+        qrStatus.textContent = message;
+        qrStatus.className = 'qr-status error';
     }
+}
+
+function closeQRCamera() {
+    if (html5Qrcode && html5Qrcode.isScanning) {
+        html5Qrcode.stop().catch(err => console.error("QRスキャナの停止に失敗しました。", err));
+    }
+    document.getElementById('qrModal').classList.remove('active');
 }
 
 // --- スタンプカード ---
@@ -423,11 +384,9 @@ function updateStampCards() {
         const stampCard = document.getElementById(`stamp-${island.id}`);
         const statusElement = stampCard.querySelector('.stamp-status');
         let currentIconElement = stampCard.querySelector('.stamp-icon, .stamp-image');
-
         if (collectedStamps.has(island.id)) {
             stampCard.classList.add('collected');
             statusElement.textContent = '獲得済み';
-
             if (currentIconElement && currentIconElement.tagName !== 'IMG') {
                 const img = document.createElement('img');
                 img.src = `./assets/${island.id}.png`;
@@ -460,7 +419,6 @@ function updateStampCards() {
 }
 
 // --- 賞品応募 ---
-// 表示を更新するための関数
 function renderPrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.innerHTML = '';
@@ -476,7 +434,6 @@ function renderPrizes() {
     updatePrizes();
 }
 
-// イベントリスナーを一度だけ登録するための関数
 function initializePrizeSection() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.addEventListener('click', (event) => {
@@ -517,14 +474,33 @@ function showSuccessModal(islandName, callback) {
     document.getElementById('successTitle').textContent = 'スタンプ獲得！';
     document.getElementById('successMessage').textContent = `${islandName}のスタンプを獲得しました！ポイントが1つ増えました。`;
     successModal.classList.add('active');
-
     const closeButton = document.getElementById('closeSuccessModal');
     closeButton.onclick = () => {
         successModal.classList.remove('active');
-        if (callback && typeof callback === 'function') {
-            callback();
-        }
+        if (callback && typeof callback === 'function') callback();
         closeButton.onclick = null;
+    };
+}
+
+function showConfirmModal(prize, onConfirm) {
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmBtn = document.getElementById('confirmApplyBtn');
+    const cancelBtn = document.getElementById('cancelApplyBtn');
+    confirmTitle.textContent = `${prize.name}への応募`;
+    confirmMessage.textContent = `${prize.points}ポイントを消費します。本当によろしいですか？`;
+    confirmModal.classList.add('active');
+    confirmBtn.onclick = () => {
+        confirmModal.classList.remove('active');
+        onConfirm();
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
+    };
+    cancelBtn.onclick = () => {
+        confirmModal.classList.remove('active');
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
     };
 }
 
@@ -534,35 +510,4 @@ function showMessage(message, type = 'info') {
     messageDiv.textContent = message;
     document.body.appendChild(messageDiv);
     setTimeout(() => messageDiv.remove(), 3000);
-}
-
-// app.js のユーティリティセクションなどに追加
-function showConfirmModal(prize, onConfirm) {
-    const confirmModal = document.getElementById('confirmModal');
-    const confirmTitle = document.getElementById('confirmTitle');
-    const confirmMessage = document.getElementById('confirmMessage');
-    const confirmBtn = document.getElementById('confirmApplyBtn');
-    const cancelBtn = document.getElementById('cancelApplyBtn');
-
-    confirmTitle.textContent = `${prize.name}への応募`;
-    confirmMessage.textContent = `${prize.points}ポイントを消費します。本当によろしいですか？`;
-
-    confirmModal.classList.add('active');
-
-    // 「はい」ボタンの処理
-    confirmBtn.onclick = () => {
-        confirmModal.classList.remove('active');
-        onConfirm(); // Supabaseへの応募処理を実行
-        // リスナーをクリア
-        confirmBtn.onclick = null;
-        cancelBtn.onclick = null;
-    };
-
-    // 「いいえ」ボタンの処理
-    cancelBtn.onclick = () => {
-        confirmModal.classList.remove('active');
-        // リスナーをクリア
-        confirmBtn.onclick = null;
-        cancelBtn.onclick = null;
-    };
 }
