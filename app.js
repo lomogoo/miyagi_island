@@ -1,6 +1,6 @@
 /**
  * 宮城県離島スタンプラリー アプリケーション
- * メインスクリプト (標準ブラウザ向け堅牢版)
+ * メインスクリプト (最終修正版)
  */
 
 //================================================================
@@ -37,9 +37,9 @@ let collectedStamps = new Set();
 let map;
 let markers = [];
 let userLocationMarker = null;
-let isProcessingQR = false;
 let html5Qrcode; // html5-qrcodeのインスタンスを保持
-let isAppInitialized = false;
+let isProcessingQR = false;
+let isAppInitialized = false; // ★★★ 初期化済みフラグ
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -125,14 +125,15 @@ async function fetchUserData() {
 }
 
 function initializeApp() {
+    // ★★★ 初期化処理が複数回実行されるのを防ぐ
     if (isAppInitialized) return;
 
     initializeMap();
     initializeNavigation();
     initializeQRCamera();
     initializeStampCards();
-    initializePrizeSection();
-    renderPrizes();
+    initializePrizeSection(); // イベントリスナー登録
+    renderPrizes();           // 初回表示の描画
     updatePointsDisplay();
     initializeGeolocation();
     
@@ -143,26 +144,23 @@ function initializeApp() {
 // 4. 主要機能 (Supabase連携)
 //================================================================
 
-// app.js
-
 async function onScanSuccess(decodedText) {
-    // スキャンしたテキストが無い場合はここで処理を終了
+    // isProcessingQRのチェックは openQRCamera 側で行うため、ここでは主にnullチェック
     if (!decodedText) {
         isProcessingQR = false; // 次のスキャンに備える
         return;
     }
-
-    // QRカメラを閉じる処理は openQRCamera 側に移ったため、ここでは不要
-
+    
     const matchedIsland = islands.find(island => island.name === decodedText.trim());
 
     if (matchedIsland) {
         if (collectedStamps.has(matchedIsland.id)) {
             showMessage(`${matchedIsland.name}のスタンプは既に獲得済みです。`, 'warning');
-            isProcessingQR = false; // 処理完了のためフラグをリセット
+            isProcessingQR = false;
             return;
         }
         try {
+            // ★★★ データベース関数呼び出しをシンプルな形式に統一
             const { error } = await supabaseClient.rpc('add_stamp_and_point', { 
                 p_island_id: matchedIsland.id 
             });
@@ -172,7 +170,6 @@ async function onScanSuccess(decodedText) {
             userProfile.total_points += 1;
 
             showSuccessModal(matchedIsland.name, () => {
-                // ポップアップを閉じた後に、すべての更新処理とフラグのリセットを行う
                 updatePointsDisplay();
                 updateStampCards();
                 updateMapMarkers();
@@ -182,11 +179,11 @@ async function onScanSuccess(decodedText) {
         } catch (error) {
             console.error("スタンプ追加処理に失敗しました:", error);
             showMessage(`エラーが発生しました: ${error.message}`, 'error');
-            isProcessingQR = false; // エラー時もフラグをリセット
+            isProcessingQR = false;
         }
     } else {
         showMessage(`「${decodedText}」は対象外のQRコードです。`, 'error');
-        isProcessingQR = false; // 対象外でもフラグをリセット
+        isProcessingQR = false;
     }
 }
 
@@ -197,6 +194,7 @@ async function applyForPrize(prizeIndex) {
         return;
     }
 
+    // ★★★ カスタム確認モーダルを呼び出す
     showConfirmModal(prize, async () => {
         try {
             const rpcParams = {
@@ -320,11 +318,9 @@ function initializeQRCamera() {
     document.getElementById('qrModal').addEventListener('click', (e) => {
         if (e.target.id === 'qrModal') closeQRCamera();
     });
-    // html5-qrcodeのインスタンスを生成
     html5Qrcode = new Html5Qrcode("qrReader");
 }
 
-// app.js -> openQRCamera
 async function openQRCamera() {
     isProcessingQR = false;
     const qrModal = document.getElementById('qrModal');
@@ -340,19 +336,17 @@ async function openQRCamera() {
             { facingMode: "environment" },
             config,
             (decodedText, decodedResult) => {
-                // ★★★ 成功したら、まずスキャナを停止 ★★★
-                // isProcessingQRフラグで、複数回呼び出されるのを防ぐ
+                // 複数回呼び出されるのを防ぐ
                 if (isProcessingQR) return;
                 isProcessingQR = true;
 
+                // スキャンを即座に停止
                 html5Qrcode.stop()
                     .then(() => {
-                        // 停止が完了してから、メインの処理を呼び出す
                         onScanSuccess(decodedText);
                     })
                     .catch((err) => {
                         console.error("QRスキャナの停止に失敗しました。", err);
-                        // 停止に失敗しても、スキャンは成功しているので処理は続行
                         onScanSuccess(decodedText);
                     });
             }
@@ -431,6 +425,7 @@ function updateStampCards() {
 }
 
 // --- 賞品応募 ---
+// 表示を更新するための関数
 function renderPrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.innerHTML = '';
@@ -446,6 +441,7 @@ function renderPrizes() {
     updatePrizes();
 }
 
+// イベントリスナーを一度だけ登録するための関数
 function initializePrizeSection() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.addEventListener('click', (event) => {
@@ -494,6 +490,7 @@ function showSuccessModal(islandName, callback) {
     };
 }
 
+// ★★★ カスタム確認モーダルの制御関数 ★★★
 function showConfirmModal(prize, onConfirm) {
     const confirmModal = document.getElementById('confirmModal');
     const confirmTitle = document.getElementById('confirmTitle');
