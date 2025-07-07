@@ -37,8 +37,8 @@ let collectedStamps = new Set();
 let map;
 let markers = [];
 let userLocationMarker = null;
-let html5QrcodeScanner;
 let isProcessingQR = false;
+let sdk; // PocketSign SDKのインスタンスを保持する変数
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -130,13 +130,32 @@ async function fetchUserData() {
     }
 }
 
-function initializeApp() {
+async function initializeApp() {
+    // ★★★ SDKの初期化処理 ★★★
+    //     ドキュメントに従い、SDKが利用可能な状態になったらインスタンスを作成します。
+    //     ここでは、SDKが`window.pocketsign.inAppSdk`にロードされていると仮定します。
+    if (window.pocketsign && window.pocketsign.inAppSdk) {
+        const { createSDKInstance, createAppBackend } = window.pocketsign.inAppSdk;
+        try {
+            sdk = await createSDKInstance({
+                serviceId: '2fd2bc48-de60-4145-934f-9bbcabd42cf6', // あなたのサービスID
+                backend: createAppBackend()
+            });
+            console.log("PocketSign SDK has been initialized successfully.");
+        } catch(error) {
+            console.error("Failed to initialize PocketSign SDK:", error);
+            showMessage("ポケットサインSDKの初期化に失敗しました。", "error");
+        }
+    } else {
+        console.warn("PocketSign SDK not found. QR Scanner will not work in PocketSign App.");
+    }
+    
     initializeMap();
     initializeNavigation();
     initializeQRCamera();
     initializeStampCards();
-    initializePrizeSection(); // イベントリスナーを登録
-    renderPrizes();           // 初回の表示を描画
+    initializePrizeSection(); // イベントリスナー登録
+    renderPrizes();           // 初回表示の描画
     updatePointsDisplay();
     initializeGeolocation();
 }
@@ -146,19 +165,19 @@ function initializeApp() {
 //================================================================
 
 async function onScanSuccess(decodedText) {
-    if (isProcessingQR) {
+    if (isProcessingQR || !decodedText) {
+        if(isProcessingQR) console.log("Processing another QR, ignoring.");
+        isProcessingQR = false;
         return;
     }
     isProcessingQR = true;
-
-    const qrStatus = document.getElementById('qrStatus');
+    
     const matchedIsland = islands.find(island => island.name === decodedText.trim());
 
     if (matchedIsland) {
         if (collectedStamps.has(matchedIsland.id)) {
-            qrStatus.textContent = `${matchedIsland.name}のスタンプは既に獲得済みです。`;
-            qrStatus.className = 'qr-status warning';
-            setTimeout(() => { isProcessingQR = false; }, 2000);
+            showMessage(`${matchedIsland.name}のスタンプは既に獲得済みです。`, 'warning');
+            isProcessingQR = false;
             return;
         }
 
@@ -174,11 +193,6 @@ async function onScanSuccess(decodedText) {
             collectedStamps.add(matchedIsland.id);
             userProfile.total_points += 1;
 
-            qrStatus.textContent = `${matchedIsland.name}のQRコードを読み取りました。`;
-            qrStatus.className = 'qr-status success';
-
-            closeQRCamera();
-
             showSuccessModal(matchedIsland.name, () => {
                 updatePointsDisplay();
                 updateStampCards();
@@ -189,14 +203,12 @@ async function onScanSuccess(decodedText) {
 
         } catch (error) {
             console.error("スタンプ追加処理に失敗しました:", error);
-            qrStatus.textContent = `エラーが発生しました: ${error.message}`;
-            qrStatus.className = 'qr-status error';
-            setTimeout(() => { isProcessingQR = false; }, 2000);
+            showMessage(`エラーが発生しました: ${error.message}`, 'error');
+            isProcessingQR = false;
         }
     } else {
-        qrStatus.textContent = '対象外のQRコードです。';
-        qrStatus.className = 'qr-status error';
-        setTimeout(() => { isProcessingQR = false; }, 2000);
+        showMessage(`「${decodedText}」は対象外のQRコードです。`, 'error');
+        isProcessingQR = false;
     }
 }
 
@@ -363,54 +375,37 @@ function switchSection(sectionId) {
 // --- QRカメラ ---
 function initializeQRCamera() {
     document.getElementById('qrCameraBtn').addEventListener('click', openQRCamera);
-    document.getElementById('closeQrModal').addEventListener('click', closeQRCamera);
-    document.getElementById('qrModal').addEventListener('click', (e) => {
-        if (e.target.id === 'qrModal') closeQRCamera();
-    });
 }
 
 async function openQRCamera() {
-    isProcessingQR = false;
-    const qrModal = document.getElementById('qrModal');
-    const qrStatus = document.getElementById('qrStatus');
-    qrModal.classList.add('active');
-    qrStatus.textContent = 'カメラを起動しています...';
-    qrStatus.className = 'qr-status info';
-
-    if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
-        await html5QrcodeScanner.stop().catch(e => console.error("スキャナーの停止に失敗しました", e));
+    if (!sdk) {
+        showMessage("SDKが初期化されていません。標準ブラウザでテストします。", "warning");
+        // 標準ブラウザ用のフォールバック（デバッグ用）
+        const testData = prompt("【テスト用】QRコードの内容（島の名）を入力してください:");
+        if (testData) onScanSuccess(testData);
+        return;
     }
-
-    html5QrcodeScanner = new Html5Qrcode("qrReader");
-    const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 }
-    };
 
     try {
-        await html5QrcodeScanner.start(
-            { facingMode: "environment" },
-            config,
-            onScanSuccess,
-            onScanError
-        );
-        qrStatus.textContent = 'QRコードを枠内に収めてください';
-        qrStatus.className = 'qr-status info';
-    } catch (err) {
-        console.error("背面カメラでの起動に失敗しました:", err);
-        qrStatus.textContent = 'カメラの起動に失敗しました。';
-        qrStatus.className = 'qr-status error';
+        const { readWithQrScanner } = window.pocketsign.inAppSdk;
+        console.log("Calling PocketSign's readWithQrScanner function...");
+        
+        // 第2引数に空オブジェクトを渡して、デフォルトのフィルタ挙動を利用
+        const result = await readWithQrScanner(sdk, {});
+
+        // 返り値の構造はドキュメントで要確認
+        // ここでは、result.data にスキャンした文字列そのものが入っていると仮定
+        if (result && result.result === 'success' && result.data) {
+            onScanSuccess(result.data);
+        } else {
+            console.log("QR scan was canceled or returned no data.", result);
+            showMessage("QRスキャンがキャンセルされました。", "info");
+        }
+    } catch (error) {
+        console.error("An error occurred during the QR scan process:", error);
+        showMessage("QRスキャンの起動に失敗しました。", "error");
     }
 }
-
-function closeQRCamera() {
-    if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
-        html5QrcodeScanner.stop().catch(err => console.error("Scanner stop failed.", err));
-    }
-    document.getElementById('qrModal').classList.remove('active');
-}
-
-function onScanError(error) { /* デバッグ時以外は静かにする */ }
 
 // --- スタンプカード ---
 function initializeStampCards() {
@@ -468,6 +463,7 @@ function updateStampCards() {
 }
 
 // --- 賞品応募 ---
+// 表示を更新するための関数
 function renderPrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.innerHTML = '';
@@ -483,6 +479,7 @@ function renderPrizes() {
     updatePrizes();
 }
 
+// イベントリスナーを一度だけ登録するための関数
 function initializePrizeSection() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.addEventListener('click', (event) => {
