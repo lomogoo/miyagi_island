@@ -212,6 +212,7 @@ async function onScanSuccess(decodedText) {
     }
 }
 
+// app.js
 async function applyForPrize(prizeIndex) {
     const prize = prizes[prizeIndex];
     if (userProfile.total_points < prize.points) {
@@ -219,33 +220,29 @@ async function applyForPrize(prizeIndex) {
         return;
     }
 
-    const confirmed = confirm(`${prize.name}に ${prize.points} ポイントを使って応募しますか？`);
-    if (!confirmed) return;
+    // ★★★ confirm() の代わりに新しい関数を呼び出す ★★★
+    showConfirmModal(prize, async () => {
+        // この中の処理は、ユーザーが「はい」を押した後に実行される
+        try {
+            const rpcParams = {
+                p_prize_name: prize.name,
+                p_points_spent: prize.points
+            };
+            const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
 
-    try {
-        const rpcParams = {
-            p_prize_name: prize.name,
-            p_points_spent: prize.points
-        };
+            if (error) throw error;
+            if (data !== '応募に成功しました。') throw new Error(data);
 
-        const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
+            userProfile.total_points -= prize.points;
+            updatePointsDisplay();
+            updatePrizes();
+            showMessage(`${prize.name}に応募しました！`, 'success');
 
-        if (error) throw error;
-
-        if (data !== '応募に成功しました。') {
-            throw new Error(data);
+        } catch (error) {
+            console.error("応募処理に失敗しました:", error);
+            showMessage(`応募処理中にエラーが発生しました: ${error.message}`, 'error');
         }
-
-        userProfile.total_points -= prize.points;
-
-        updatePointsDisplay();
-        updatePrizes();
-        showMessage(`${prize.name}に応募しました！`, 'success');
-
-    } catch (error) {
-        console.error("応募処理に失敗しました:", error);
-        showMessage(`応募処理中にエラーが発生しました: ${error.message}`, 'error');
-    }
+    });
 }
 
 //================================================================
@@ -537,4 +534,35 @@ function showMessage(message, type = 'info') {
     messageDiv.textContent = message;
     document.body.appendChild(messageDiv);
     setTimeout(() => messageDiv.remove(), 3000);
+}
+
+// app.js のユーティリティセクションなどに追加
+function showConfirmModal(prize, onConfirm) {
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmBtn = document.getElementById('confirmApplyBtn');
+    const cancelBtn = document.getElementById('cancelApplyBtn');
+
+    confirmTitle.textContent = `${prize.name}への応募`;
+    confirmMessage.textContent = `${prize.points}ポイントを消費します。本当によろしいですか？`;
+
+    confirmModal.classList.add('active');
+
+    // 「はい」ボタンの処理
+    confirmBtn.onclick = () => {
+        confirmModal.classList.remove('active');
+        onConfirm(); // Supabaseへの応募処理を実行
+        // リスナーをクリア
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
+    };
+
+    // 「いいえ」ボタンの処理
+    cancelBtn.onclick = () => {
+        confirmModal.classList.remove('active');
+        // リスナーをクリア
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
+    };
 }
