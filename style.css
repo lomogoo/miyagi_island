@@ -1187,3 +1187,25 @@ p { margin: 0; }
     transform: none;
   }
 }
+
+
+/* style.css の末尾に追加 */
+.confirm-content {
+    padding: var(--space-24);
+    text-align: center;
+}
+.confirm-content h3 {
+    font-size: var(--font-size-2xl);
+    color: var(--color-text);
+    margin-bottom: var(--space-12);
+}
+.confirm-content p {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-24);
+}
+.confirm-buttons {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-16);
+}
