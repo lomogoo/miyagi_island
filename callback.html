@@ -53,7 +53,7 @@
                     });
                     if (sessionError) throw sessionError;
                     
-                    window.location.replace('/');
+                    window.location.replace('./index.html');
                 } catch (error) {
                     console.error('Login failed:', error);
                     container.innerHTML = `<h1>ログインに失敗しました</h1><p>エラー: ${error.message}</p>`;
