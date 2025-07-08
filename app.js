@@ -16,7 +16,8 @@ const islands = [
   { id: "sabusawa", name: "寒風沢島", lat: 38.333481, lng: 141.124332, description: "江戸時代の歴史的な港跡が残る島。", image: "https://urato-island.jp/wp-content/uploads/2022/11/sabusawa09.jpg" },
   { id: "ho", name: "朴島", lat: 38.349648, lng: 141.124462, description: "静かな時間を過ごせる小さな島。", image: "https://urato-island.jp/wp-content/uploads/2022/10/about10.jpg" },
   { id: "izushima", name: "出島", lat: 38.450176, lng: 141.522555, description: "本土と橋で結ばれた漁業の盛んな島。", image: "https://www.pref.miyagi.jp/images/55686/100_r.jpg" },
-  { id: "enoshima", name: "江島", lat: 38.398743, lng: 141.593839, description: "ウミネコの繁殖地として知られる。", image: "http://seapal-kisen.co.jp/wp-content/uploads/2025/05/1746735867906.jpg" }
+  { id: "enoshima", name: "江島", lat: 38.398743, lng: 141.593839, description: "ウミネコの繁殖地として知られる。", image: "http://seapal-kisen.co.jp/wp-content/uploads/2025/05/1746735867906.jpg" },
+  { id: "umedia", name: "ユーメディア", lat: 38.248033, lng: 140.880796, description: "テスト用の場所です。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" }
 ];
 
 // 賞品の情報
