@@ -1044,7 +1044,8 @@ p { margin: 0; }
 
   /* スマホではエリア指定を解除 */
   #stamp-katsura, #stamp-nonoshima, #stamp-sabusawa, #stamp-ho,
-  #stamp-tashiro, #stamp-aji, #stamp-izushima, #stamp-enoshima {
+  #stamp-tashiro, #stamp-aji, #stamp-izushima, #stamp-enoshima,
+  #stamp-umedia {
       grid-area: auto;
   }
   
