@@ -1,18 +1,18 @@
 :root {
   /* Colors - ポスターのカラーパレットに基づく */
-  --color-background: #FFF8DC; /* クリーム色の背景 */
+  --color-background: #FFEB3A; /* 明るい黄色の背景 */
   --color-surface: #FFFFFF;
-  --color-text: #2C3E50; /* ダークブルーグレー */
-  --color-text-secondary: #34495E;
+  --color-text: #333333; /* ダークグレー */
+  --color-text-secondary: #666666;
   
   /* ターコイズブルー系 */
-  --color-primary: #1ABC9C; /* 明るいターコイズ */
-  --color-primary-hover: #16A085;
-  --color-primary-active: #149174;
+  --color-primary: #00BCD4; /* 鮮やかなターコイズ */
+  --color-primary-hover: #00ACC1;
+  --color-primary-active: #0097A7;
   
   /* イエロー系 */
-  --color-accent: #F1C40F; /* 鮮やかな黄色 */
-  --color-accent-light: #F9E79F;
+  --color-accent: #FFEB3A; /* 明るい黄色 */
+  --color-accent-light: #FFF59D;
   
   /* ピンク系 */
   --color-secondary: #EC407A; /* ビビッドピンク */
@@ -20,21 +20,21 @@
   --color-secondary-active: #D81B60;
   
   /* その他の色 */
-  --color-border: rgba(52, 73, 94, 0.2);
+  --color-border: rgba(0, 0, 0, 0.1);
   --color-btn-primary-text: #FFFFFF;
-  --color-card-border: rgba(26, 188, 156, 0.3);
-  --color-card-border-inner: rgba(26, 188, 156, 0.2);
+  --color-card-border: rgba(0, 188, 212, 0.3);
+  --color-card-border-inner: rgba(0, 188, 212, 0.2);
   --color-error: #E74C3C;
   --color-success: #27AE60;
   --color-warning: #F39C12;
-  --color-info: #3498DB;
-  --color-focus-ring: rgba(26, 188, 156, 0.4);
+  --color-info: #00BCD4;
+  --color-focus-ring: rgba(0, 188, 212, 0.4);
 
   /* RGB versions */
   --color-success-rgb: 39, 174, 96;
   --color-error-rgb: 231, 76, 60;
   --color-warning-rgb: 243, 156, 18;
-  --color-info-rgb: 52, 152, 219;
+  --color-info-rgb: 0, 188, 212;
 
   /* Typography - より丸みのあるフォント */
   --font-family-base: "Rounded Mplus 1c", "Noto Sans JP", "Hiragino Kaku Gothic ProN",
