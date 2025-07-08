@@ -321,30 +321,53 @@ function initializeQRCamera() {
     html5Qrcode = new Html5Qrcode("qrReader");
 }
 
-async function openQRCamera() {
-    isProcessingQR = false;
-    const qrModal = document.getElementById('qrModal');
-    const qrStatus = document.getElementById('qrStatus');
-    qrModal.classList.add('active');
-    qrStatus.textContent = 'カメラの許可をリクエストしています...';
-    qrStatus.className = 'qr-status info';
+// app.js
 
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+async function openQRCamera() {
+    // ★★★ ここからが追加・変更部分 ★★★
+    showMessage("現在地を確認しています...", "info");
 
     try {
+        // 1. ユーザーの現在地を取得
+        const position = await getCurrentLocation();
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+
+        // 2. いずれかの島から5km以内かチェック
+        let isNearIsland = false;
+        for (const island of islands) {
+            const distance = getDistanceInKm(userLat, userLon, island.lat, island.lng);
+            console.log(`- ${island.name}までの距離: ${distance.toFixed(2)} km`); // デバッグ用ログ
+            if (distance <= 5) { // 半径5km以内か？
+                isNearIsland = true;
+                break; // 近くの島を見つけたらループを抜ける
+            }
+        }
+
+        // 3. 5km以内にいなければ、エラーメッセージを表示して処理を中断
+        if (!isNearIsland) {
+            showMessage("いずれかの島の5km以内にいません。QRコードをスキャンするには島に近づいてください。", "warning");
+            return;
+        }
+
+        // 4. 5km以内にいる場合のみ、カメラ起動処理に進む
+        isProcessingQR = false;
+        const qrModal = document.getElementById('qrModal');
+        const qrStatus = document.getElementById('qrStatus');
+        qrModal.classList.add('active');
+        qrStatus.textContent = 'カメラの許可をリクエストしています...';
+        qrStatus.className = 'qr-status info';
+        
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
         await html5Qrcode.start(
             { facingMode: "environment" },
             config,
             (decodedText, decodedResult) => {
-                // 複数回呼び出されるのを防ぐ
                 if (isProcessingQR) return;
                 isProcessingQR = true;
-
-                // スキャンを即座に停止
                 html5Qrcode.stop()
-                    .then(() => {
-                        onScanSuccess(decodedText);
-                    })
+                    .then(() => { onScanSuccess(decodedText); })
                     .catch((err) => {
                         console.error("QRスキャナの停止に失敗しました。", err);
                         onScanSuccess(decodedText);
@@ -353,15 +376,17 @@ async function openQRCamera() {
         );
         qrStatus.textContent = 'QRコードを枠内に収めてください';
         qrStatus.className = 'qr-status info';
-    } catch (err) {
-        console.error("html5-qrcode.start() failed", err);
-        let message = 'カメラの起動に失敗しました。';
-        if (err.name === 'NotAllowedError') {
-            message = 'カメラの利用が許可されていません。ブラウザの設定を確認してください。';
+
+    } catch (error) {
+        // 位置情報取得のエラーハンドリング
+        console.error("位置情報の取得またはカメラの起動に失敗しました:", error);
+        let message = "位置情報の取得に失敗しました。";
+        if (error.code === 1) { // ユーザーが許可を拒否
+            message = "位置情報の利用が許可されていません。ブラウザの設定を確認してください。";
         }
-        qrStatus.textContent = message;
-        qrStatus.className = 'qr-status error';
+        showMessage(message, "error");
     }
+    // ★★★ ここまでが追加・変更部分 ★★★
 }
 
 function closeQRCamera() {
@@ -519,4 +544,39 @@ function showMessage(message, type = 'info') {
     messageDiv.textContent = message;
     document.body.appendChild(messageDiv);
     setTimeout(() => messageDiv.remove(), 3000);
+}
+
+// app.js のユーティリティセクション（6. ユーティリティ）などに追加
+
+/**
+ * 現在地を一度だけ取得するためのPromiseベースの関数
+ */
+function getCurrentLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            return reject(new Error('お使いのブラウザは位置情報機能に対応していません。'));
+        }
+        // 高精度な位置情報を要求
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 30000, // 10秒でタイムアウト
+            maximumAge: 0 // 常に最新の位置情報を取得
+        };
+        navigator.geolocation.getCurrentPosition(resolve, reject, options);
+    });
+}
+
+/**
+ * 2点間の緯度経度から距離をkm単位で計算する（ハーパーサイン公式）
+ */
+function getDistanceInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // 地球の半径 (km)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // 距離 (km)
 }
