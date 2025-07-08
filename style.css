@@ -1225,7 +1225,6 @@ p { margin: 0; }
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
     z-index: 9999; /* 最前面に表示 */
-    display: flex;
     justify-content: center;
     align-items: center;
 }
