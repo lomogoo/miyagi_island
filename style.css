@@ -1043,8 +1043,7 @@ p { margin: 0; }
 
   /* スマホではエリア指定を解除 */
   #stamp-katsura, #stamp-nonoshima, #stamp-sabusawa, #stamp-ho,
-  #stamp-tashiro, #stamp-aji, #stamp-izushima, #stamp-enoshima,
-  #stamp-umedia {
+  #stamp-tashiro, #stamp-aji, #stamp-izushima, #stamp-enoshima{
       grid-area: auto;
   }
   
@@ -1248,7 +1247,3 @@ p { margin: 0; }
 
 
 
-/* style.css の末尾あたりに追加 */
-
-/* ★★★ テスト用スタンプの配置場所を追加 ★★★ */
-#stamp-umedia { grid-area: umedia; }
