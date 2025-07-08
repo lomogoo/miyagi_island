@@ -7,7 +7,7 @@
 // 定数データ
 //================================================================
 
-// 島の情報
+// ★★★ ご指定の島の情報に差し替え ★★★
 const islands = [
   { id: "aji", name: "網地島", lat: 38.268300, lng: 141.477809, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area07_img01.jpg" },
   { id: "tashiro", name: "田代島", lat: 38.294285, lng: 141.424276, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area06_img01.jpg" },
@@ -22,12 +22,12 @@ const islands = [
 // ★★★ テスト用の位置情報を別途定義 ★★★
 const testLocationForMap = { id: "umedia", name: "ユーメディア", lat: 38.248033, lng: 140.880796, description: "テスト用の場所です。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" };
 
-// 賞品の情報
+// ★★★ ご指定の賞品情報に差し替え ★★★
 const prizes = [
-  { name: "A賞", points: 3, description: "特別賞品" },
-  { name: "B賞", points: 2, description: "優秀賞品" },
-  { name: "C賞", points: 1, description: "参加賞品" },
-  { name: "D賞", points: 1, description: "参加賞品" }
+  { name: "A賞", points: 3, description: "みやぎの特産品（5,000円相当）" },
+  { name: "B賞", points: 2, description: "みやぎの特産品（3,000円相当）" },
+  { name: "C賞", points: 1, description: "みやぎの特産品（1,000円相当）" },
+  { name: "D賞", points: 1, description: "みやぎポイント 1,000pt" }
 ];
 
 //================================================================
@@ -44,7 +44,7 @@ let html5Qrcode;
 let isProcessingQR = false;
 let isAppInitialized = false;
 let canUseCamera = false;
-let prizeHistory = []; // ★★★ 応募履歴を保存する配列
+let prizeHistory = [];
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -109,26 +109,17 @@ async function fetchUserData() {
     if (!currentUser) return;
     try {
         const { data: profileData, error: profileError } = await supabaseClient
-            .from('profiles')
-            .select('total_points')
-            .eq('id', currentUser.id)
-            .single();
+            .from('profiles').select('total_points').eq('id', currentUser.id).single();
         if (profileError && profileError.code !== 'PGRST116') throw profileError;
         userProfile = profileData || { total_points: 0 };
 
         const { data: stampsData, error: stampsError } = await supabaseClient
-            .from('collected_stamps')
-            .select('island_id')
-            .eq('user_id', currentUser.id);
+            .from('collected_stamps').select('island_id').eq('user_id', currentUser.id);
         if (stampsError) throw stampsError;
         collectedStamps = new Set(stampsData.map(s => s.island_id));
 
-        // ★★★ 応募履歴を取得する処理を追加 ★★★
         const { data: historyData, error: historyError } = await supabaseClient
-            .from('prize_entries')
-            .select('prize_name, points_spent, entry_at')
-            .eq('user_id', currentUser.id)
-            .order('entry_at', { ascending: false });
+            .from('prize_entries').select('prize_name, points_spent, entry_at').eq('user_id', currentUser.id).order('entry_at', { ascending: false });
         if (historyError) throw historyError;
         prizeHistory = historyData || [];
 
@@ -148,7 +139,7 @@ function initializeApp() {
     initializeStampCards();
     initializePrizeSection();
     renderPrizes();
-    renderHistory(); // ★★★ 履歴の初回描画
+    renderHistory();
     updatePointsDisplay();
     initializeGeolocation();
     isAppInitialized = true;
@@ -212,12 +203,10 @@ async function applyForPrize(prizeIndex) {
             
             showMessage(`${prize.name}に応募しました！`, 'success');
 
-            // ★★★ 応募成功後に全ユーザーデータを再取得して表示を更新 ★★★
             await fetchUserData();
             updatePointsDisplay();
             updatePrizes();
             renderHistory();
-
         } catch (error) {
             console.error("応募処理に失敗しました:", error);
             showMessage(`応募処理中にエラーが発生しました: ${error.message}`, 'error');
@@ -235,6 +224,7 @@ function initializeMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
     markers = [];
     islands.forEach(addIslandMarker);
+    addIslandMarker(testLocationForMap); // ★★★ テスト用マーカーをマップにだけ追加
 }
 
 function addIslandMarker(island) {
@@ -259,10 +249,7 @@ function updateMapMarkers() {
 }
 
 function initializeGeolocation() {
-    if (!navigator.geolocation) {
-        console.log("お使いのブラウザは位置情報機能に対応していません。");
-        return;
-    }
+    if (!navigator.geolocation) { console.log("お使いのブラウザは位置情報機能に対応していません。"); return; }
     const locationOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
     navigator.geolocation.watchPosition(
         (position) => {
@@ -307,9 +294,7 @@ function switchSection(sectionId) {
 function initializeQRCamera() {
     document.getElementById('qrCameraBtn').addEventListener('click', openQRCamera);
     document.getElementById('closeQrModal').addEventListener('click', closeQRCamera);
-    document.getElementById('qrModal').addEventListener('click', (e) => {
-        if (e.target.id === 'qrModal') closeQRCamera();
-    });
+    document.getElementById('qrModal').addEventListener('click', (e) => { if (e.target.id === 'qrModal') closeQRCamera(); });
     html5Qrcode = new Html5Qrcode("qrReader");
 }
 
@@ -327,17 +312,13 @@ async function openQRCamera() {
     const config = { fps: 10, qrbox: { width: 250, height: 250 } };
     try {
         await html5Qrcode.start(
-            { facingMode: "environment" },
-            config,
+            { facingMode: "environment" }, config,
             (decodedText, decodedResult) => {
                 if (isProcessingQR) return;
                 isProcessingQR = true;
                 html5Qrcode.stop()
                     .then(() => { onScanSuccess(decodedText); })
-                    .catch((err) => {
-                        console.error("QRスキャナの停止に失敗しました。", err);
-                        onScanSuccess(decodedText);
-                    });
+                    .catch((err) => { console.error("QRスキャナの停止に失敗しました。", err); onScanSuccess(decodedText); });
             }
         );
         qrStatus.textContent = 'QRコードを枠内に収めてください';
@@ -361,7 +342,7 @@ function closeQRCamera() {
 function initializeStampCards() {
     const stampGrid = document.getElementById('stampGrid');
     stampGrid.innerHTML = '';
-    islands.slice(0, 8).forEach(island => {
+    islands.forEach(island => { // ★★★ 8島の配列を直接使うようにクリーンアップ
         const stampCard = document.createElement('div');
         stampCard.className = 'stamp-card';
         stampCard.id = `stamp-${island.id}`;
@@ -372,7 +353,7 @@ function initializeStampCards() {
 }
 
 function updateStampCards() {
-    islands.slice(0, 8).forEach(island => {
+    islands.forEach(island => { // ★★★ 8島の配列を直接使うようにクリーンアップ
         const stampCard = document.getElementById(`stamp-${island.id}`);
         if (!stampCard) return;
         const statusElement = stampCard.querySelector('.stamp-status');
@@ -457,21 +438,16 @@ function updatePointsDisplay() {
 // 6. ユーティリティ
 //================================================================
 
-// ★★★ 応募履歴を描画する新しい関数 ★★★
 function renderHistory() {
     const historyList = document.getElementById('historyList');
     const historyContainer = document.getElementById('historyContainer');
     if (!historyList || !historyContainer) return;
-
     historyList.innerHTML = '';
-
     if (prizeHistory.length === 0) {
         historyContainer.style.display = 'none';
         return;
     }
-    
     historyContainer.style.display = 'block';
-
     prizeHistory.forEach(entry => {
         const li = document.createElement('li');
         li.className = 'history-item';
@@ -526,9 +502,7 @@ function showMessage(message, type = 'info') {
 
 function getCurrentLocation() {
     return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            return reject(new Error('お使いのブラウザは位置情報機能に対応していません。'));
-        }
+        if (!navigator.geolocation) { return reject(new Error('お使いのブラウザは位置情報機能に対応していません。')); }
         const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
         navigator.geolocation.getCurrentPosition(resolve, reject, options);
     });
@@ -549,8 +523,10 @@ async function checkInitialLocationAndSetCameraPermission() {
         const position = await getCurrentLocation();
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
-        for (const island of islands) {
-            const distance = getDistanceInKm(userLat, userLon, island.lat, island.lng);
+        // ★★★ 判定対象にテスト用ロケーションを追加 ★★★
+        const allLocations = [...islands, testLocationForMap];
+        for (const location of allLocations) {
+            const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
             if (distance <= 5) {
                 canUseCamera = true;
                 showMessage("スタンプラリーエリア内です。QRスキャンが利用できます！", "success");
