@@ -9,14 +9,14 @@
 
 // 島の情報
 const islands = [
-  { id: "aji", name: "網地島", lat: 38.268300, lng: 141.477809, description: "美しい砂浜が広がる島。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area07_img01.jpg" },
-  { id: "tashiro", name: "田代島", lat: 38.294285, lng: 141.424276, description: "「猫の島」として有名。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area06_img01.jpg" },
-  { id: "katsura", name: "桂島", lat: 38.334771, lng: 141.095541, description: "歴史的な見どころも多い風光明媚な島。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" },
-  { id: "nonoshima", name: "野々島", lat: 38.338022, lng: 141.110935, description: "ツバキのトンネルが魅力。", image: "https://urato-island.jp/wp-content/uploads/2023/01/nonoshima12.jpg" },
-  { id: "sabusawa", name: "寒風沢島", lat: 38.333481, lng: 141.124332, description: "江戸時代の歴史的な港跡が残る島。", image: "https://urato-island.jp/wp-content/uploads/2022/11/sabusawa09.jpg" },
-  { id: "ho", name: "朴島", lat: 38.349648, lng: 141.124462, description: "静かな時間を過ごせる小さな島。", image: "https://urato-island.jp/wp-content/uploads/2022/10/about10.jpg" },
-  { id: "izushima", name: "出島", lat: 38.450176, lng: 141.522555, description: "本土と橋で結ばれた漁業の盛んな島。", image: "https://www.pref.miyagi.jp/images/55686/100_r.jpg" },
-  { id: "enoshima", name: "江島", lat: 38.398743, lng: 141.593839, description: "ウミネコの繁殖地として知られる。", image: "http://seapal-kisen.co.jp/wp-content/uploads/2025/05/1746735867906.jpg" },
+  { id: "aji", name: "網地島", lat: 38.268300, lng: 141.477809, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area07_img01.jpg" },
+  { id: "tashiro", name: "田代島", lat: 38.294285, lng: 141.424276, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area06_img01.jpg" },
+  { id: "katsura", name: "桂島", lat: 38.334771, lng: 141.095541, description: "塩竈市本土から一番近い島。島内には遊歩道があり、風光明媚な景観を楽しむことができるほか、夏には海水浴場がオープンし、多くの観光客で賑わう。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" },
+  { id: "nonoshima", name: "野々島", lat: 38.338022, lng: 141.110935, description: "宿泊研 修施設「ブルーセンター」や診療所、小中学校があり、生活面でも中心的な島。ボラと呼ばれる洞穴群や椿のトンネルなど神秘的な景観が魅力。", image: "https://urato-island.jp/wp-content/uploads/2023/01/nonoshima12.jpg" },
+  { id: "sabusawa", name: "寒風沢島", lat: 38.333481, lng: 141.124332, description: "江戸時代に伊達藩の江戸廻米の港として繁栄を極め、当時を語り継ぐ風景や歴史が多く存在する。島の奥には懐かしい田園風景、美しい砂浜に辿り着く。", image: "https://urato-island.jp/wp-content/uploads/2022/11/sabusawa09.jpg" },
+  { id: "ho", name: "朴島", lat: 38.349648, lng: 141.124462, description: "浦戸諸島の有人島で一番小さく、ミネラル豊富な漁場で種牡蠣の生産地として有名。仙台白菜の種も生産しており、春には美しい菜の花の景色が楽しめる。", image: "https://urato-island.jp/wp-content/uploads/2022/10/about10.jpg" },
+  { id: "izushima", name: "出島", lat: 38.450176, lng: 141.522555, description: "2024年完成の大橋で本土と直結。釣りや散策が気軽に楽しめる。出島大橋が開通しアクセスが向上、レクリエーションに適した島。", image: "https://www.pref.miyagi.jp/images/55686/100_r.jpg" },
+  { id: "enoshima", name: "江島", lat: 38.398743, lng: 141.593839, description: "江島褶曲地層があり、海鳥繁殖地としても知られる。断崖が迫る冒険的な島で、ウミネコの観察や神社巡りも楽しめる。", image: "http://seapal-kisen.co.jp/wp-content/uploads/2025/05/1746735867906.jpg" },
   { id: "umedia", name: "ユーメディア", lat: 38.248033, lng: 140.880796, description: "テスト用の場所です。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" }
 ];
 
