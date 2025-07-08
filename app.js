@@ -1,6 +1,6 @@
 /**
  * 宮城県離島スタンプラリー アプリケーション
- * メインスクリプト (最終修正版)
+ * メインスクリプト (最終完成版)
  */
 
 //================================================================
@@ -9,23 +9,22 @@
 
 // 島の情報
 const islands = [
-  { id: "aji", name: "網地島", lat: 38.268300, lng: 141.477809, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area07_img01.jpg" },
-  { id: "tashiro", name: "田代島", lat: 38.294285, lng: 141.424276, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area06_img01.jpg" },
-  { id: "katsura", name: "桂島", lat: 38.334771, lng: 141.095541, description: "塩竈市本土から一番近い島。島内には遊歩道があり、風光明媚な景観を楽しむことができるほか、夏には海水浴場がオープンし、多くの観光客で賑わう。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" },
-  { id: "nonoshima", name: "野々島", lat: 38.338022, lng: 141.110935, description: "宿泊研 修施設「ブルーセンター」や診療所、小中学校があり、生活面でも中心的な島。ボラと呼ばれる洞穴群や椿のトンネルなど神秘的な景観が魅力。", image: "https://urato-island.jp/wp-content/uploads/2023/01/nonoshima12.jpg" },
-  { id: "sabusawa", name: "寒風沢島", lat: 38.333481, lng: 141.124332, description: "江戸時代に伊達藩の江戸廻米の港として繁栄を極め、当時を語り継ぐ風景や歴史が多く存在する。島の奥には懐かしい田園風景、美しい砂浜に辿り着く。", image: "https://urato-island.jp/wp-content/uploads/2022/11/sabusawa09.jpg" },
-  { id: "ho", name: "朴島", lat: 38.349648, lng: 141.124462, description: "浦戸諸島の有人島で一番小さく、ミネラル豊富な漁場で種牡蠣の生産地として有名。仙台白菜の種も生産しており、春には美しい菜の花の景色が楽しめる。", image: "https://urato-island.jp/wp-content/uploads/2022/10/about10.jpg" },
-  { id: "izushima", name: "出島", lat: 38.450176, lng: 141.522555, description: "2024年完成の大橋で本土と直結。釣りや散策が気軽に楽しめる。出島大橋が開通しアクセスが向上、レクリエーションに適した島。", image: "https://www.pref.miyagi.jp/images/55686/100_r.jpg" },
-  { id: "enoshima", name: "江島", lat: 38.398743, lng: 141.593839, description: "江島褶曲地層があり、海鳥繁殖地としても知られる。断崖が迫る冒険的な島で、ウミネコの観察や神社巡りも楽しめる。", image: "http://seapal-kisen.co.jp/wp-content/uploads/2025/05/1746735867906.jpg" },
-  { id: "umedia", name: "ユーメディア", lat: 38.248033, lng: 140.880796, description: "テスト用の場所です。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" }
+  { id: "aji", name: "網地島", lat: 38.268300, lng: 141.477809, description: "美しい砂浜が広がる島。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area07_img01.jpg" },
+  { id: "tashiro", name: "田代島", lat: 38.294285, lng: 141.424276, description: "「猫の島」として有名。", image: "https://tohoku.env.go.jp/mct/modelcourse/images/course06_area06_img01.jpg" },
+  { id: "katsura", name: "桂島", lat: 38.334771, lng: 141.095541, description: "歴史的な見どころも多い風光明媚な島。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" },
+  { id: "nonoshima", name: "野々島", lat: 38.338022, lng: 141.110935, description: "ツバキのトンネルが魅力。", image: "https://urato-island.jp/wp-content/uploads/2023/01/nonoshima12.jpg" },
+  { id: "sabusawa", name: "寒風沢島", lat: 38.333481, lng: 141.124332, description: "江戸時代の歴史的な港跡が残る島。", image: "https://urato-island.jp/wp-content/uploads/2022/11/sabusawa09.jpg" },
+  { id: "ho", name: "朴島", lat: 38.349648, lng: 141.124462, description: "静かな時間を過ごせる小さな島。", image: "https://urato-island.jp/wp-content/uploads/2022/10/about10.jpg" },
+  { id: "izushima", name: "出島", lat: 38.450176, lng: 141.522555, description: "本土と橋で結ばれた漁業の盛んな島。", image: "https://www.pref.miyagi.jp/images/55686/100_r.jpg" },
+  { id: "enoshima", name: "江島", lat: 38.398743, lng: 141.593839, description: "ウミネコの繁殖地として知られる。", image: "http://seapal-kisen.co.jp/wp-content/uploads/2025/05/1746735867906.jpg" }
 ];
 
 // 賞品の情報
 const prizes = [
-  { name: "A賞", points: 3, description: "みやぎの特産品（5,000円相当）" },
-  { name: "B賞", points: 2, description: "みやぎの特産品（3,000円相当）" },
-  { name: "C賞", points: 1, description: "みやぎの特産品（1,000円相当）" },
-  { name: "D賞", points: 1, description: "みやぎポイント 1,000pt" }
+  { name: "A賞", points: 3, description: "特別賞品" },
+  { name: "B賞", points: 2, description: "優秀賞品" },
+  { name: "C賞", points: 1, description: "参加賞品" },
+  { name: "D賞", points: 1, description: "参加賞品" }
 ];
 
 //================================================================
@@ -42,6 +41,7 @@ let html5Qrcode;
 let isProcessingQR = false;
 let isAppInitialized = false;
 let canUseCamera = false;
+let prizeHistory = []; // ★★★ 応募履歴を保存する配列
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -69,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ★★★ アプリがバックグラウンドから復帰した際に位置情報を再チェックする ★★★
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && currentUser) {
             console.log("アプリが再度表示されました。位置情報を再チェックします。");
@@ -120,10 +119,21 @@ async function fetchUserData() {
             .eq('user_id', currentUser.id);
         if (stampsError) throw stampsError;
         collectedStamps = new Set(stampsData.map(s => s.island_id));
+
+        // ★★★ 応募履歴を取得する処理を追加 ★★★
+        const { data: historyData, error: historyError } = await supabaseClient
+            .from('prize_entries')
+            .select('prize_name, points_spent, entry_at')
+            .eq('user_id', currentUser.id)
+            .order('entry_at', { ascending: false });
+        if (historyError) throw historyError;
+        prizeHistory = historyData || [];
+
     } catch (error) {
         console.error("ユーザーデータの取得に失敗しました:", error);
         userProfile = { total_points: 0 };
         collectedStamps = new Set();
+        prizeHistory = [];
     }
 }
 
@@ -135,6 +145,7 @@ function initializeApp() {
     initializeStampCards();
     initializePrizeSection();
     renderPrizes();
+    renderHistory(); // ★★★ 履歴の初回描画
     updatePointsDisplay();
     initializeGeolocation();
     isAppInitialized = true;
@@ -195,10 +206,15 @@ async function applyForPrize(prizeIndex) {
             const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
             if (error) throw error;
             if (data !== '応募に成功しました。') throw new Error(data);
-            userProfile.total_points -= prize.points;
+            
+            showMessage(`${prize.name}に応募しました！`, 'success');
+
+            // ★★★ 応募成功後に全ユーザーデータを再取得して表示を更新 ★★★
+            await fetchUserData();
             updatePointsDisplay();
             updatePrizes();
-            showMessage(`${prize.name}に応募しました！`, 'success');
+            renderHistory();
+
         } catch (error) {
             console.error("応募処理に失敗しました:", error);
             showMessage(`応募処理中にエラーが発生しました: ${error.message}`, 'error');
@@ -223,13 +239,7 @@ function addIslandMarker(island) {
     const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
     const customIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
     const marker = L.marker([island.lat, island.lng], { icon: customIcon }).addTo(map);
-    const popupContent = `
-        <div class="island-popup">
-            <img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'">
-            <h3>${island.name}</h3>
-            <p>${island.description}</p>
-            ${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}
-        </div>`;
+    const popupContent = `<div class="island-popup"><img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'"><h3>${island.name}</h3><p>${island.description}</p>${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}</div>`;
     marker.bindPopup(popupContent);
     markers.push({ marker, island });
 }
@@ -240,13 +250,7 @@ function updateMapMarkers() {
         const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
         const newIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
         marker.setIcon(newIcon);
-        const popupContent = `
-            <div class="island-popup">
-                <img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'">
-                <h3>${island.name}</h3>
-                <p>${island.description}</p>
-                ${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}
-            </div>`;
+        const popupContent = `<div class="island-popup"><img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'"><h3>${island.name}</h3><p>${island.description}</p>${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}</div>`;
         marker.setPopupContent(popupContent);
     });
 }
@@ -338,9 +342,7 @@ async function openQRCamera() {
     } catch (err) {
         console.error("html5-qrcode.start() failed", err);
         let message = 'カメラの起動に失敗しました。';
-        if (err.name === 'NotAllowedError') {
-            message = 'カメラの利用が許可されていません。ブラウザの設定を確認してください。';
-        }
+        if (err.name === 'NotAllowedError') message = 'カメラの利用が許可されていません。ブラウザの設定を確認してください。';
         qrStatus.textContent = message;
         qrStatus.className = 'qr-status error';
     }
@@ -356,7 +358,7 @@ function closeQRCamera() {
 function initializeStampCards() {
     const stampGrid = document.getElementById('stampGrid');
     stampGrid.innerHTML = '';
-    islands.slice(0, 8).forEach(island => { // 8つの島のみ表示
+    islands.slice(0, 8).forEach(island => {
         const stampCard = document.createElement('div');
         stampCard.className = 'stamp-card';
         stampCard.id = `stamp-${island.id}`;
@@ -367,7 +369,7 @@ function initializeStampCards() {
 }
 
 function updateStampCards() {
-    islands.slice(0, 8).forEach(island => { // 8つの島のみ更新
+    islands.slice(0, 8).forEach(island => {
         const stampCard = document.getElementById(`stamp-${island.id}`);
         if (!stampCard) return;
         const statusElement = stampCard.querySelector('.stamp-status');
@@ -412,10 +414,7 @@ function renderPrizes() {
     prizes.forEach((prize, index) => {
         const prizeCard = document.createElement('div');
         prizeCard.className = 'prize-card';
-        prizeCard.innerHTML = `
-            <div class="prize-info"><h3>${prize.name}</h3><p>${prize.description}</p></div>
-            <div class="prize-points">${prize.points}P</div>
-            <button class="prize-btn" data-prize-index="${index}">応募する</button>`;
+        prizeCard.innerHTML = `<div class="prize-info"><h3>${prize.name}</h3><p>${prize.description}</p></div><div class="prize-points">${prize.points}P</div><button class="prize-btn" data-prize-index="${index}">応募する</button>`;
         prizesContainer.appendChild(prizeCard);
     });
     updatePrizes();
@@ -454,6 +453,30 @@ function updatePointsDisplay() {
 //================================================================
 // 6. ユーティリティ
 //================================================================
+
+// ★★★ 応募履歴を描画する新しい関数 ★★★
+function renderHistory() {
+    const historyList = document.getElementById('historyList');
+    const historyContainer = document.getElementById('historyContainer');
+    if (!historyList || !historyContainer) return;
+
+    historyList.innerHTML = '';
+
+    if (prizeHistory.length === 0) {
+        historyContainer.style.display = 'none';
+        return;
+    }
+    
+    historyContainer.style.display = 'block';
+
+    prizeHistory.forEach(entry => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        const entryDate = new Date(entry.entry_at).toLocaleString('ja-JP');
+        li.innerHTML = `<div class="info"><div class="prize-name">${entry.prize_name}</div><div class="entry-time">${entryDate}</div></div><div class="points">${entry.points_spent}P 消費</div>`;
+        historyList.appendChild(li);
+    });
+}
 
 function showSuccessModal(islandName, callback) {
     const successModal = document.getElementById('successModal');
@@ -512,10 +535,7 @@ function getDistanceInKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
 }
