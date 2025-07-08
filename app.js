@@ -22,10 +22,10 @@ const islands = [
 
 // 賞品の情報
 const prizes = [
-  { name: "A賞", points: 3, description: "特別賞品" },
-  { name: "B賞", points: 2, description: "優秀賞品" },
-  { name: "C賞", points: 1, description: "参加賞品" },
-  { name: "D賞", points: 1, description: "参加賞品" }
+  { name: "A賞", points: 3, description: "みやぎの特産品（5,000円相当）" },
+  { name: "B賞", points: 2, description: "みやぎの特産品（3,000円相当）" },
+  { name: "C賞", points: 1, description: "みやぎの特産品（1,000円相当）" },
+  { name: "D賞", points: 1, description: "みやぎポイント 1,000pt" }
 ];
 
 //================================================================
@@ -38,28 +38,24 @@ let collectedStamps = new Set();
 let map;
 let markers = [];
 let userLocationMarker = null;
-let html5Qrcode; // html5-qrcodeのインスタンスを保持
+let html5Qrcode;
 let isProcessingQR = false;
-let isAppInitialized = false; // ★★★ 初期化済みフラグ
+let isAppInitialized = false;
+let canUseCamera = false;
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
 //================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 開発者モードの処理
     const params = new URLSearchParams(window.location.search);
     if (params.get('dev') === 'true') {
         console.log("🛠️ 開発者モードで起動しました。");
         const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
-        currentUser = {
-            id: devUserId,
-            email: 'developer@example.com'
-        };
+        currentUser = { id: devUserId, email: 'developer@example.com' };
         showAuthenticatedUI();
         loadAndInitializeApp();
     } else {
-        // 通常の認証フロー
         supabaseClient.auth.onAuthStateChange((event, session) => {
             if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
                 currentUser = session.user;
@@ -72,6 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // ★★★ アプリがバックグラウンドから復帰した際に位置情報を再チェックする ★★★
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && currentUser) {
+            console.log("アプリが再度表示されました。位置情報を再チェックします。");
+            checkInitialLocationAndSetCameraPermission();
+        }
+    });
 });
 
 
@@ -96,6 +100,7 @@ function showLoginUI() {
 async function loadAndInitializeApp() {
     await fetchUserData();
     initializeApp();
+    await checkInitialLocationAndSetCameraPermission();
 }
 
 async function fetchUserData() {
@@ -106,7 +111,6 @@ async function fetchUserData() {
             .select('total_points')
             .eq('id', currentUser.id)
             .single();
-
         if (profileError && profileError.code !== 'PGRST116') throw profileError;
         userProfile = profileData || { total_points: 0 };
 
@@ -114,10 +118,8 @@ async function fetchUserData() {
             .from('collected_stamps')
             .select('island_id')
             .eq('user_id', currentUser.id);
-
         if (stampsError) throw stampsError;
         collectedStamps = new Set(stampsData.map(s => s.island_id));
-
     } catch (error) {
         console.error("ユーザーデータの取得に失敗しました:", error);
         userProfile = { total_points: 0 };
@@ -126,18 +128,15 @@ async function fetchUserData() {
 }
 
 function initializeApp() {
-    // ★★★ 初期化処理が複数回実行されるのを防ぐ
     if (isAppInitialized) return;
-
     initializeMap();
     initializeNavigation();
     initializeQRCamera();
     initializeStampCards();
-    initializePrizeSection(); // イベントリスナー登録
-    renderPrizes();           // 初回表示の描画
+    initializePrizeSection();
+    renderPrizes();
     updatePointsDisplay();
     initializeGeolocation();
-    
     isAppInitialized = true;
 }
 
@@ -146,14 +145,15 @@ function initializeApp() {
 //================================================================
 
 async function onScanSuccess(decodedText) {
-    // isProcessingQRのチェックは openQRCamera 側で行うため、ここでは主にnullチェック
-    if (!decodedText) {
-        isProcessingQR = false; // 次のスキャンに備える
+    closeQRCamera();
+    if (isProcessingQR || !decodedText) {
+        if(isProcessingQR) console.log("Processing another QR, ignoring.");
+        isProcessingQR = false;
         return;
     }
-    
-    const matchedIsland = islands.find(island => island.name === decodedText.trim());
+    isProcessingQR = true;
 
+    const matchedIsland = islands.find(island => island.name === decodedText.trim());
     if (matchedIsland) {
         if (collectedStamps.has(matchedIsland.id)) {
             showMessage(`${matchedIsland.name}のスタンプは既に獲得済みです。`, 'warning');
@@ -161,15 +161,10 @@ async function onScanSuccess(decodedText) {
             return;
         }
         try {
-            // ★★★ データベース関数呼び出しをシンプルな形式に統一
-            const { error } = await supabaseClient.rpc('add_stamp_and_point', { 
-                p_island_id: matchedIsland.id 
-            });
+            const { error } = await supabaseClient.rpc('add_stamp_and_point', { p_island_id: matchedIsland.id });
             if (error) throw error;
-
             collectedStamps.add(matchedIsland.id);
             userProfile.total_points += 1;
-
             showSuccessModal(matchedIsland.name, () => {
                 updatePointsDisplay();
                 updateStampCards();
@@ -194,14 +189,9 @@ async function applyForPrize(prizeIndex) {
         showMessage("ポイントが足りません。", 'warning');
         return;
     }
-
-    // ★★★ カスタム確認モーダルを呼び出す
     showConfirmModal(prize, async () => {
         try {
-            const rpcParams = {
-                p_prize_name: prize.name,
-                p_points_spent: prize.points
-            };
+            const rpcParams = { p_prize_name: prize.name, p_points_spent: prize.points };
             const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
             if (error) throw error;
             if (data !== '応募に成功しました。') throw new Error(data);
@@ -220,13 +210,10 @@ async function applyForPrize(prizeIndex) {
 // 5. UIコンポーネントの初期化と更新
 //================================================================
 
-// --- マップ関連 ---
 function initializeMap() {
     if (map) { map.remove(); }
     map = L.map('map').setView([38.3, 141.3], 10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
     markers = [];
     islands.forEach(addIslandMarker);
 }
@@ -264,7 +251,6 @@ function updateMapMarkers() {
     });
 }
 
-// --- 現在地表示機能 ---
 function initializeGeolocation() {
     if (!navigator.geolocation) {
         console.log("お使いのブラウザは位置情報機能に対応していません。");
@@ -291,7 +277,6 @@ function initializeGeolocation() {
     );
 }
 
-// --- ナビゲーション ---
 function initializeNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(btn => {
@@ -312,7 +297,6 @@ function switchSection(sectionId) {
     }
 }
 
-// --- QRカメラ (堅牢版) ---
 function initializeQRCamera() {
     document.getElementById('qrCameraBtn').addEventListener('click', openQRCamera);
     document.getElementById('closeQrModal').addEventListener('click', closeQRCamera);
@@ -322,48 +306,19 @@ function initializeQRCamera() {
     html5Qrcode = new Html5Qrcode("qrReader");
 }
 
-// app.js
-
-// app.js
-
 async function openQRCamera() {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    
+    if (!canUseCamera) {
+        showMessage("スタンプラリーエリア外です。QRスキャンを利用するにはいずれかの島に近づいてください。", "warning");
+        return;
+    }
+    isProcessingQR = false;
+    const qrModal = document.getElementById('qrModal');
+    const qrStatus = document.getElementById('qrStatus');
+    qrModal.classList.add('active');
+    qrStatus.textContent = 'カメラを起動しています...';
+    qrStatus.className = 'qr-status info';
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
     try {
-        // ★★★ ローディング画面を表示 ★★★
-        loadingOverlay.style.display = 'flex';
-
-        // 1. ユーザーの現在地を取得
-        const position = await getCurrentLocation();
-        const userLat = position.coords.latitude;
-        const userLon = position.coords.longitude;
-
-        // 2. いずれかの島から5km以内かチェック
-        let isNearIsland = false;
-        for (const island of islands) {
-            const distance = getDistanceInKm(userLat, userLon, island.lat, island.lng);
-            if (distance <= 5) {
-                isNearIsland = true;
-                break;
-            }
-        }
-
-        // 3. 5km以内にいなければ、エラーメッセージを表示して処理を中断
-        if (!isNearIsland) {
-            showMessage("いずれかの島の5km以内にいません。QRコードをスキャンするには島に近づいてください。", "warning");
-            return; // finallyブロックが実行される
-        }
-
-        // 4. 5km以内にいる場合のみ、カメラ起動処理に進む
-        isProcessingQR = false;
-        const qrModal = document.getElementById('qrModal');
-        const qrStatus = document.getElementById('qrStatus');
-        qrModal.classList.add('active');
-        qrStatus.textContent = 'カメラの許可をリクエストしています...';
-        qrStatus.className = 'qr-status info';
-        
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
         await html5Qrcode.start(
             { facingMode: "environment" },
             config,
@@ -380,17 +335,14 @@ async function openQRCamera() {
         );
         qrStatus.textContent = 'QRコードを枠内に収めてください';
         qrStatus.className = 'qr-status info';
-
-    } catch (error) {
-        console.error("位置情報の取得またはカメラの起動に失敗しました:", error);
-        let message = "位置情報の取得に失敗しました。";
-        if (error.code === 1) {
-            message = "位置情報の利用が許可されていません。ブラウザの設定を確認してください。";
+    } catch (err) {
+        console.error("html5-qrcode.start() failed", err);
+        let message = 'カメラの起動に失敗しました。';
+        if (err.name === 'NotAllowedError') {
+            message = 'カメラの利用が許可されていません。ブラウザの設定を確認してください。';
         }
-        showMessage(message, "error");
-    } finally {
-        // ★★★ 処理が成功しても失敗しても、必ずローディング画面を非表示にする ★★★
-        loadingOverlay.style.display = 'none';
+        qrStatus.textContent = message;
+        qrStatus.className = 'qr-status error';
     }
 }
 
@@ -401,11 +353,10 @@ function closeQRCamera() {
     document.getElementById('qrModal').classList.remove('active');
 }
 
-// --- スタンプカード ---
 function initializeStampCards() {
     const stampGrid = document.getElementById('stampGrid');
     stampGrid.innerHTML = '';
-    islands.forEach(island => {
+    islands.slice(0, 8).forEach(island => { // 8つの島のみ表示
         const stampCard = document.createElement('div');
         stampCard.className = 'stamp-card';
         stampCard.id = `stamp-${island.id}`;
@@ -416,8 +367,9 @@ function initializeStampCards() {
 }
 
 function updateStampCards() {
-    islands.forEach(island => {
+    islands.slice(0, 8).forEach(island => { // 8つの島のみ更新
         const stampCard = document.getElementById(`stamp-${island.id}`);
+        if (!stampCard) return;
         const statusElement = stampCard.querySelector('.stamp-status');
         let currentIconElement = stampCard.querySelector('.stamp-icon, .stamp-image');
         if (collectedStamps.has(island.id)) {
@@ -454,8 +406,6 @@ function updateStampCards() {
     });
 }
 
-// --- 賞品応募 ---
-// 表示を更新するための関数
 function renderPrizes() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.innerHTML = '';
@@ -471,7 +421,6 @@ function renderPrizes() {
     updatePrizes();
 }
 
-// イベントリスナーを一度だけ登録するための関数
 function initializePrizeSection() {
     const prizesContainer = document.getElementById('prizesContainer');
     prizesContainer.addEventListener('click', (event) => {
@@ -497,7 +446,6 @@ function updatePrizes() {
     });
 }
 
-// --- ポイント表示 ---
 function updatePointsDisplay() {
     const pointsValue = document.getElementById('pointsValue');
     pointsValue.textContent = userProfile ? userProfile.total_points : 0;
@@ -520,7 +468,6 @@ function showSuccessModal(islandName, callback) {
     };
 }
 
-// ★★★ カスタム確認モーダルの制御関数 ★★★
 function showConfirmModal(prize, onConfirm) {
     const confirmModal = document.getElementById('confirmModal');
     const confirmTitle = document.getElementById('confirmTitle');
@@ -551,31 +498,18 @@ function showMessage(message, type = 'info') {
     setTimeout(() => messageDiv.remove(), 3000);
 }
 
-// app.js のユーティリティセクション（6. ユーティリティ）などに追加
-
-/**
- * 現在地を一度だけ取得するためのPromiseベースの関数
- */
 function getCurrentLocation() {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
             return reject(new Error('お使いのブラウザは位置情報機能に対応していません。'));
         }
-        // 高精度な位置情報を要求
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 30000, // 10秒でタイムアウト
-            maximumAge: 0 // 常に最新の位置情報を取得
-        };
+        const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
         navigator.geolocation.getCurrentPosition(resolve, reject, options);
     });
 }
 
-/**
- * 2点間の緯度経度から距離をkm単位で計算する（ハーパーサイン公式）
- */
 function getDistanceInKm(lat1, lon1, lat2, lon2) {
-    const R = 6371; // 地球の半径 (km)
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a =
@@ -583,5 +517,28 @@ function getDistanceInKm(lat1, lon1, lat2, lon2) {
         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
         Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // 距離 (km)
+    return R * c;
+}
+
+async function checkInitialLocationAndSetCameraPermission() {
+    showMessage("現在地から利用可能エリアか確認しています...", "info");
+    try {
+        const position = await getCurrentLocation();
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+        for (const island of islands) {
+            const distance = getDistanceInKm(userLat, userLon, island.lat, island.lng);
+            if (distance <= 5) {
+                canUseCamera = true;
+                showMessage("スタンプラリーエリア内です。QRスキャンが利用できます！", "success");
+                return;
+            }
+        }
+        canUseCamera = false;
+        showMessage("スタンプラリーエリア外です。QRスキャンを利用するにはいずれかの島に近づいてください。", "warning");
+    } catch (error) {
+        canUseCamera = false;
+        console.error("起動時の位置情報取得に失敗しました:", error);
+        showMessage("位置情報の取得に失敗しました。QRスキャンは利用できません。", "error");
+    }
 }
