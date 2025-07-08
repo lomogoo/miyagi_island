@@ -23,11 +23,11 @@
 
         function redirectToPocketSign() {
             // ★★★ ご自身の環境に合わせて設定してください ★★★
-            const clientId = '2fd2bc48-de60-4145-934f-9bbcabd42cf6'; 
+            const clientId = '01324b12-3dcd-4125-a1cd-5a993776d43d'; 
             // callback.html をデプロイしたURL
             const redirectUri = 'https://lomogoo.github.io/miyagi_island/callback.html'; 
             // ポケットサインの認可エンドポイント（環境に合わせて変更）
-            const authEndpoint = 'https://oidc.core.mock.p8n.app/oauth2/auth'; // モックの例
+            const authEndpoint = 'https://oidc.core.p8n.app/oauth2/auth'; // モックの例
 
             const state = generateRandomString();
             const nonce = generateRandomString();
