@@ -1214,6 +1214,58 @@ p { margin: 0; }
 
 /* style.css の末尾に追加 */
 
+/* ★★★ 応募履歴用のスタイルを追加 ★★★ */
+.history-container {
+    margin-top: var(--space-32);
+    padding: 0 var(--space-16);
+    width: 100%;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+}
+
+.history-item {
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-base);
+    padding: var(--space-16);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-16);
+}
+
+.history-item .info {
+    text-align: left;
+}
+
+.history-item .prize-name {
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+    color: var(--color-text);
+}
+
+.history-item .entry-time {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.history-item .points {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    white-space: nowrap; /* ポイント数が改行されないように */
+}
+
+
+/* style.css の末尾に追加 */
+
 /* ★★★ ローディング画面用のスタイルを追加 ★★★ */
 .loading-overlay {
     display: none; /* 最初は非表示 */
