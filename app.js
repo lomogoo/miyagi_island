@@ -324,11 +324,15 @@ function initializeQRCamera() {
 
 // app.js
 
-async function openQRCamera() {
-    // ★★★ ここからが追加・変更部分 ★★★
-    showMessage("現在地を確認しています...", "info");
+// app.js
 
+async function openQRCamera() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
     try {
+        // ★★★ ローディング画面を表示 ★★★
+        loadingOverlay.style.display = 'flex';
+
         // 1. ユーザーの現在地を取得
         const position = await getCurrentLocation();
         const userLat = position.coords.latitude;
@@ -338,17 +342,16 @@ async function openQRCamera() {
         let isNearIsland = false;
         for (const island of islands) {
             const distance = getDistanceInKm(userLat, userLon, island.lat, island.lng);
-            console.log(`- ${island.name}までの距離: ${distance.toFixed(2)} km`); // デバッグ用ログ
-            if (distance <= 5) { // 半径5km以内か？
+            if (distance <= 5) {
                 isNearIsland = true;
-                break; // 近くの島を見つけたらループを抜ける
+                break;
             }
         }
 
         // 3. 5km以内にいなければ、エラーメッセージを表示して処理を中断
         if (!isNearIsland) {
             showMessage("いずれかの島の5km以内にいません。QRコードをスキャンするには島に近づいてください。", "warning");
-            return;
+            return; // finallyブロックが実行される
         }
 
         // 4. 5km以内にいる場合のみ、カメラ起動処理に進む
@@ -379,15 +382,16 @@ async function openQRCamera() {
         qrStatus.className = 'qr-status info';
 
     } catch (error) {
-        // 位置情報取得のエラーハンドリング
         console.error("位置情報の取得またはカメラの起動に失敗しました:", error);
         let message = "位置情報の取得に失敗しました。";
-        if (error.code === 1) { // ユーザーが許可を拒否
+        if (error.code === 1) {
             message = "位置情報の利用が許可されていません。ブラウザの設定を確認してください。";
         }
         showMessage(message, "error");
+    } finally {
+        // ★★★ 処理が成功しても失敗しても、必ずローディング画面を非表示にする ★★★
+        loadingOverlay.style.display = 'none';
     }
-    // ★★★ ここまでが追加・変更部分 ★★★
 }
 
 function closeQRCamera() {
