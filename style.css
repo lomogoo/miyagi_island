@@ -363,13 +363,12 @@ p { margin: 0; }
   /* PC向けの新しいグリッドレイアウト定義 */
   /* 4x4のグリッドエリアを定義し、各島を割り当て */
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(5, 1fr);
+  grid-template-rows: repeat(4, 1fr);
   grid-template-areas:
     "katsura nonoshima tashiro tashiro"
     "sabusawa ho       tashiro tashiro"
     "aji     aji       izushima enoshima"
-    "aji     aji       izushima enoshima"
-    "umedia  umedia    umedia   umedia";
+    "aji     aji       izushima enoshima";
 }
 
 /* 各スタンプカードを定義したエリアに配置 */
