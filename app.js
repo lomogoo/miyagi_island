@@ -158,7 +158,9 @@ async function onScanSuccess(decodedText) {
     }
     isProcessingQR = true;
 
-    const matchedIsland = islands.find(island => island.name === decodedText.trim());
+    // app.js L.168
+  const normalizedDecodedText = decodedText.trim().normalize();
+  const matchedIsland = islands.find(island => island.name.normalize() === normalizedDecodedText);
     if (matchedIsland) {
         if (collectedStamps.has(matchedIsland.id)) {
             showMessage(`${matchedIsland.name}のスタンプは既に獲得済みです。`, 'warning');
