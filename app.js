@@ -149,29 +149,41 @@ function initializeApp() {
 // 4. 主要機能 (Supabase連携)
 //================================================================
 
+// このコードに丸ごと置き換えてください
 async function onScanSuccess(decodedText) {
-    closeQRCamera();
-    if (isProcessingQR || !decodedText) {
-        if(isProcessingQR) console.log("Processing another QR, ignoring.");
-        isProcessingQR = false;
+    if (isProcessingQR) {
         return;
     }
     isProcessingQR = true;
 
-    // app.js L.168
-  const normalizedDecodedText = decodedText.trim().normalize();
-  const matchedIsland = islands.find(island => island.name.normalize() === normalizedDecodedText);
+    const qrStatus = document.getElementById('qrStatus');
+    const matchedIsland = islands.find(island => island.name === decodedText.trim());
+
     if (matchedIsland) {
         if (collectedStamps.has(matchedIsland.id)) {
-            showMessage(`${matchedIsland.name}のスタンプは既に獲得済みです。`, 'warning');
-            isProcessingQR = false;
+            qrStatus.textContent = `${matchedIsland.name}のスタンプは既に獲得済みです。`;
+            qrStatus.className = 'qr-status warning';
+            setTimeout(() => { isProcessingQR = false; }, 2000);
             return;
         }
+
         try {
-            const { error } = await supabaseClient.rpc('add_stamp_and_point', { p_island_id: matchedIsland.id });
-            if (error) throw error;
+            const { error } = await supabaseClient.rpc('add_stamp_and_point', { 
+                p_island_id: matchedIsland.id 
+            });
+
+            if (error) {
+                throw error;
+            }
+
             collectedStamps.add(matchedIsland.id);
             userProfile.total_points += 1;
+
+            qrStatus.textContent = `${matchedIsland.name}のQRコードを読み取りました。`;
+            qrStatus.className = 'qr-status success';
+
+            closeQRCamera();
+
             showSuccessModal(matchedIsland.name, () => {
                 updatePointsDisplay();
                 updateStampCards();
@@ -179,14 +191,17 @@ async function onScanSuccess(decodedText) {
                 updatePrizes();
                 isProcessingQR = false;
             });
+
         } catch (error) {
             console.error("スタンプ追加処理に失敗しました:", error);
-            showMessage(`エラーが発生しました: ${error.message}`, 'error');
-            isProcessingQR = false;
+            qrStatus.textContent = `エラーが発生しました: ${error.message}`;
+            qrStatus.className = 'qr-status error';
+            setTimeout(() => { isProcessingQR = false; }, 2000);
         }
     } else {
-        showMessage(`「${decodedText}」は対象外のQRコードです。`, 'error');
-        isProcessingQR = false;
+        qrStatus.textContent = '対象外のQRコードです。';
+        qrStatus.className = 'qr-status error';
+        setTimeout(() => { isProcessingQR = false; }, 2000);
     }
 }
 
