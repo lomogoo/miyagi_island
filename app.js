@@ -576,7 +576,7 @@ async function checkInitialLocationAndSetCameraPermission() {
         const allLocations = [...islands, testLocationForMap];
         for (const location of allLocations) {
             const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
-            if (distance <= 1) {
+            if (distance <= 3) {
                 canUseCamera = true;
                 showMessage("スタンプラリーエリア内です。QRスキャンが利用できます！", "success");
                 return;
