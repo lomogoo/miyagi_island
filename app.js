@@ -168,12 +168,21 @@ async function onScanSuccess(decodedText) {
             throw new Error(`「${decodedText}」は対象外のQRコードです。`);
         }
         
-        // 注：獲得済みチェックは主にサーバー側で行うため、フロント側では削除してシンプルに
-
         qrStatus.textContent = 'スタンプをデータベースに保存中...';
-        const { error: rpcError } = await supabaseClient.rpc('add_stamp_and_point', {
+        
+        // デバッグ用にユーザーIDとパラメータを表示
+        console.log('Supabase RPC呼び出し:', {
+            function: 'add_stamp_and_point',
+            user_id: currentUser.id,
+            island_id: matchedIsland.id
+        });
+        
+        const { data: rpcData, error: rpcError } = await supabaseClient.rpc('add_stamp_and_point', {
             p_island_id: matchedIsland.id
         });
+        
+        // デバッグ用にレスポンスを表示
+        console.log('Supabase RPC レスポンス:', { data: rpcData, error: rpcError });
 
         // ★ データベース関数からエラーが報告された場合
         if (rpcError) {
@@ -184,6 +193,11 @@ async function onScanSuccess(decodedText) {
         collectedStamps.add(matchedIsland.id);
         userProfile.total_points += 1;
 
+        // スキャナーを停止してからモーダルを閉じる
+        if (html5Qrcode && html5Qrcode.isScanning) {
+            await html5Qrcode.stop().catch(err => console.error("QRスキャナの停止に失敗しました。", err));
+        }
+        
         closeQRCamera();
         showSuccessModal(matchedIsland.name, () => {
             updatePointsDisplay();
@@ -192,6 +206,8 @@ async function onScanSuccess(decodedText) {
             updatePrizes();
         });
 
+        isProcessingQR = false;  // 成功時はここでリセット
+        
     } catch (error) {
         // ★ すべてのエラーをここでキャッチし、ユーザーに明確に表示
         console.error("スタンプ処理中にエラーが発生しました:", error);
@@ -205,13 +221,24 @@ async function onScanSuccess(decodedText) {
         // 画面上部にも分かりやすくメッセージを表示
         showMessage(cleanErrorMessage, 'error');
         
-    } finally {
-        // 2秒後に再度スキャン可能にする
-        setTimeout(() => {
+        // エラー時は3秒後にスキャンを再開
+        setTimeout(async () => {
             isProcessingQR = false;
-        }, 2000);
+            qrStatus.textContent = 'QRコードを枠内に収めてください';
+            qrStatus.className = 'qr-status info';
+        }, 3000);
+        
+    } finally {
+        // エラー時は処理フラグのみリセット（成功時は既にリセット済み）
+        if (isProcessingQR) {
+            setTimeout(() => {
+                isProcessingQR = false;
+            }, 2000);
+        }
     }
 }
+
+
 async function applyForPrize(prizeIndex) {
     const prize = prizes[prizeIndex];
     if (userProfile.total_points < prize.points) {
@@ -339,10 +366,8 @@ async function openQRCamera() {
             { facingMode: "environment" }, config,
             (decodedText, decodedResult) => {
                 if (isProcessingQR) return;
-                isProcessingQR = true;
-                html5Qrcode.stop()
-                    .then(() => { onScanSuccess(decodedText); })
-                    .catch((err) => { console.error("QRスキャナの停止に失敗しました。", err); onScanSuccess(decodedText); });
+                // QRコードを読み取ったら、まず処理を実行（stopは後で）
+                onScanSuccess(decodedText);
             }
         );
         qrStatus.textContent = 'QRコードを枠内に収めてください';
