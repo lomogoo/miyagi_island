@@ -340,6 +340,14 @@ function switchSection(sectionId) {
         targetSection.classList.add('active');
         if (sectionId === 'mapSection' && map) map.invalidateSize();
     }
+
+    // ▼▼▼ この3行を追加 ▼▼▼
+    const qrButton = document.getElementById('qrCameraBtn');
+    if (sectionId === 'entrySection') {
+        qrButton.style.display = 'none'; // 応募セクションでは非表示
+    } else {
+        qrButton.style.display = 'flex'; // それ以外のセクションでは表示
+    }
 }
 
 function initializeQRCamera() {
