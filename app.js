@@ -149,9 +149,8 @@ function initializeApp() {
 // 4. 主要機能 (Supabase連携)
 //================================================================
 
-// onScanSuccess 関数をこのコードに丸ごと置き換えてください
+// onScanSuccess 関数をこの最終版コードに丸ごと置き換えてください
 async function onScanSuccess(decodedText) {
-    // 処理が重複しないようにガード
     if (isProcessingQR) {
         return;
     }
@@ -165,33 +164,23 @@ async function onScanSuccess(decodedText) {
         const normalizedDecodedText = decodedText.trim().normalize();
         const matchedIsland = islands.find(island => island.name.normalize() === normalizedDecodedText);
 
-        // 1. 対象の島かどうかをチェック
         if (!matchedIsland) {
             throw new Error(`「${decodedText}」は対象外のQRコードです。`);
         }
+        
+        // 注：獲得済みチェックは主にサーバー側で行うため、フロント側では削除してシンプルに
 
-        // 2. 既に獲得済みかチェック
-        if (collectedStamps.has(matchedIsland.id)) {
-            throw new Error(`${matchedIsland.name}のスタンプは既に獲得済みです。`);
-        }
-
-        // 3. データベースに保存
         qrStatus.textContent = 'スタンプをデータベースに保存中...';
-        const { data, error: rpcError } = await supabaseClient.rpc('add_stamp_and_point', {
+        const { error: rpcError } = await supabaseClient.rpc('add_stamp_and_point', {
             p_island_id: matchedIsland.id
         });
 
-        // データベース関数からのエラーをチェック
+        // ★ データベース関数からエラーが報告された場合
         if (rpcError) {
-            // ★ エラー内容をより詳細に表示
-            throw new Error(`データベースエラー: ${rpcError.message}`);
-        }
-        if (data && data.error) {
-             throw new Error(`関数内部エラー: ${data.message}`);
+            throw new Error(rpcError.message);
         }
 
-
-        // 4. 成功処理
+        // 成功処理
         collectedStamps.add(matchedIsland.id);
         userProfile.total_points += 1;
 
@@ -207,15 +196,17 @@ async function onScanSuccess(decodedText) {
         // ★ すべてのエラーをここでキャッチし、ユーザーに明確に表示
         console.error("スタンプ処理中にエラーが発生しました:", error);
         
-        // QRモーダル内のステータスを更新
-        qrStatus.textContent = error.message;
+        // エラー内容をQRモーダル内に表示
+        // エラーメッセージから不要な "Error: " などを取り除く
+        const cleanErrorMessage = error.message.replace(/^(Error: )?/, '');
+        qrStatus.textContent = cleanErrorMessage;
         qrStatus.className = 'qr-status error';
         
-        // 画面上部にもエラーメッセージを表示
-        showMessage(error.message, 'error');
+        // 画面上部にも分かりやすくメッセージを表示
+        showMessage(cleanErrorMessage, 'error');
         
     } finally {
-        // 成功・失敗に関わらず、2秒後に再度スキャン可能にする
+        // 2秒後に再度スキャン可能にする
         setTimeout(() => {
             isProcessingQR = false;
         }, 2000);
