@@ -20,7 +20,7 @@ const islands = [
 ];
 
 // ★★★ テスト用の位置情報を別途定義 ★★★
-const testLocationForMap = { id: "umedia", name: "ユーメディア", lat: 38.248033, lng: 140.880796, description: "テスト用の場所です。", image: "https://urato-island.jp/wp-content/uploads/2022/11/katsurashima02.jpg" };
+const testLocationForMap = { id: "miyagi-pref", name: "宮城県庁", lat: 38.268352, lng: 140.872127, description: "テスト用の場所（宮城県庁）です。", image: "https://www.pref.miyagi.jp/images/5994/55420_1.gif" };
 
 // ★★★ ご指定の賞品情報に差し替え ★★★
 const prizes = [
