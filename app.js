@@ -59,16 +59,29 @@ async function initializeAuth() {
                 body: { userId: storedUserId },
             });
 
+            // ★★★ ここからが修正点 ★★★
             if (error) {
-                // リフレッシュトークンが無効などの理由で、再認証が必要な場合
-                if (error.context && error.context.json && error.context.json().requiresReauth) {
-                    console.warn("リフレッシュトークンが無効です。再認証が必要です。");
-                    localStorage.removeItem('p8n_user_id'); // 古いIDを削除
-                    window.location.href = './auth.html'; // フル認証フローを開始
-                    return;
+                // Edge Functionから返されたエラーの詳細を確認
+                // SupabaseのFunctionエラーは 'context' に元のレスポンス情報を持つ
+                if (error.context && typeof error.context.json === 'function') {
+                    try {
+                        const errBody = await error.context.json();
+                        // リフレッシュトークンが無効などの理由で、再認証が必要な場合
+                        if (errBody.requiresReauth) {
+                            console.warn("リフレッシュトークンが無効です。再認証が必要です。");
+                            localStorage.removeItem('p8n_user_id'); // 古いIDを削除
+                            window.location.href = './auth.html'; // フル認証フローを開始
+                            return; // これ以降の処理を中断
+                        }
+                    } catch (parseError) {
+                        // エラーレスポンスがJSON形式でなかった場合
+                        console.error("FunctionからのエラーJSONの解析に失敗しました。", parseError);
+                    }
                 }
-                throw error; // その他の予期せぬエラー
+                // 上記以外の予期せぬエラーはここで投げる
+                throw error;
             }
+            // ★★★ ここまでが修正点 ★★★
             
             const { accessToken } = data;
             if (!accessToken) throw new Error('再確立したアクセストークンの取得に失敗しました。');
@@ -232,7 +245,6 @@ function updatePrizeHistory() {
     });
 }
 
-// ... 他のすべてのヘルパー関数 (initializeMap, setupEventListeners, etc.) ...
 function initializeMap() {
     if (map) return;
     map = L.map('map').setView([38.3, 141.2], 9);
@@ -288,10 +300,8 @@ async function handleLogout() {
     if (error) {
         console.error('ログアウトエラー', error);
     }
-    // onAuthStateChangeが検知してUIを更新する
 }
 
-// ... (QRスキャン、モーダル表示、距離計算などの関数) ...
 function showIslandModal(island) {
     document.getElementById('modalIslandName').textContent = island.name;
     document.getElementById('modalIslandDescription').textContent = island.description;
