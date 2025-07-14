@@ -38,30 +38,32 @@
 
             if (code) {
                 try {
+                    // サーバー側の 'login-with-pocketsign' 機能を呼び出す
                     const { data, error: funcError } = await window.supabaseClient.functions.invoke('login-with-pocketsign', {
                         body: { code },
                     });
 
                     if (funcError) throw funcError;
                     
-                    const { accessToken, userId } = data; // userIdも返すように変更が必要
-                    if (!accessToken) throw new Error('アクセストークンの取得に失敗しました。');
+                    // サーバーから accessToken と userId を受け取る
+                    const { accessToken, userId } = data;
+                    if (!accessToken || !userId) {
+                        throw new Error('アクセストークンまたはユーザーIDの取得に失敗しました。');
+                    }
+                    
+                    // 次回起動時のために、ユーザーIDをlocalStorageに保存する
+                    localStorage.setItem('p8n_user_id', userId);
 
-                    // セッションを開始
+                    // 受け取ったアクセストークンでセッションを開始する
                     const { error: sessionError } = await window.supabaseClient.auth.setSession({
                         access_token: accessToken,
-                        refresh_token: accessToken
+                        refresh_token: accessToken // Supabase.js v2では、便宜上同じ値を設定してOK
                     });
                     if (sessionError) throw sessionError;
                     
-                    // ユーザーIDを保存（refresh_token用）
-                    // セッションからユーザー情報を取得
-                    const { data: { user } } = await window.supabaseClient.auth.getUser();
-                    if (user) {
-                        localStorage.setItem('pocketsign_user_id', user.id);
-                    }
-                    
+                    // 正常に完了したら、メインページに移動する
                     window.location.replace('./index.html');
+
                 } catch (error) {
                     console.error('Login failed:', error);
                     container.innerHTML = `<h1>ログインに失敗しました</h1><p>エラー: ${error.message}</p>`;
