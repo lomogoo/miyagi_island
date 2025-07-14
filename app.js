@@ -50,36 +50,6 @@ let prizeHistory = [];
 // 1. アプリケーションのエントリーポイントと認証管理
 //================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('dev') === 'true') {
-        console.log("🛠️ 開発者モードで起動しました。");
-        const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
-        currentUser = { id: devUserId, email: 'developer@example.com' };
-        showAuthenticatedUI();
-        loadAndInitializeApp();
-    } else {
-        supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-                currentUser = session.user;
-                showAuthenticatedUI();
-                loadAndInitializeApp();
-            } else if (event === 'SIGNED_OUT') {
-                currentUser = null;
-                userProfile = null;
-                showLoginUI();
-            }
-        });
-    }
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && currentUser) {
-            console.log("アプリが再度表示されました。位置情報を再チェックします。");
-            checkInitialLocationAndSetCameraPermission();
-        }
-    });
-});
-
 
 //================================================================
 // 2. UI表示の切り替え
