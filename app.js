@@ -1,6 +1,6 @@
 /**
  * 宮城県離島スタンプラリー アプリケーション
- * メインスクリプト (最終解決策版)
+ * メインスクリプト (最終修正版)
  */
 
 //================================================================
@@ -30,126 +30,91 @@ const testLocationForMap = { id: "test", name: "テスト用ロケーション",
 
 
 //================================================================
-// 認証フロー
+// 認証とアプリケーションの起動
 //================================================================
 
 /**
- * アプリ起動時の認証処理のメイン関数
+ * アプリ起動時のメイン関数
  */
-async function initializeAuth() {
+async function bootstrapApp() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     loadingOverlay.style.display = 'flex';
 
-    // ステップ1: まず、Supabaseの現在のセッションを確認 (ページ内遷移などのため)
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session && session.user) {
-        console.log("アクティブなセッションが見つかりました。アプリを初期化します。");
-        currentUser = session.user;
-        await initializeApp();
+    // 1. まず、Supabaseの現在のセッションを確認
+    const { data: { session: existingSession } } = await supabaseClient.auth.getSession();
+    if (existingSession && existingSession.user) {
+        console.log("アクティブなセッションが見つかりました。");
+        await runApplication(existingSession.user);
         return;
     }
 
-    // ステップ2: セッションがない場合、保存されたユーザーIDを探す
+    // 2. セッションがない場合、保存されたユーザーIDでリフレッシュを試みる
     const storedUserId = localStorage.getItem('p8n_user_id');
     if (storedUserId) {
-        console.log(`保存されたユーザーIDが見つかりました: ${storedUserId}。セッションの再確立を試みます。`);
+        console.log(`保存されたユーザーID [${storedUserId}] でセッションの再確立を試みます。`);
         try {
-            // ステップ3: 保存されたIDで、同意画面なしのセッション再確立を試みる
             const { data, error } = await supabaseClient.functions.invoke('refresh-pocketsign-token', {
                 body: { userId: storedUserId },
             });
 
-            // ★★★ ここからが修正点 ★★★
-            if (error) {
-                // Edge Functionから返されたエラーの詳細を確認
-                // SupabaseのFunctionエラーは 'context' に元のレスポンス情報を持つ
-                if (error.context && typeof error.context.json === 'function') {
-                    try {
-                        const errBody = await error.context.json();
-                        // リフレッシュトークンが無効などの理由で、再認証が必要な場合
-                        if (errBody.requiresReauth) {
-                            console.warn("リフレッシュトークンが無効です。再認証が必要です。");
-                            localStorage.removeItem('p8n_user_id'); // 古いIDを削除
-                            window.location.href = './auth.html'; // フル認証フローを開始
-                            return; // これ以降の処理を中断
-                        }
-                    } catch (parseError) {
-                        // エラーレスポンスがJSON形式でなかった場合
-                        console.error("FunctionからのエラーJSONの解析に失敗しました。", parseError);
-                    }
-                }
-                // 上記以外の予期せぬエラーはここで投げる
-                throw error;
-            }
-            // ★★★ ここまでが修正点 ★★★
+            if (error) { throw new Error("リフレッシュトークンでの認証に失敗しました。"); }
             
             const { accessToken } = data;
             if (!accessToken) throw new Error('再確立したアクセストークンの取得に失敗しました。');
             
-            await supabaseClient.auth.setSession({
-                access_token: accessToken,
-                refresh_token: accessToken,
-            });
+            await supabaseClient.auth.setSession({ access_token: accessToken, refresh_token: accessToken });
             
-            console.log("セッションの再確立に成功しました。アプリを初期化します。");
             const { data: { user } } = await supabaseClient.auth.getUser();
-            currentUser = user;
-            await initializeApp();
+            if (!user) throw new Error("リフレッシュ後のユーザー情報取得に失敗しました。");
+
+            console.log("セッションの再確立に成功しました。");
+            await runApplication(user);
 
         } catch (e) {
-            // リフレッシュに失敗したら、最終手段としてフル認証フローへ
-            console.error("セッションの再確立に失敗しました。通常のログインフローに移行します。", e);
-            localStorage.removeItem('p8n_user_id'); // 古いIDを削除
-            window.location.href = './auth.html';
+            console.warn("セッションの再確立に失敗しました。通常のログインフローに移行します。", e.message);
+            redirectToLogin();
         }
     } else {
-        // ステップ4: 保存されたユーザーIDもない場合 (完全な初回起動)
+        // 3. 保存されたユーザーIDもない場合 (完全な初回起動)
         console.log("保存されたユーザーIDがありません。通常のログインフローを開始します。");
-        window.location.href = './auth.html';
+        redirectToLogin();
     }
 }
 
-
-//================================================================
-// アプリケーション初期化・UI制御
-//================================================================
-
 /**
- * 認証成功後にアプリのメイン機能を初期化する
+ * 認証成功後に、アプリの全機能を初期化して実行する
+ * @param {object} user - Supabaseのユーザーオブジェクト
  */
-async function initializeApp() {
-    showAuthenticatedUI();
-    await loadAndInitializeApp();
-    document.getElementById('loadingOverlay').style.display = 'none';
-}
-
-/**
- * 認証済みユーザー向けのUIを表示する
- */
-function showAuthenticatedUI() {
+async function runApplication(user) {
+    console.log("アプリケーションの実行を開始します...");
+    currentUser = user;
+    
+    // UIを認証済み状態に切り替え
     document.getElementById('loginPrompt').style.display = 'none';
     document.getElementById('appContainer').style.display = 'flex';
-}
 
-/**
- * 未認証ユーザー向けのUIを表示する
- */
-function showLoginUI() {
-    document.getElementById('appContainer').style.display = 'none';
-    document.getElementById('loginPrompt').style.display = 'block';
-}
-
-/**
- * ユーザーデータやスタンプ情報をDBから取得し、画面を更新する
- */
-async function loadAndInitializeApp() {
+    // データを取得
     await fetchUserData();
+
+    // 全てのUIコンポーネントとイベントを初期化
     updatePointsDisplay();
     initializeMap();
     updateStampCards();
     updatePrizeHistory();
     setupEventListeners();
     checkInitialLocationAndSetCameraPermission();
+    
+    // ローディング画面を非表示
+    document.getElementById('loadingOverlay').style.display = 'none';
+    console.log("アプリケーションの初期化が完了しました。");
+}
+
+/**
+ * ログインページにリダイレクトする
+ */
+function redirectToLogin() {
+    localStorage.removeItem('p8n_user_id');
+    window.location.href = './auth.html';
 }
 
 
@@ -160,6 +125,7 @@ async function loadAndInitializeApp() {
 async function fetchUserData() {
     if (!currentUser) return;
     try {
+        console.log("ユーザーデータを取得中...");
         const { data: profileData, error: profileError } = await supabaseClient
             .from('profiles')
             .select('total_points, birth_year, gender, address')
@@ -182,14 +148,16 @@ async function fetchUserData() {
             .order('entered_at', { ascending: false });
         if (prizeError) throw prizeError;
         prizeHistory = prizeData;
-
+        console.log("ユーザーデータの取得完了。");
     } catch (error) {
         console.error('ユーザーデータの取得に失敗しました:', error);
     }
 }
 
-// ... (ここから下のUI更新、イベントリスナー、QRスキャン、地図、計算などの関数は、
-//      既存のapp.jsから変更ありませんので、そのまま流用します。)
+
+//================================================================
+// UIコンポーネントの初期化と更新
+//================================================================
 
 function updatePointsDisplay() {
     const pointsValue = document.getElementById('pointsValue');
@@ -247,6 +215,7 @@ function updatePrizeHistory() {
 
 function initializeMap() {
     if (map) return;
+    console.log("マップを初期化中...");
     map = L.map('map').setView([38.3, 141.2], 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -265,9 +234,12 @@ function initializeMap() {
         marker.on('click', () => showIslandModal(island));
         islandMarkers[island.id] = marker;
     });
+    console.log("マップの初期化完了。");
 }
 
 function setupEventListeners() {
+    console.log("イベントリスナーを設定中...");
+    // 下部ナビゲーション
     const navItems = document.querySelectorAll('.nav-item');
     const sections = document.querySelectorAll('.section');
     navItems.forEach(item => {
@@ -277,9 +249,13 @@ function setupEventListeners() {
             const targetId = item.getAttribute('data-target');
             sections.forEach(s => s.classList.remove('active'));
             document.getElementById(targetId).classList.add('active');
+            if (targetId === 'mapSection') {
+                map.invalidateSize(); // マップ表示時にサイズを再計算
+            }
         });
     });
 
+    // その他のボタン
     document.getElementById('startQRScanBtn').addEventListener('click', startQRScanner);
     document.getElementById('closeScannerBtn').addEventListener('click', stopQRScanner);
     document.getElementById('closeIslandModal').addEventListener('click', () => document.getElementById('islandModal').style.display = 'none');
@@ -293,14 +269,18 @@ function setupEventListeners() {
             showConfirmModal(prizeName, prizeId);
         });
     });
+    console.log("イベントリスナーの設定完了。");
 }
 
 async function handleLogout() {
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) {
-        console.error('ログアウトエラー', error);
-    }
+    await supabaseClient.auth.signOut();
+    // onAuthStateChangeが検知してリダイレクト処理などを行う
 }
+
+
+//================================================================
+// その他の機能関数 (QRスキャン、モーダル、位置情報など)
+//================================================================
 
 function showIslandModal(island) {
     document.getElementById('modalIslandName').textContent = island.name;
@@ -403,7 +383,7 @@ async function applyForPrize(prizeName, prizeId) {
         });
         if (error) throw error;
         userProfile.total_points -= 5;
-        await fetchUserData(); // 応募履歴を再取得
+        await fetchUserData();
         updatePointsDisplay();
         updatePrizeHistory();
         showSuccessModal("応募完了！", `${prizeName}に応募しました。`);
@@ -441,6 +421,7 @@ function updateMarkerIcon(islandId) {
 }
 
 async function checkInitialLocationAndSetCameraPermission() {
+    console.log("位置情報を確認中...");
     showMessage("現在地から利用可能エリアか確認しています...", "info");
     try {
         const position = await getCurrentLocation();
@@ -449,13 +430,16 @@ async function checkInitialLocationAndSetCameraPermission() {
         const allLocations = [...islands, testLocationForMap];
         for (const location of allLocations) {
             const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
-            if (distance <= 8) {
+            if (distance <= 8) { // 距離の閾値
                 canUseCamera = true;
                 showMessage("スタンプラリーエリア内です。QRコードをスキャンできます。", "success");
+                console.log("カメラ使用を許可しました。");
                 return;
             }
         }
+        canUseCamera = false;
         showMessage("スタンプラリーエリア外です。島に近づいてください。", "info");
+        console.log("カメラ使用は許可されませんでした。");
     } catch (error) {
         console.error("位置情報取得エラー:", error);
         showMessage("位置情報の取得に失敗しました。ブラウザの設定を確認してください。", "error");
@@ -483,17 +467,20 @@ function getDistanceInKm(lat1, lon1, lat2, lon2) {
 
 
 //================================================================
-// イベントリスナー
+// アプリケーションのエントリーポイント
 //================================================================
 
-// ログアウト処理などのために認証状態の変更を監視
+// ログアウト処理を監視
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
+        console.log("ログアウトを検知しました。");
         currentUser = null;
-        localStorage.removeItem('p8n_user_id'); // ログアウト時にIDも削除
-        showLoginUI();
+        localStorage.removeItem('p8n_user_id');
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('loginPrompt').style.display = 'block';
+        document.getElementById('loadingOverlay').style.display = 'none';
     }
 });
 
-// アプリ起動
-document.addEventListener('DOMContentLoaded', initializeAuth);
+// DOMの読み込みが完了したら、アプリの起動処理を開始
+document.addEventListener('DOMContentLoaded', bootstrapApp);
