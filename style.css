@@ -193,7 +193,7 @@ p { margin: 0; }
 /* Header - よりポップなデザイン */
 .header {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-  padding: var(--space-16) var(--space-20);
+  padding: var(--space-12) var(--space-20); /* ★ 修正: 上下のpaddingを少し減らす */
   box-shadow: var(--shadow-md);
   z-index: 1000;
   display: flex;
@@ -229,7 +229,7 @@ p { margin: 0; }
 
 /* タイトル画像のスタイル */
 .header .app-title-image {
-  height: 120px; /* より大きなサイズに調整 */
+  height: 100px; /* ★ 修正: 少し小さくする */
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
@@ -240,17 +240,17 @@ p { margin: 0; }
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .header .app-title-image {
-    height: 60px;
+    height: 50px; /* ★ 修正: スマホでも少し小さくする */
     margin-right: var(--space-8);
   }
 }
 
 @media (max-width: 480px) {
   .header {
-    padding: var(--space-12) var(--space-16);
+    padding: var(--space-8) var(--space-16); /* ★ 修正: さらに小さい画面でのpaddingを調整 */
   }
   .header .app-title-image {
-    height: 60px;
+    height: 50px; /* ★ 修正: 高さを統一 */
     margin-right: var(--space-4);
   }
 }
@@ -332,7 +332,7 @@ p { margin: 0; }
 
 .island-popup { 
   text-align: center; 
-  max-width: 200px; 
+  max-width: 220px; 
 }
 .island-popup img { 
   width: 100%; 
@@ -348,8 +348,19 @@ p { margin: 0; }
 }
 .island-popup p { 
   color: var(--color-text-secondary); 
-  font-size: var(--font-size-sm); 
+  font-size: var(--font-size-sm);
+  margin: 0; /* ★ 修正: 余分なマージンを削除 */
 }
+
+/* ★ 追加: 設置場所用のスタイル */
+.island-popup .qr-location {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  margin-top: var(--space-8);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-border);
+}
+
 
 /* Stamp Grid - ポップなカードデザイン */
 .stamp-grid {
@@ -1214,11 +1225,12 @@ p { margin: 0; }
 
 /* style.css の末尾に追加 */
 
-/* ★★★ 応募履歴用のスタイルを追加 ★★★ */
+/* ★★★ 応募履歴用のスタイルを修正 ★★★ */
 .history-container {
     margin-top: var(--space-32);
     padding: 0 var(--space-16);
     width: 100%;
+    padding-bottom: 80px; /* ★ 修正: 下部メニューとの余白を確保 */
 }
 
 .history-list {
@@ -1294,8 +1306,3 @@ p { margin: 0; }
         transform: rotate(360deg);
     }
 }
-
-
-
-
-
