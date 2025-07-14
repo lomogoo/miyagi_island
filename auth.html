@@ -24,10 +24,8 @@
         function redirectToPocketSign() {
             // ★★★ ご自身の環境に合わせて設定してください ★★★
             const clientId = '01324b12-3dcd-4125-a1cd-5a993776d43d'; 
-            // callback.html をデプロイしたURL
             const redirectUri = 'https://lomogoo.github.io/miyagi_island/callback.html'; 
-            // ポケットサインの認可エンドポイント（環境に合わせて変更）
-            const authEndpoint = 'https://oidc.core.p8n.app/oauth2/auth'; // モックの例
+            const authEndpoint = 'https://oidc.core.p8n.app/oauth2/auth';
 
             const state = generateRandomString();
             const nonce = generateRandomString();
@@ -35,13 +33,12 @@
             sessionStorage.setItem('oauth_state', state);
             sessionStorage.setItem('oauth_nonce', nonce);
 
-            // auth.html 内の params オブジェクト
             const params = new URLSearchParams({
                 response_type: 'code',
                 client_id: clientId,
                 redirect_uri: redirectUri,
-                // ★★★ 'address' スコープを追加 ★★★
-                scope: 'openid profile address',
+                // 'offline_access' スコープを追加してリフレッシュトークンを要求
+                scope: 'openid profile address offline_access',
                 state: state,
                 nonce: nonce,
                 display: 'psapp'
@@ -50,7 +47,6 @@
             window.location.href = `${authEndpoint}?${params.toString()}`;
         }
 
-        // ページが読み込まれたらすぐに実行
         window.addEventListener('DOMContentLoaded', redirectToPocketSign);
     </script>
 </body>
