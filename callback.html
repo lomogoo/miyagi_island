@@ -44,16 +44,22 @@
 
                     if (funcError) throw funcError;
                     
-                    const { accessToken } = data;
+                    const { accessToken, userId } = data; // userIdも返すように変更が必要
                     if (!accessToken) throw new Error('アクセストークンの取得に失敗しました。');
 
-                    // 受け取ったアクセストークンでセッションを開始します。
-                    // バックエンドでこのトークンの有効期限が長く設定されています。
+                    // セッションを開始
                     const { error: sessionError } = await window.supabaseClient.auth.setSession({
                         access_token: accessToken,
-                        refresh_token: accessToken // Supabase.js v2では、便宜上同じ値を設定してOK
+                        refresh_token: accessToken
                     });
                     if (sessionError) throw sessionError;
+                    
+                    // ユーザーIDを保存（refresh_token用）
+                    // セッションからユーザー情報を取得
+                    const { data: { user } } = await window.supabaseClient.auth.getUser();
+                    if (user) {
+                        localStorage.setItem('pocketsign_user_id', user.id);
+                    }
                     
                     window.location.replace('./index.html');
                 } catch (error) {
