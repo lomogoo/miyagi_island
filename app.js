@@ -62,6 +62,7 @@ function showAuthenticatedUI() {
 
 function showLoginUI() {
     document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('loadingOverlay').style.display = 'none';
     document.getElementById('loginPrompt').style.display = 'block';
 }
 
