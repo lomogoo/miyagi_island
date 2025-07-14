@@ -7,20 +7,20 @@
 // 定数データ
 //================================================================
 
-// ★★★ ご指定の島の情報に差し替え ★★★
+// ★★★ ご指定の島の情報に「qrLocation」を追記 ★★★
 const islands = [
-  { id: "aji", name: "網地島", lat: 38.274976, lng: 141.461628, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//aji.jpeg" },
-  { id: "tashiro", name: "田代島", lat: 38.294834, lng: 141.426264, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//tashiro.jpg" },
-  { id: "katsura", name: "桂島", lat: 38.334949, lng: 141.095117, description: "塩竈市本土から一番近い島。島内には遊歩道があり、風光明媚な景観を楽しむことができるほか、夏には海水浴場がオープンし、多くの観光客で賑わう。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//katsura.JPG" },
-  { id: "nonoshima", name: "野々島", lat:　38.338475, lng: 141.105808, description: "宿泊研 修施設「ブルーセンター」や診療所、小中学校があり、生活面でも中心的な島。ボラと呼ばれる洞穴群や椿のトンネルなど神秘的な景観が魅力。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//nono.jpg" },
-  { id: "sabusawa", name: "寒風沢島", lat: 38.338049, lng: 141.118135, description: "江戸時代に伊達藩の江戸廻米の港として繁栄を極め、当時を語り継ぐ風景や歴史が多く存在する。島の奥には懐かしい田園風景、美しい砂浜に辿り着く。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//sabusawa.jpeg" },
-  { id: "ho", name: "朴島", lat: 38.348959, lng: 141.124619, description: "浦戸諸島の有人島で一番小さく、ミネラル豊富な漁場で種牡蠣の生産地として有名。仙台白菜の種も生産しており、春には美しい菜の花の景色が楽しめる。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//ho.jpg" },
-  { id: "izushima", name: "出島", lat: 38.457811, lng: 141.518860, description: "2024年完成の大橋で本土と直結。釣りや散策が気軽に楽しめる。出島大橋が開通しアクセスが向上、レクリエーションに適した島。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//ide.jpg" },
-  { id: "enoshima", name: "江島", lat: 38.400473, lng: 141.593721, description: "江島褶曲地層があり、海鳥繁殖地としても知られる。断崖が迫る冒険的な島で、ウミネコの観察や神社巡りも楽しめる。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//enoshima.jpg" },
+  { id: "aji", name: "網地島", lat: 38.274976, lng: 141.461628, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//aji.jpeg", qrLocation: "網地浜船着場待合所" },
+  { id: "tashiro", name: "田代島", lat: 38.294834, lng: 141.426264, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//tashiro.jpg", qrLocation: "仁斗田港船着場待合所" },
+  { id: "katsura", name: "桂島", lat: 38.334949, lng: 141.095117, description: "塩竈市本土から一番近い島。島内には遊歩道があり、風光明媚な景観を楽しむことができるほか、夏には海水浴場がオープンし、多くの観光客で賑わう。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//katsura.JPG", qrLocation: "桂島ステイ・ステーション" },
+  { id: "nonoshima", name: "野々島", lat:　38.338475, lng: 141.105808, description: "宿泊研 修施設「ブルーセンター」や診療所、小中学校があり、生活面でも中心的な島。ボラと呼ばれる洞穴群や椿のトンネルなど神秘的な景観が魅力。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//nono.jpg", qrLocation: "菜の花ラウンジ(浦戸諸島開発総合センター)" },
+  { id: "sabusawa", name: "寒風沢島", lat: 38.338049, lng: 141.118135, description: "江戸時代に伊達藩の江戸廻米の港として繁栄を極め、当時を語り継ぐ風景や歴史が多く存在する。島の奥には懐かしい田園風景、美しい砂浜に辿り着く。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//sabusawa.jpeg", qrLocation: "寒風沢島汽船待合所" },
+  { id: "ho", name: "朴島", lat: 38.348959, lng: 141.124619, description: "浦戸諸島の有人島で一番小さく、ミネラル豊富な漁場で種牡蠣の生産地として有名。仙台白菜の種も生産しており、春には美しい菜の花の景色が楽しめる。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//ho.jpg", qrLocation: "朴島汽船待合所" },
+  { id: "izushima", name: "出島", lat: 38.457811, lng: 141.518860, description: "2024年完成の大橋で本土と直結。釣りや散策が気軽に楽しめる。出島大橋が開通しアクセスが向上、レクリエーションに適した島。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//ide.jpg", qrLocation: "出島漁港内公衆用トイレ" },
+  { id: "enoshima", name: "江島", lat: 38.400473, lng: 141.593721, description: "江島褶曲地層があり、海鳥繁殖地としても知られる。断崖が迫る冒険的な島で、ウミネコの観察や神社巡りも楽しめる。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//enoshima.jpg", qrLocation: "江島離島航路待合所" },
 ];
 
 // ★★★ テスト用の位置情報を別途定義 ★★★
-const testLocationForMap = { id: "miyagi-pref", name: "宮城県庁", lat: 38.268352, lng: 140.872127, description: "テスト用の場所（宮城県庁）です。", image: "https://www.pref.miyagi.jp/images/5994/55420_1.gif" };
+const testLocationForMap = { id: "miyagi-pref", name: "宮城県庁", lat: 38.268352, lng: 140.872127, description: "テスト用の場所（宮城県庁）です。", image: "https://www.pref.miyagi.jp/images/5994/55420_1.gif", qrLocation: "宮城県庁 1階" }; // テスト用にもqrLocationを追加
 
 // ★★★ ご指定の賞品情報に差し替え ★★★
 const prizes = [
@@ -149,7 +149,6 @@ function initializeApp() {
 // 4. 主要機能 (Supabase連携)
 //================================================================
 
-// onScanSuccess 関数をこの最終版コードに丸ごと置き換えてください
 async function onScanSuccess(decodedText) {
     if (isProcessingQR) {
         return;
@@ -170,7 +169,6 @@ async function onScanSuccess(decodedText) {
         
         qrStatus.textContent = 'スタンプをデータベースに保存中...';
         
-        // デバッグ用にユーザーIDとパラメータを表示
         console.log('Supabase RPC呼び出し:', {
             function: 'add_stamp_and_point',
             user_id: currentUser.id,
@@ -181,19 +179,15 @@ async function onScanSuccess(decodedText) {
             p_island_id: matchedIsland.id
         });
         
-        // デバッグ用にレスポンスを表示
         console.log('Supabase RPC レスポンス:', { data: rpcData, error: rpcError });
 
-        // ★ データベース関数からエラーが報告された場合
         if (rpcError) {
             throw new Error(rpcError.message);
         }
 
-        // 成功処理
         collectedStamps.add(matchedIsland.id);
         userProfile.total_points += 1;
 
-        // スキャナーを停止してからモーダルを閉じる
         if (html5Qrcode && html5Qrcode.isScanning) {
             await html5Qrcode.stop().catch(err => console.error("QRスキャナの停止に失敗しました。", err));
         }
@@ -206,22 +200,17 @@ async function onScanSuccess(decodedText) {
             updatePrizes();
         });
 
-        isProcessingQR = false;  // 成功時はここでリセット
+        isProcessingQR = false;
         
     } catch (error) {
-        // ★ すべてのエラーをここでキャッチし、ユーザーに明確に表示
         console.error("スタンプ処理中にエラーが発生しました:", error);
         
-        // エラー内容をQRモーダル内に表示
-        // エラーメッセージから不要な "Error: " などを取り除く
         const cleanErrorMessage = error.message.replace(/^(Error: )?/, '');
         qrStatus.textContent = cleanErrorMessage;
         qrStatus.className = 'qr-status error';
         
-        // 画面上部にも分かりやすくメッセージを表示
         showMessage(cleanErrorMessage, 'error');
         
-        // エラー時は3秒後にスキャンを再開
         setTimeout(async () => {
             isProcessingQR = false;
             qrStatus.textContent = 'QRコードを枠内に収めてください';
@@ -229,7 +218,6 @@ async function onScanSuccess(decodedText) {
         }, 3000);
         
     } finally {
-        // エラー時は処理フラグのみリセット（成功時は既にリセット済み）
         if (isProcessingQR) {
             setTimeout(() => {
                 isProcessingQR = false;
@@ -275,7 +263,7 @@ function initializeMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
     markers = [];
     islands.forEach(addIslandMarker);
-    addIslandMarker(testLocationForMap); // ★★★ テスト用マーカーをマップにだけ追加
+    addIslandMarker(testLocationForMap);
 }
 
 function addIslandMarker(island) {
@@ -283,7 +271,15 @@ function addIslandMarker(island) {
     const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
     const customIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
     const marker = L.marker([island.lat, island.lng], { icon: customIcon }).addTo(map);
-    const popupContent = `<div class="island-popup"><img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'"><h3>${island.name}</h3><p>${island.description}</p>${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}</div>`;
+    
+    // ★ 修正: ポップアップに設置場所を追加
+    const popupContent = `<div class="island-popup">
+                              <img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'">
+                              <h3>${island.name}</h3>
+                              <p>${island.description}</p>
+                              <p class="qr-location"><b>設置場所:</b> ${island.qrLocation || '各島の主要施設'}</p>
+                              ${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}
+                           </div>`;
     marker.bindPopup(popupContent);
     markers.push({ marker, island });
 }
@@ -294,7 +290,15 @@ function updateMapMarkers() {
         const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
         const newIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
         marker.setIcon(newIcon);
-        const popupContent = `<div class="island-popup"><img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'"><h3>${island.name}</h3><p>${island.description}</p>${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}</div>`;
+
+        // ★ 修正: ポップアップに設置場所を追加
+        const popupContent = `<div class="island-popup">
+                                  <img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'">
+                                  <h3>${island.name}</h3>
+                                  <p>${island.description}</p>
+                                  <p class="qr-location"><b>設置場所:</b> ${island.qrLocation || '各島の主要施設'}</p>
+                                  ${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}
+                               </div>`;
         marker.setPopupContent(popupContent);
     });
 }
@@ -341,12 +345,11 @@ function switchSection(sectionId) {
         if (sectionId === 'mapSection' && map) map.invalidateSize();
     }
 
-    // ▼▼▼ この3行を追加 ▼▼▼
     const qrButton = document.getElementById('qrCameraBtn');
     if (sectionId === 'entrySection') {
-        qrButton.style.display = 'none'; // 応募セクションでは非表示
+        qrButton.style.display = 'none';
     } else {
-        qrButton.style.display = 'flex'; // それ以外のセクションでは表示
+        qrButton.style.display = 'flex';
     }
 }
 
@@ -374,7 +377,6 @@ async function openQRCamera() {
             { facingMode: "environment" }, config,
             (decodedText, decodedResult) => {
                 if (isProcessingQR) return;
-                // QRコードを読み取ったら、まず処理を実行（stopは後で）
                 onScanSuccess(decodedText);
             }
         );
@@ -399,7 +401,7 @@ function closeQRCamera() {
 function initializeStampCards() {
     const stampGrid = document.getElementById('stampGrid');
     stampGrid.innerHTML = '';
-    islands.forEach(island => { // ★★★ 8島の配列を直接使うようにクリーンアップ
+    islands.forEach(island => {
         const stampCard = document.createElement('div');
         stampCard.className = 'stamp-card';
         stampCard.id = `stamp-${island.id}`;
@@ -410,7 +412,7 @@ function initializeStampCards() {
 }
 
 function updateStampCards() {
-    islands.forEach(island => { // ★★★ 8島の配列を直接使うようにクリーンアップ
+    islands.forEach(island => {
         const stampCard = document.getElementById(`stamp-${island.id}`);
         if (!stampCard) return;
         const statusElement = stampCard.querySelector('.stamp-status');
@@ -580,7 +582,6 @@ async function checkInitialLocationAndSetCameraPermission() {
         const position = await getCurrentLocation();
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
-        // ★★★ 判定対象にテスト用ロケーションを追加 ★★★
         const allLocations = [...islands, testLocationForMap];
         for (const location of allLocations) {
             const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
