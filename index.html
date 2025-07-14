@@ -91,12 +91,12 @@
 </div>
     </div>
 
-    <div id="loginPrompt" style="text-align: center; padding: 50px;">
+    <div id="loginPrompt" style="text-align: center; padding: 50px; display: none;">
         <h2>認証情報がありません</h2>
         <p>このアプリはポケットサインから起動してください。</p>
     </div>
 
-    <div id="loadingOverlay" class="loading-overlay">
+    <div id="loadingOverlay" class="loading-overlay" style="display: flex;">
         <div class="spinner"></div>
     </div>
 
@@ -149,6 +149,9 @@
 
         // 初期化時の認証チェック
         async function initializeAuth() {
+            // ローディング画面を表示
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
             const params = new URLSearchParams(window.location.search);
             
             if (params.get('dev') === 'true') {
@@ -156,25 +159,38 @@
                 console.log("🛠️ 開発者モードで起動しました。");
                 const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
                 currentUser = { id: devUserId, email: 'developer@example.com' };
+                document.getElementById('loadingOverlay').style.display = 'none';
                 showAuthenticatedUI();
                 loadAndInitializeApp();
                 return;
             }
 
-            // まずrefresh_tokenでの認証を試みる
-            const refreshSuccess = await tryRefreshToken();
-            
-            if (refreshSuccess) {
-                // refresh_tokenでの認証成功 - 同意画面をスキップ
-                console.log('Authenticated via refresh token');
-            } else {
-                // refresh_tokenがない or 失敗した場合は、通常の認証フローをチェック
-                const session = await window.supabaseClient.auth.getSession();
-                if (!session.data.session) {
-                    // セッションがない場合は認証ページへリダイレクト
-                    window.location.href = './auth.html';
-                    return;
+            try {
+                // まずrefresh_tokenでの認証を試みる
+                const refreshSuccess = await tryRefreshToken();
+                
+                if (refreshSuccess) {
+                    // refresh_tokenでの認証成功 - 同意画面をスキップ
+                    console.log('Authenticated via refresh token');
+                    // この時点でonAuthStateChangeが発火するのを待つ
+                } else {
+                    // refresh_tokenがない or 失敗した場合は、通常の認証フローをチェック
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    if (!session) {
+                        // セッションがない場合のみログイン画面を表示
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        document.getElementById('loginPrompt').style.display = 'block';
+                        // 3秒後に認証ページへリダイレクト
+                        setTimeout(() => {
+                            window.location.href = './auth.html';
+                        }, 3000);
+                        return;
+                    }
                 }
+            } catch (error) {
+                console.error('Auth initialization error:', error);
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('loginPrompt').style.display = 'block';
             }
 
             // Supabaseの認証状態変更を監視
@@ -183,12 +199,14 @@
                     currentUser = session.user;
                     // ユーザーIDを保存（次回起動時のrefresh用）
                     localStorage.setItem('pocketsign_user_id', session.user.id);
+                    document.getElementById('loadingOverlay').style.display = 'none';
                     showAuthenticatedUI();
                     loadAndInitializeApp();
                 } else if (event === 'SIGNED_OUT') {
                     currentUser = null;
                     userProfile = null;
                     localStorage.removeItem('pocketsign_user_id');
+                    document.getElementById('loadingOverlay').style.display = 'none';
                     showLoginUI();
                 }
             });
