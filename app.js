@@ -1,456 +1,565 @@
 /**
  * 宮城県離島スタンプラリー アプリケーション
- * メインスクリプト (最終修正版)
+ * メインスクリプト (最終完成版)
  */
-
-//================================================================
-// グローバル変数
-//================================================================
-let currentUser = null;
-let userProfile = null;
-let collectedStamps = new Set();
-let prizeHistory = [];
-let map = null;
-let canUseCamera = false;
-let html5QrCode = null;
-const islandMarkers = {};
 
 //================================================================
 // 定数データ
 //================================================================
+
+// ★★★ ご指定の島の情報に差し替え ★★★
 const islands = [
-  { id: "aji", name: "網地島", lat: 38.274976, lng: 141.461628, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", location: "網地白浜海水浴場", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//aji.jpeg" },
-  { id: "tashiro", name: "田代島", lat: 38.294834, lng: 141.426264, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", location: "猫神社", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//tashiro.jpg" },
-  { id: "katsura", name: "桂島", lat: 38.334949, lng: 141.095117, description: "塩竈市本土から一番近い島。島内には遊歩道があり、風光明媚な景観を楽しむことができるほか、夏には海水浴場が開設される。", location: "桂島海水浴場", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//katsura.jpg" },
-  { id: "nono", name: "野々島", lat: 38.341113, lng: 141.101831, description: "”花の島”として知られ、椿やツツジ、アジサイなどが咲き誇る。島内にはウォーキングコースが整備されている。", location: "野々島ビジターセンター", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//nono.jpg" },
-  { id: "miyato", name: "宮戸島", lat: 38.349692, lng: 141.157855, description: "日本三景松島の一角をなす最大の島。奥松島の絶景が広がり、縄文時代の「里浜貝塚」は国の史跡に指定されている。", location: "里浜貝塚", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//miyato.jpg" },
-  { id: "kinkasan", name: "金華山", lat: 38.299104, lng: 141.566378, description: "島全体が黄金山神社の神域で、神の使いとされる鹿が多数生息。三年続けてお参りすればお金に不自由しないと言われる。", location: "黄金山神社", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//kinkasan.jpg" }
+  { id: "aji", name: "網地島", lat: 38.274976, lng: 141.461628, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//aji.jpeg" },
+  { id: "tashiro", name: "田代島", lat: 38.294834, lng: 141.426264, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//tashiro.jpg" },
+  { id: "katsura", name: "桂島", lat: 38.334949, lng: 141.095117, description: "塩竈市本土から一番近い島。島内には遊歩道があり、風光明媚な景観を楽しむことができるほか、夏には海水浴場がオープンし、多くの観光客で賑わう。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//katsura.JPG" },
+  { id: "nonoshima", name: "野々島", lat:　38.338475, lng: 141.105808, description: "宿泊研 修施設「ブルーセンター」や診療所、小中学校があり、生活面でも中心的な島。ボラと呼ばれる洞穴群や椿のトンネルなど神秘的な景観が魅力。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//nono.jpg" },
+  { id: "sabusawa", name: "寒風沢島", lat: 38.338049, lng: 141.118135, description: "江戸時代に伊達藩の江戸廻米の港として繁栄を極め、当時を語り継ぐ風景や歴史が多く存在する。島の奥には懐かしい田園風景、美しい砂浜に辿り着く。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//sabusawa.jpeg" },
+  { id: "ho", name: "朴島", lat: 38.348959, lng: 141.124619, description: "浦戸諸島の有人島で一番小さく、ミネラル豊富な漁場で種牡蠣の生産地として有名。仙台白菜の種も生産しており、春には美しい菜の花の景色が楽しめる。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//ho.jpg" },
+  { id: "izushima", name: "出島", lat: 38.457811, lng: 141.518860, description: "2024年完成の大橋で本土と直結。釣りや散策が気軽に楽しめる。出島大橋が開通しアクセスが向上、レクリエーションに適した島。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//ide.jpg" },
+  { id: "enoshima", name: "江島", lat: 38.400473, lng: 141.593721, description: "江島褶曲地層があり、海鳥繁殖地としても知られる。断崖が迫る冒険的な島で、ウミネコの観察や神社巡りも楽しめる。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//enoshima.jpg" },
 ];
-const testLocationForMap = { id: "test", name: "テスト用ロケーション", lat: 38.26883, lng: 140.87188, description: "開発テスト用の地点です。", image: "" };
 
+// ★★★ テスト用の位置情報を別途定義 ★★★
+const testLocationForMap = { id: "miyagi-pref", name: "宮城県庁", lat: 38.268352, lng: 140.872127, description: "テスト用の場所（宮城県庁）です。", image: "https://www.pref.miyagi.jp/images/5994/55420_1.gif" };
+
+// ★★★ ご指定の賞品情報に差し替え ★★★
+const prizes = [
+  { name: "A賞", points: 3, description: "みやぎの特産品（5,000円相当）" },
+  { name: "B賞", points: 2, description: "みやぎの特産品（3,000円相当）" },
+  { name: "C賞", points: 1, description: "みやぎの特産品（1,000円相当）" },
+  { name: "D賞", points: 1, description: "みやぎポイント 1,000pt" }
+];
 
 //================================================================
-// 認証とアプリケーションの起動
+// グローバル状態変数
 //================================================================
 
-/**
- * アプリ起動時のメイン関数
- */
-async function bootstrapApp() {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    loadingOverlay.style.display = 'flex';
+let currentUser = null;
+let userProfile = null;
+let collectedStamps = new Set();
+let map;
+let markers = [];
+let userLocationMarker = null;
+let html5Qrcode;
+let isProcessingQR = false;
+let isAppInitialized = false;
+let canUseCamera = false;
+let prizeHistory = [];
 
-    // 1. まず、Supabaseの現在のセッションを確認
-    const { data: { session: existingSession } } = await supabaseClient.auth.getSession();
-    if (existingSession && existingSession.user) {
-        console.log("アクティブなセッションが見つかりました。");
-        await runApplication(existingSession.user);
-        return;
-    }
+//================================================================
+// 1. アプリケーションのエントリーポイントと認証管理
+//================================================================
 
-    // 2. セッションがない場合、保存されたユーザーIDでリフレッシュを試みる
-    const storedUserId = localStorage.getItem('p8n_user_id');
-    if (storedUserId) {
-        console.log(`保存されたユーザーID [${storedUserId}] でセッションの再確立を試みます。`);
-        try {
-            const { data, error } = await supabaseClient.functions.invoke('refresh-pocketsign-token', {
-                body: { userId: storedUserId },
-            });
-
-            if (error) { throw new Error("リフレッシュトークンでの認証に失敗しました。"); }
-            
-            const { accessToken } = data;
-            if (!accessToken) throw new Error('再確立したアクセストークンの取得に失敗しました。');
-            
-            await supabaseClient.auth.setSession({ access_token: accessToken, refresh_token: accessToken });
-            
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) throw new Error("リフレッシュ後のユーザー情報取得に失敗しました。");
-
-            console.log("セッションの再確立に成功しました。");
-            await runApplication(user);
-
-        } catch (e) {
-            console.warn("セッションの再確立に失敗しました。通常のログインフローに移行します。", e.message);
-            redirectToLogin();
-        }
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dev') === 'true') {
+        console.log("🛠️ 開発者モードで起動しました。");
+        const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
+        currentUser = { id: devUserId, email: 'developer@example.com' };
+        showAuthenticatedUI();
+        loadAndInitializeApp();
     } else {
-        // 3. 保存されたユーザーIDもない場合 (完全な初回起動)
-        console.log("保存されたユーザーIDがありません。通常のログインフローを開始します。");
-        redirectToLogin();
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+                currentUser = session.user;
+                showAuthenticatedUI();
+                loadAndInitializeApp();
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                userProfile = null;
+                showLoginUI();
+            }
+        });
     }
-}
 
-/**
- * 認証成功後に、アプリの全機能を初期化して実行する
- * @param {object} user - Supabaseのユーザーオブジェクト
- */
-async function runApplication(user) {
-    console.log("アプリケーションの実行を開始します...");
-    currentUser = user;
-    
-    // UIを認証済み状態に切り替え
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && currentUser) {
+            console.log("アプリが再度表示されました。位置情報を再チェックします。");
+            checkInitialLocationAndSetCameraPermission();
+        }
+    });
+});
+
+
+//================================================================
+// 2. UI表示の切り替え
+//================================================================
+
+function showAuthenticatedUI() {
     document.getElementById('loginPrompt').style.display = 'none';
     document.getElementById('appContainer').style.display = 'flex';
+}
 
-    // データを取得
+function showLoginUI() {
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('loginPrompt').style.display = 'block';
+}
+
+//================================================================
+// 3. データの読み込みとアプリ初期化
+//================================================================
+
+async function loadAndInitializeApp() {
     await fetchUserData();
-
-    // 全てのUIコンポーネントとイベントを初期化
-    updatePointsDisplay();
-    initializeMap();
-    updateStampCards();
-    updatePrizeHistory();
-    setupEventListeners();
-    checkInitialLocationAndSetCameraPermission();
-    
-    // ローディング画面を非表示
-    document.getElementById('loadingOverlay').style.display = 'none';
-    console.log("アプリケーションの初期化が完了しました。");
+    initializeApp();
+    await checkInitialLocationAndSetCameraPermission();
 }
-
-/**
- * ログインページにリダイレクトする
- */
-function redirectToLogin() {
-    localStorage.removeItem('p8n_user_id');
-    window.location.href = './auth.html';
-}
-
-
-//================================================================
-// データ取得・更新
-//================================================================
 
 async function fetchUserData() {
     if (!currentUser) return;
     try {
-        console.log("ユーザーデータを取得中...");
         const { data: profileData, error: profileError } = await supabaseClient
-            .from('profiles')
-            .select('total_points, birth_year, gender, address')
-            .eq('id', currentUser.id)
-            .single();
-        if (profileError) throw profileError;
-        userProfile = profileData;
+            .from('profiles').select('total_points').eq('id', currentUser.id).single();
+        if (profileError && profileError.code !== 'PGRST116') throw profileError;
+        userProfile = profileData || { total_points: 0 };
 
         const { data: stampsData, error: stampsError } = await supabaseClient
-            .from('collected_stamps')
-            .select('island_id')
-            .eq('user_id', currentUser.id);
+            .from('collected_stamps').select('island_id').eq('user_id', currentUser.id);
         if (stampsError) throw stampsError;
         collectedStamps = new Set(stampsData.map(s => s.island_id));
 
-        const { data: prizeData, error: prizeError } = await supabaseClient
-            .from('prize_entries')
-            .select('prize_id, entered_at, prize_name')
-            .eq('user_id', currentUser.id)
-            .order('entered_at', { ascending: false });
-        if (prizeError) throw prizeError;
-        prizeHistory = prizeData;
-        console.log("ユーザーデータの取得完了。");
+        const { data: historyData, error: historyError } = await supabaseClient
+            .from('prize_entries').select('prize_name, points_spent, entry_at').eq('user_id', currentUser.id).order('entry_at', { ascending: false });
+        if (historyError) throw historyError;
+        prizeHistory = historyData || [];
+
     } catch (error) {
-        console.error('ユーザーデータの取得に失敗しました:', error);
+        console.error("ユーザーデータの取得に失敗しました:", error);
+        userProfile = { total_points: 0 };
+        collectedStamps = new Set();
+        prizeHistory = [];
+    }
+}
+
+function initializeApp() {
+    if (isAppInitialized) return;
+    initializeMap();
+    initializeNavigation();
+    initializeQRCamera();
+    initializeStampCards();
+    initializePrizeSection();
+    renderPrizes();
+    renderHistory();
+    updatePointsDisplay();
+    initializeGeolocation();
+    isAppInitialized = true;
+}
+
+//================================================================
+// 4. 主要機能 (Supabase連携)
+//================================================================
+
+// onScanSuccess 関数をこの最終版コードに丸ごと置き換えてください
+async function onScanSuccess(decodedText) {
+    if (isProcessingQR) {
+        return;
+    }
+    isProcessingQR = true;
+
+    const qrStatus = document.getElementById('qrStatus');
+    qrStatus.textContent = 'QRコードをチェックしています...';
+    qrStatus.className = 'qr-status info';
+
+    try {
+        const normalizedDecodedText = decodedText.trim().normalize();
+        const matchedIsland = islands.find(island => island.name.normalize() === normalizedDecodedText);
+
+        if (!matchedIsland) {
+            throw new Error(`「${decodedText}」は対象外のQRコードです。`);
+        }
+        
+        qrStatus.textContent = 'スタンプをデータベースに保存中...';
+        
+        // デバッグ用にユーザーIDとパラメータを表示
+        console.log('Supabase RPC呼び出し:', {
+            function: 'add_stamp_and_point',
+            user_id: currentUser.id,
+            island_id: matchedIsland.id
+        });
+        
+        const { data: rpcData, error: rpcError } = await supabaseClient.rpc('add_stamp_and_point', {
+            p_island_id: matchedIsland.id
+        });
+        
+        // デバッグ用にレスポンスを表示
+        console.log('Supabase RPC レスポンス:', { data: rpcData, error: rpcError });
+
+        // ★ データベース関数からエラーが報告された場合
+        if (rpcError) {
+            throw new Error(rpcError.message);
+        }
+
+        // 成功処理
+        collectedStamps.add(matchedIsland.id);
+        userProfile.total_points += 1;
+
+        // スキャナーを停止してからモーダルを閉じる
+        if (html5Qrcode && html5Qrcode.isScanning) {
+            await html5Qrcode.stop().catch(err => console.error("QRスキャナの停止に失敗しました。", err));
+        }
+        
+        closeQRCamera();
+        showSuccessModal(matchedIsland.name, () => {
+            updatePointsDisplay();
+            updateStampCards();
+            updateMapMarkers();
+            updatePrizes();
+        });
+
+        isProcessingQR = false;  // 成功時はここでリセット
+        
+    } catch (error) {
+        // ★ すべてのエラーをここでキャッチし、ユーザーに明確に表示
+        console.error("スタンプ処理中にエラーが発生しました:", error);
+        
+        // エラー内容をQRモーダル内に表示
+        // エラーメッセージから不要な "Error: " などを取り除く
+        const cleanErrorMessage = error.message.replace(/^(Error: )?/, '');
+        qrStatus.textContent = cleanErrorMessage;
+        qrStatus.className = 'qr-status error';
+        
+        // 画面上部にも分かりやすくメッセージを表示
+        showMessage(cleanErrorMessage, 'error');
+        
+        // エラー時は3秒後にスキャンを再開
+        setTimeout(async () => {
+            isProcessingQR = false;
+            qrStatus.textContent = 'QRコードを枠内に収めてください';
+            qrStatus.className = 'qr-status info';
+        }, 3000);
+        
+    } finally {
+        // エラー時は処理フラグのみリセット（成功時は既にリセット済み）
+        if (isProcessingQR) {
+            setTimeout(() => {
+                isProcessingQR = false;
+            }, 2000);
+        }
     }
 }
 
 
+async function applyForPrize(prizeIndex) {
+    const prize = prizes[prizeIndex];
+    if (userProfile.total_points < prize.points) {
+        showMessage("ポイントが足りません。", 'warning');
+        return;
+    }
+    showConfirmModal(prize, async () => {
+        try {
+            const rpcParams = { p_prize_name: prize.name, p_points_spent: prize.points };
+            const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
+            if (error) throw error;
+            if (data !== '応募に成功しました。') throw new Error(data);
+            
+            showMessage(`${prize.name}に応募しました！`, 'success');
+
+            await fetchUserData();
+            updatePointsDisplay();
+            updatePrizes();
+            renderHistory();
+        } catch (error) {
+            console.error("応募処理に失敗しました:", error);
+            showMessage(`応募処理中にエラーが発生しました: ${error.message}`, 'error');
+        }
+    });
+}
+
 //================================================================
-// UIコンポーネントの初期化と更新
+// 5. UIコンポーネントの初期化と更新
 //================================================================
 
-function updatePointsDisplay() {
-    const pointsValue = document.getElementById('pointsValue');
-    if (pointsValue && userProfile) {
-        pointsValue.textContent = userProfile.total_points || 0;
+function initializeMap() {
+    if (map) { map.remove(); }
+    map = L.map('map').setView([38.3, 141.3], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+    markers = [];
+    islands.forEach(addIslandMarker);
+    addIslandMarker(testLocationForMap); // ★★★ テスト用マーカーをマップにだけ追加
+}
+
+function addIslandMarker(island) {
+    const isCollected = collectedStamps.has(island.id);
+    const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
+    const customIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
+    const marker = L.marker([island.lat, island.lng], { icon: customIcon }).addTo(map);
+    const popupContent = `<div class="island-popup"><img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'"><h3>${island.name}</h3><p>${island.description}</p>${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}</div>`;
+    marker.bindPopup(popupContent);
+    markers.push({ marker, island });
+}
+
+function updateMapMarkers() {
+    markers.forEach(({ marker, island }) => {
+        const isCollected = collectedStamps.has(island.id);
+        const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
+        const newIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
+        marker.setIcon(newIcon);
+        const popupContent = `<div class="island-popup"><img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'"><h3>${island.name}</h3><p>${island.description}</p>${isCollected ? '<p style="color: var(--color-success); font-weight: bold;">✓ スタンプ獲得済み</p>' : ''}</div>`;
+        marker.setPopupContent(popupContent);
+    });
+}
+
+function initializeGeolocation() {
+    if (!navigator.geolocation) { console.log("お使いのブラウザは位置情報機能に対応していません。"); return; }
+    const locationOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+    navigator.geolocation.watchPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            const latLng = [latitude, longitude];
+            if (userLocationMarker) {
+                userLocationMarker.setLatLng(latLng);
+            } else {
+                const userIcon = L.divIcon({ html: '<div class="user-location-marker"></div>', className: 'custom-user-location-container', iconSize: [24, 24], iconAnchor: [12, 12] });
+                userLocationMarker = L.marker(latLng, { icon: userIcon }).addTo(map);
+                map.setView(latLng, 13);
+            }
+        },
+        (error) => {
+            console.error("位置情報の取得に失敗しました: ", error);
+            if (error.code === 1) showMessage("位置情報の利用が許可されていません。", "warning");
+        },
+        locationOptions
+    );
+}
+
+function initializeNavigation() {
+    const navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            switchSection(this.dataset.section);
+            navButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+}
+
+function switchSection(sectionId) {
+    document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+        if (sectionId === 'mapSection' && map) map.invalidateSize();
     }
+
+    // ▼▼▼ この3行を追加 ▼▼▼
+    const qrButton = document.getElementById('qrCameraBtn');
+    if (sectionId === 'entrySection') {
+        qrButton.style.display = 'none'; // 応募セクションでは非表示
+    } else {
+        qrButton.style.display = 'flex'; // それ以外のセクションでは表示
+    }
+}
+
+function initializeQRCamera() {
+    document.getElementById('qrCameraBtn').addEventListener('click', openQRCamera);
+    document.getElementById('closeQrModal').addEventListener('click', closeQRCamera);
+    document.getElementById('qrModal').addEventListener('click', (e) => { if (e.target.id === 'qrModal') closeQRCamera(); });
+    html5Qrcode = new Html5Qrcode("qrReader");
+}
+
+async function openQRCamera() {
+    if (!canUseCamera) {
+        showMessage("スタンプラリーエリア外です。QRスキャンを利用するにはいずれかの島に近づいてください。", "warning");
+        return;
+    }
+    isProcessingQR = false;
+    const qrModal = document.getElementById('qrModal');
+    const qrStatus = document.getElementById('qrStatus');
+    qrModal.classList.add('active');
+    qrStatus.textContent = 'カメラを起動しています...';
+    qrStatus.className = 'qr-status info';
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    try {
+        await html5Qrcode.start(
+            { facingMode: "environment" }, config,
+            (decodedText, decodedResult) => {
+                if (isProcessingQR) return;
+                // QRコードを読み取ったら、まず処理を実行（stopは後で）
+                onScanSuccess(decodedText);
+            }
+        );
+        qrStatus.textContent = 'QRコードを枠内に収めてください';
+        qrStatus.className = 'qr-status info';
+    } catch (err) {
+        console.error("html5-qrcode.start() failed", err);
+        let message = 'カメラの起動に失敗しました。';
+        if (err.name === 'NotAllowedError') message = 'カメラの利用が許可されていません。ブラウザの設定を確認してください。';
+        qrStatus.textContent = message;
+        qrStatus.className = 'qr-status error';
+    }
+}
+
+function closeQRCamera() {
+    if (html5Qrcode && html5Qrcode.isScanning) {
+        html5Qrcode.stop().catch(err => console.error("QRスキャナの停止に失敗しました。", err));
+    }
+    document.getElementById('qrModal').classList.remove('active');
+}
+
+function initializeStampCards() {
+    const stampGrid = document.getElementById('stampGrid');
+    stampGrid.innerHTML = '';
+    islands.forEach(island => { // ★★★ 8島の配列を直接使うようにクリーンアップ
+        const stampCard = document.createElement('div');
+        stampCard.className = 'stamp-card';
+        stampCard.id = `stamp-${island.id}`;
+        stampCard.innerHTML = `<span class="stamp-icon">🏝️</span><div class="stamp-name">${island.name}</div><div class="stamp-status">未獲得</div>`;
+        stampGrid.appendChild(stampCard);
+    });
+    updateStampCards();
 }
 
 function updateStampCards() {
-    const stampGrid = document.getElementById('stampGrid');
-    if (!stampGrid) return;
-    stampGrid.innerHTML = '';
-    islands.forEach(island => {
-        const isCollected = collectedStamps.has(island.id);
-        const card = document.createElement('div');
-        card.className = `stamp-card ${isCollected ? 'collected' : ''}`;
-        card.innerHTML = `
-            <div class="stamp-card-inner">
-                <div class="stamp-card-front">
-                    <img src="${island.image}" alt="${island.name}" class="stamp-image">
-                    <h3 class="stamp-name">${island.name}</h3>
-                </div>
-                <div class="stamp-card-back">
-                    <div class="stamp-icon">済</div>
-                    <p>${island.name}のスタンプ</p>
-                </div>
-            </div>
-        `;
-        stampGrid.appendChild(card);
+    islands.forEach(island => { // ★★★ 8島の配列を直接使うようにクリーンアップ
+        const stampCard = document.getElementById(`stamp-${island.id}`);
+        if (!stampCard) return;
+        const statusElement = stampCard.querySelector('.stamp-status');
+        let currentIconElement = stampCard.querySelector('.stamp-icon, .stamp-image');
+        if (collectedStamps.has(island.id)) {
+            stampCard.classList.add('collected');
+            statusElement.textContent = '獲得済み';
+            if (currentIconElement && currentIconElement.tagName !== 'IMG') {
+                const img = document.createElement('img');
+                img.src = `./assets/${island.id}.png`;
+                img.alt = `${island.name} スタンプ`;
+                img.className = 'stamp-image';
+                currentIconElement.replaceWith(img);
+            } else if (!currentIconElement) {
+                 const img = document.createElement('img');
+                 img.src = `./assets/${island.id}.png`;
+                 img.alt = `${island.name} スタンプ`;
+                 img.className = 'stamp-image';
+                 stampCard.prepend(img);
+            }
+        } else {
+            stampCard.classList.remove('collected');
+            statusElement.textContent = '未獲得';
+            if (currentIconElement && currentIconElement.tagName === 'IMG') {
+                const span = document.createElement('span');
+                span.className = 'stamp-icon';
+                span.textContent = '🏝️';
+                currentIconElement.replaceWith(span);
+            } else if (!currentIconElement) {
+                const span = document.createElement('span');
+                span.className = 'stamp-icon';
+                span.textContent = '🏝️';
+                stampCard.prepend(span);
+            }
+        }
     });
 }
 
-function updatePrizeHistory() {
-    const historyList = document.getElementById('prizeHistoryList');
-    if (!historyList) return;
+function renderPrizes() {
+    const prizesContainer = document.getElementById('prizesContainer');
+    prizesContainer.innerHTML = '';
+    prizes.forEach((prize, index) => {
+        const prizeCard = document.createElement('div');
+        prizeCard.className = 'prize-card';
+        prizeCard.innerHTML = `<div class="prize-info"><h3>${prize.name}</h3><p>${prize.description}</p></div><div class="prize-points">${prize.points}P</div><button class="prize-btn" data-prize-index="${index}">応募する</button>`;
+        prizesContainer.appendChild(prizeCard);
+    });
+    updatePrizes();
+}
+
+function initializePrizeSection() {
+    const prizesContainer = document.getElementById('prizesContainer');
+    prizesContainer.addEventListener('click', (event) => {
+        const prizeButton = event.target.closest('.prize-btn');
+        if (prizeButton && !prizeButton.disabled) {
+            const prizeIndex = parseInt(prizeButton.dataset.prizeIndex, 10);
+            applyForPrize(prizeIndex);
+        }
+    });
+}
+
+function updatePrizes() {
+    const prizeButtons = document.querySelectorAll('.prize-btn');
+    const currentPoints = userProfile ? userProfile.total_points : 0;
+    prizeButtons.forEach((btn) => {
+        const prizeIndex = parseInt(btn.dataset.prizeIndex, 10);
+        const prize = prizes[prizeIndex];
+        if (prize) {
+            const canApply = currentPoints >= prize.points;
+            btn.disabled = !canApply;
+            btn.textContent = canApply ? '応募する' : `${prize.points}P必要`;
+        }
+    });
+}
+
+function updatePointsDisplay() {
+    const pointsValue = document.getElementById('pointsValue');
+    pointsValue.textContent = userProfile ? userProfile.total_points : 0;
+}
+
+//================================================================
+// 6. ユーティリティ
+//================================================================
+
+function renderHistory() {
+    const historyList = document.getElementById('historyList');
+    const historyContainer = document.getElementById('historyContainer');
+    if (!historyList || !historyContainer) return;
     historyList.innerHTML = '';
     if (prizeHistory.length === 0) {
-        historyList.innerHTML = '<p>まだ応募履歴はありません。</p>';
+        historyContainer.style.display = 'none';
         return;
     }
+    historyContainer.style.display = 'block';
     prizeHistory.forEach(entry => {
-        const item = document.createElement('li');
-        item.className = 'history-item';
-        const entryDate = new Date(entry.entered_at).toLocaleDateString('ja-JP');
-        item.innerHTML = `
-            <div class="info">
-                <span class="prize-name">${entry.prize_name}</span>
-                <span class="entry-time">${entryDate}</span>
-            </div>
-            <span class="points">5 ポイント</span>
-        `;
-        historyList.appendChild(item);
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        const entryDate = new Date(entry.entry_at).toLocaleString('ja-JP');
+        li.innerHTML = `<div class="info"><div class="prize-name">${entry.prize_name}</div><div class="entry-time">${entryDate}</div></div><div class="points">${entry.points_spent}P 消費</div>`;
+        historyList.appendChild(li);
     });
 }
 
-function initializeMap() {
-    if (map) return;
-    console.log("マップを初期化中...");
-    map = L.map('map').setView([38.3, 141.2], 9);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    islands.forEach(island => {
-        const iconHtml = `<div class="map-icon ${collectedStamps.has(island.id) ? 'collected' : ''}"></div>`;
-        const customIcon = L.divIcon({
-            html: iconHtml,
-            className: 'custom-map-icon-container',
-            iconSize: [30, 30],
-            iconAnchor: [15, 15]
-        });
-
-        const marker = L.marker([island.lat, island.lng], { icon: customIcon }).addTo(map);
-        marker.on('click', () => showIslandModal(island));
-        islandMarkers[island.id] = marker;
-    });
-    console.log("マップの初期化完了。");
+function showSuccessModal(islandName, callback) {
+    const successModal = document.getElementById('successModal');
+    document.getElementById('successTitle').textContent = 'スタンプ獲得！';
+    document.getElementById('successMessage').textContent = `${islandName}のスタンプを獲得しました！ポイントが1つ増えました。`;
+    successModal.classList.add('active');
+    const closeButton = document.getElementById('closeSuccessModal');
+    closeButton.onclick = () => {
+        successModal.classList.remove('active');
+        if (callback && typeof callback === 'function') callback();
+        closeButton.onclick = null;
+    };
 }
 
-function setupEventListeners() {
-    console.log("イベントリスナーを設定中...");
-    // 下部ナビゲーション
-    const navItems = document.querySelectorAll('.nav-item');
-    const sections = document.querySelectorAll('.section');
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            navItems.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-            const targetId = item.getAttribute('data-target');
-            sections.forEach(s => s.classList.remove('active'));
-            document.getElementById(targetId).classList.add('active');
-            if (targetId === 'mapSection') {
-                map.invalidateSize(); // マップ表示時にサイズを再計算
-            }
-        });
-    });
-
-    // その他のボタン
-    document.getElementById('startQRScanBtn').addEventListener('click', startQRScanner);
-    document.getElementById('closeScannerBtn').addEventListener('click', stopQRScanner);
-    document.getElementById('closeIslandModal').addEventListener('click', () => document.getElementById('islandModal').style.display = 'none');
-    document.getElementById('closeSuccessModal').addEventListener('click', () => document.getElementById('successModal').style.display = 'none');
-    document.getElementById('logout-button').addEventListener('click', handleLogout);
-    
-    document.querySelectorAll('.apply-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const prizeName = e.target.getAttribute('data-prize-name');
-            const prizeId = e.target.getAttribute('data-prize-id');
-            showConfirmModal(prizeName, prizeId);
-        });
-    });
-    console.log("イベントリスナーの設定完了。");
-}
-
-async function handleLogout() {
-    await supabaseClient.auth.signOut();
-    // onAuthStateChangeが検知してリダイレクト処理などを行う
-}
-
-
-//================================================================
-// その他の機能関数 (QRスキャン、モーダル、位置情報など)
-//================================================================
-
-function showIslandModal(island) {
-    document.getElementById('modalIslandName').textContent = island.name;
-    document.getElementById('modalIslandDescription').textContent = island.description;
-    document.getElementById('modalIslandLocation').textContent = `場所: ${island.location}`;
-    document.getElementById('modalIslandImage').src = island.image;
-    document.getElementById('islandModal').style.display = 'flex';
-}
-
-function startQRScanner() {
-    if (!canUseCamera) {
-        showMessage("スタンプラリーエリア外のため、カメラを起動できません。", "error");
-        return;
-    }
-    const scannerContainer = document.getElementById('qrScannerContainer');
-    scannerContainer.style.display = 'block';
-    html5QrCode = new Html5Qrcode("qr-reader");
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-    html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
-}
-
-function stopQRScanner() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            document.getElementById('qrScannerContainer').style.display = 'none';
-        }).catch(err => console.error("QRスキャナーの停止に失敗", err));
-    }
-}
-
-async function onScanSuccess(decodedText, decodedResult) {
-    stopQRScanner();
-    const island = islands.find(i => i.id === decodedText);
-    if (island) {
-        if (collectedStamps.has(island.id)) {
-            showMessage(`${island.name}のスタンプは既に獲得済みです。`, "info");
-        } else {
-            await grantStampAndPoints(island);
-        }
-    } else {
-        showMessage("無効なQRコードです。", "error");
-    }
-}
-
-function onScanFailure(error) { /* 意図的に空 */ }
-
-async function grantStampAndPoints(island) {
-    try {
-        const { error } = await supabaseClient.rpc('grant_stamp_and_points', {
-            p_user_id: currentUser.id,
-            p_island_id: island.id,
-            p_points_to_add: 10
-        });
-        if (error) throw error;
-
-        collectedStamps.add(island.id);
-        userProfile.total_points += 10;
-        updatePointsDisplay();
-        updateStampCards();
-        updateMarkerIcon(island.id);
-        showSuccessModal(`${island.name}のスタンプを獲得！`, "10ポイントゲット！");
-    } catch (error) {
-        console.error("スタンプ付与エラー:", error);
-        showMessage("スタンプの付与に失敗しました。", "error");
-    }
-}
-
-function showConfirmModal(prizeName, prizeId) {
-    document.getElementById('confirmTitle').textContent = `${prizeName}に応募`;
-    document.getElementById('confirmMessage').textContent = `本当に${prizeName}に応募しますか？ (5ポイント消費)`;
+function showConfirmModal(prize, onConfirm) {
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
     const confirmBtn = document.getElementById('confirmApplyBtn');
     const cancelBtn = document.getElementById('cancelApplyBtn');
-    
-    const confirmHandler = () => {
-        applyForPrize(prizeName, prizeId);
-        closeConfirmModal();
+    confirmTitle.textContent = `${prize.name}への応募`;
+    confirmMessage.textContent = `${prize.points}ポイントを消費します。本当によろしいですか？`;
+    confirmModal.classList.add('active');
+    confirmBtn.onclick = () => {
+        confirmModal.classList.remove('active');
+        onConfirm();
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
     };
-
-    const closeConfirmModal = () => {
-        document.getElementById('confirmModal').style.display = 'none';
-        confirmBtn.removeEventListener('click', confirmHandler);
-        cancelBtn.removeEventListener('click', closeConfirmModal);
+    cancelBtn.onclick = () => {
+        confirmModal.classList.remove('active');
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
     };
-
-    confirmBtn.addEventListener('click', confirmHandler);
-    cancelBtn.addEventListener('click', closeConfirmModal);
-    document.getElementById('confirmModal').style.display = 'flex';
 }
 
-async function applyForPrize(prizeName, prizeId) {
-    if (userProfile.total_points < 5) {
-        showMessage("ポイントが足りません。", "error");
-        return;
-    }
-    try {
-        const { error } = await supabaseClient.rpc('apply_for_prize', {
-            p_user_id: currentUser.id,
-            p_prize_id: prizeId,
-            p_prize_name: prizeName,
-            p_points_to_deduct: 5
-        });
-        if (error) throw error;
-        userProfile.total_points -= 5;
-        await fetchUserData();
-        updatePointsDisplay();
-        updatePrizeHistory();
-        showSuccessModal("応募完了！", `${prizeName}に応募しました。`);
-    } catch (error) {
-        console.error("応募エラー:", error);
-        showMessage("応募に失敗しました。", "error");
-    }
-}
-
-function showSuccessModal(title, message) {
-    document.getElementById('successTitle').textContent = title;
-    document.getElementById('successMessage').textContent = message;
-    document.getElementById('successModal').style.display = 'flex';
-}
-
-function showMessage(message, type = "info") {
-    const container = document.getElementById('messageContainer');
-    container.textContent = message;
-    container.className = `message-container ${type} show`;
-    setTimeout(() => container.classList.remove('show'), 3000);
-}
-
-function updateMarkerIcon(islandId) {
-    const marker = islandMarkers[islandId];
-    if (marker) {
-        const iconHtml = `<div class="map-icon collected"></div>`;
-        const newIcon = L.divIcon({
-            html: iconHtml,
-            className: 'custom-map-icon-container',
-            iconSize: [30, 30],
-            iconAnchor: [15, 15]
-        });
-        marker.setIcon(newIcon);
-    }
-}
-
-async function checkInitialLocationAndSetCameraPermission() {
-    console.log("位置情報を確認中...");
-    showMessage("現在地から利用可能エリアか確認しています...", "info");
-    try {
-        const position = await getCurrentLocation();
-        const userLat = position.coords.latitude;
-        const userLon = position.coords.longitude;
-        const allLocations = [...islands, testLocationForMap];
-        for (const location of allLocations) {
-            const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
-            if (distance <= 8) { // 距離の閾値
-                canUseCamera = true;
-                showMessage("スタンプラリーエリア内です。QRコードをスキャンできます。", "success");
-                console.log("カメラ使用を許可しました。");
-                return;
-            }
-        }
-        canUseCamera = false;
-        showMessage("スタンプラリーエリア外です。島に近づいてください。", "info");
-        console.log("カメラ使用は許可されませんでした。");
-    } catch (error) {
-        console.error("位置情報取得エラー:", error);
-        showMessage("位置情報の取得に失敗しました。ブラウザの設定を確認してください。", "error");
-    }
+function showMessage(message, type = 'info') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${type}`;
+    messageDiv.textContent = message;
+    document.body.appendChild(messageDiv);
+    setTimeout(() => messageDiv.remove(), 3000);
 }
 
 function getCurrentLocation() {
     return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject(new Error("Geolocation is not supported by your browser."));
-        }
+        if (!navigator.geolocation) { return reject(new Error('お使いのブラウザは位置情報機能に対応していません。')); }
         const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
         navigator.geolocation.getCurrentPosition(resolve, reject, options);
     });
@@ -465,22 +574,27 @@ function getDistanceInKm(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-
-//================================================================
-// アプリケーションのエントリーポイント
-//================================================================
-
-// ログアウト処理を監視
-supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
-        console.log("ログアウトを検知しました。");
-        currentUser = null;
-        localStorage.removeItem('p8n_user_id');
-        document.getElementById('appContainer').style.display = 'none';
-        document.getElementById('loginPrompt').style.display = 'block';
-        document.getElementById('loadingOverlay').style.display = 'none';
+async function checkInitialLocationAndSetCameraPermission() {
+    showMessage("現在地から利用可能エリアか確認しています...", "info");
+    try {
+        const position = await getCurrentLocation();
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+        // ★★★ 判定対象にテスト用ロケーションを追加 ★★★
+        const allLocations = [...islands, testLocationForMap];
+        for (const location of allLocations) {
+            const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
+            if (distance <= 3) {
+                canUseCamera = true;
+                showMessage("スタンプラリーエリア内です。QRスキャンが利用できます！", "success");
+                return;
+            }
+        }
+        canUseCamera = false;
+        showMessage("スタンプラリーエリア外です。QRスキャンを利用するにはいずれかの島に近づいてください。", "warning");
+    } catch (error) {
+        canUseCamera = false;
+        console.error("起動時の位置情報取得に失敗しました:", error);
+        showMessage("位置情報の取得に失敗しました。QRスキャンは利用できません。", "error");
     }
-});
-
-// DOMの読み込みが完了したら、アプリの起動処理を開始
-document.addEventListener('DOMContentLoaded', bootstrapApp);
+}

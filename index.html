@@ -46,7 +46,7 @@
                          
                      </ul>
                  </div>
-                 <div class="entry-section-bottom-spacer"></div> </section>
+            </section>
         </main>
 
         <div id="qrModal" class="modal">
@@ -91,12 +91,12 @@
 </div>
     </div>
 
-    <div id="loginPrompt" style="text-align: center; padding: 50px; display: none;">
+    <div id="loginPrompt" style="text-align: center; padding: 50px;">
         <h2>認証情報がありません</h2>
         <p>このアプリはポケットサインから起動してください。</p>
     </div>
 
-    <div id="loadingOverlay" class="loading-overlay" style="display: flex;">
+    <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
     </div>
 
@@ -105,124 +105,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="supabase-client.js"></script>
-    
-    <script>
-        // 認証処理を別スクリプトとして実装
-        async function tryRefreshToken() {
-            try {
-                // LocalStorageから以前のユーザーIDを取得
-                const savedUserId = localStorage.getItem('pocketsign_user_id');
-                if (!savedUserId) return false;
-
-                console.log('Trying to refresh token for user:', savedUserId);
-
-                // refresh_tokenを使って新しいトークンを取得
-                const { data, error } = await window.supabaseClient.functions.invoke('refresh-pocketsign-token', {
-                    body: { userId: savedUserId }
-                });
-
-                if (error || !data.success) {
-                    console.log('Refresh token failed:', error);
-                    localStorage.removeItem('pocketsign_user_id');
-                    return false;
-                }
-
-                // 新しいセッションを設定
-                const { error: sessionError } = await window.supabaseClient.auth.setSession({
-                    access_token: data.accessToken,
-                    refresh_token: data.accessToken
-                });
-
-                if (sessionError) {
-                    console.error('Session creation failed:', sessionError);
-                    return false;
-                }
-
-                console.log('Successfully refreshed token');
-                return true;
-            } catch (error) {
-                console.error('Error in tryRefreshToken:', error);
-                return false;
-            }
-        }
-
-        // 初期化時の認証チェック
-        async function initializeAuth() {
-            // ローディング画面を表示
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            
-            const params = new URLSearchParams(window.location.search);
-            
-            if (params.get('dev') === 'true') {
-                // 開発者モード
-                console.log("🛠️ 開発者モードで起動しました。");
-                const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
-                currentUser = { id: devUserId, email: 'developer@example.com' };
-                document.getElementById('loadingOverlay').style.display = 'none';
-                showAuthenticatedUI();
-                loadAndInitializeApp();
-                return;
-            }
-
-            try {
-                // まずrefresh_tokenでの認証を試みる
-                const refreshSuccess = await tryRefreshToken();
-                
-                if (refreshSuccess) {
-                    // refresh_tokenでの認証成功 - 同意画面をスキップ
-                    console.log('Authenticated via refresh token');
-                    // この時点でonAuthStateChangeが発火するのを待つ
-                } else {
-                    // refresh_tokenがない or 失敗した場合は、通常の認証フローをチェック
-                    const { data: { session } } = await window.supabaseClient.auth.getSession();
-                    if (!session) {
-                        // セッションがない場合のみログイン画面を表示
-                        document.getElementById('loadingOverlay').style.display = 'none';
-                        document.getElementById('loginPrompt').style.display = 'block';
-                        // 3秒後に認証ページへリダイレクト
-                        setTimeout(() => {
-                            window.location.href = './auth.html';
-                        }, 3000);
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.error('Auth initialization error:', error);
-                document.getElementById('loadingOverlay').style.display = 'none';
-                document.getElementById('loginPrompt').style.display = 'block';
-            }
-
-            // Supabaseの認証状態変更を監視
-            window.supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-                    currentUser = session.user;
-                    // ユーザーIDを保存（次回起動時のrefresh用）
-                    localStorage.setItem('pocketsign_user_id', session.user.id);
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                    showAuthenticatedUI();
-                    loadAndInitializeApp();
-                } else if (event === 'SIGNED_OUT') {
-                    currentUser = null;
-                    userProfile = null;
-                    localStorage.removeItem('pocketsign_user_id');
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                    showLoginUI();
-                }
-            });
-        }
-
-        // ページ読み込み時に認証を初期化
-        document.addEventListener('DOMContentLoaded', initializeAuth);
-
-        // visibilitychange イベントハンドラも追加
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && currentUser) {
-                console.log("アプリが再度表示されました。位置情報を再チェックします。");
-                checkInitialLocationAndSetCameraPermission();
-            }
-        });
-    </script>
-    
     <script src="app.js"></script>
 </body>
 </html>

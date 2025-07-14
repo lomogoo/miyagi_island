@@ -192,8 +192,8 @@ p { margin: 0; }
 
 /* Header - よりポップなデザイン */
 .header {
-  /* 高さをやや低く調整 */
-  padding: var(--space-12) var(--space-20); 
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  padding: var(--space-16) var(--space-20);
   box-shadow: var(--shadow-md);
   z-index: 1000;
   display: flex;
@@ -202,9 +202,6 @@ p { margin: 0; }
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
-  /* 薄い印象にするためにグラデーションを調整 */
-  background: linear-gradient(135deg, rgba(0, 188, 212, 0.8) 0%, rgba(0, 172, 193, 0.8) 100%);
-  backdrop-filter: blur(5px);
 }
 
 /* 雲の装飾 */
@@ -232,7 +229,7 @@ p { margin: 0; }
 
 /* タイトル画像のスタイル */
 .header .app-title-image {
-  height: 100px; /* 少し低く調整 */
+  height: 120px; /* より大きなサイズに調整 */
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
@@ -333,15 +330,13 @@ p { margin: 0; }
   border-radius: var(--radius-lg);
 }
 
-/* マップポップアップのサイズ調整 */
 .island-popup { 
   text-align: center; 
-  max-width: 250px; /* 最大幅を少し広げる */
-  width: auto; /* コンテンツに合わせて自動調整 */
+  max-width: 200px; 
 }
 .island-popup img { 
   width: 100%; 
-  height: 150px; /* 高さを少し高くする */
+  height: 120px; 
   object-fit: cover; 
   border-radius: var(--radius-base); 
   margin-bottom: var(--space-8); 
@@ -354,13 +349,6 @@ p { margin: 0; }
 .island-popup p { 
   color: var(--color-text-secondary); 
   font-size: var(--font-size-sm); 
-  margin-bottom: var(--space-4); /* 段落間の余白を調整 */
-}
-/* 設置場所のテキストスタイル */
-.island-popup .location-text {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
-  margin-top: var(--space-8); /* 上部に余白を追加 */
 }
 
 /* Stamp Grid - ポップなカードデザイン */
@@ -1082,10 +1070,6 @@ p { margin: 0; }
     font-size: var(--font-size-xs); 
   }
   
-  .stamp-status { 
-    font-size: var(--font-size-xs); 
-  }
-  
   .prize-card {
     flex-direction: column;
     gap: var(--space-16);
@@ -1279,12 +1263,6 @@ p { margin: 0; }
     white-space: nowrap; /* ポイント数が改行されないように */
 }
 
-/* 応募履歴と下部メニューの間隔を空けるためのスペーサー */
-.entry-section-bottom-spacer {
-    height: 100px; /* 下部メニューの高さと余白を考慮して調整 */
-    flex-shrink: 0;
-}
-
 
 /* style.css の末尾に追加 */
 
@@ -1316,3 +1294,8 @@ p { margin: 0; }
         transform: rotate(360deg);
     }
 }
+
+
+
+
+
