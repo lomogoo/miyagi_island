@@ -19,10 +19,8 @@ const islands = [
   { id: "enoshima", name: "江島", lat: 38.400473, lng: 141.593721, description: "江島褶曲地層があり、海鳥繁殖地としても知られる。断崖が迫る冒険的な島で、ウミネコの観察や神社巡りも楽しめる。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//enoshima.jpg", qrLocation: "江島離島航路待合所" },
 ];
 
-// ★★★ テスト用の位置情報を別途定義 ★★★
-const testLocationForMap = { id: "miyagi-pref", name: "宮城県庁", lat: 38.268352, lng: 140.872127, description: "テスト用の場所（宮城県庁）です。", image: "https://www.pref.miyagi.jp/images/5994/55420_1.gif", qrLocation: "宮城県庁 1階" }; // テスト用にもqrLocationを追加
+const testLocationForMap = { id: "miyagi-pref", name: "宮城県庁", lat: 38.268352, lng: 140.872127, description: "テスト用の場所（宮城県庁）です。", image: "https://www.pref.miyagi.jp/images/5994/55420_1.gif", qrLocation: "宮城県庁 1階" };
 
-// ★★★ ご指定の賞品情報に差し替え ★★★
 const prizes = [
   { name: "A賞", points: 3, description: "みやぎの特産品（5,000円相当）" },
   { name: "B賞", points: 2, description: "みやぎの特産品（3,000円相当）" },
@@ -45,7 +43,7 @@ let isProcessingQR = false;
 let isAppInitialized = false;
 let canUseCamera = false;
 let prizeHistory = [];
-let qrScanTimeout = null; // ★ 修正: タイムアウトIDを管理する変数を追加
+let qrScanTimeout = null;
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -80,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
 
 //================================================================
 // 2. UI表示の切り替え
@@ -151,7 +148,6 @@ function initializeApp() {
 //================================================================
 
 async function onScanSuccess(decodedText) {
-    // ★ 修正: タイムアウトを解除
     if (qrScanTimeout) {
         clearTimeout(qrScanTimeout);
         qrScanTimeout = null;
@@ -176,17 +172,9 @@ async function onScanSuccess(decodedText) {
         
         qrStatus.textContent = 'スタンプをデータベースに保存中...';
         
-        console.log('Supabase RPC呼び出し:', {
-            function: 'add_stamp_and_point',
-            user_id: currentUser.id,
-            island_id: matchedIsland.id
-        });
-        
         const { data: rpcData, error: rpcError } = await supabaseClient.rpc('add_stamp_and_point', {
             p_island_id: matchedIsland.id
         });
-        
-        console.log('Supabase RPC レスポンス:', { data: rpcData, error: rpcError });
 
         if (rpcError) {
             throw new Error(rpcError.message);
@@ -233,7 +221,6 @@ async function onScanSuccess(decodedText) {
     }
 }
 
-
 async function applyForPrize(prizeIndex) {
     const prize = prizes[prizeIndex];
     if (userProfile.total_points < prize.points) {
@@ -279,7 +266,6 @@ function addIslandMarker(island) {
     const customIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
     const marker = L.marker([island.lat, island.lng], { icon: customIcon }).addTo(map);
     
-    // ★ 修正: ポップアップに設置場所を追加
     const popupContent = `<div class="island-popup">
                               <img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'">
                               <h3>${island.name}</h3>
@@ -298,7 +284,6 @@ function updateMapMarkers() {
         const newIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
         marker.setIcon(newIcon);
 
-        // ★ 修正: ポップアップに設置場所を追加
         const popupContent = `<div class="island-popup">
                                   <img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'">
                                   <h3>${island.name}</h3>
@@ -390,7 +375,6 @@ async function openQRCamera() {
         qrStatus.textContent = 'QRコードを枠内に収めてください';
         qrStatus.className = 'qr-status info';
         
-        // ★ 修正: 10秒のタイムアウトを設定
         qrScanTimeout = setTimeout(() => {
             console.log("10秒間読み取りがなかったため、カメラを自動的に閉じます。");
             closeQRCamera();
@@ -407,7 +391,6 @@ async function openQRCamera() {
 }
 
 function closeQRCamera() {
-    // ★ 修正: タイムアウトを解除
     if (qrScanTimeout) {
         clearTimeout(qrScanTimeout);
         qrScanTimeout = null;
@@ -588,7 +571,7 @@ function getCurrentLocation() {
     });
 }
 
-function getInKm(lat1, lon1, lat2, lon2) {
+function getDistanceInKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -605,7 +588,7 @@ async function checkInitialLocationAndSetCameraPermission() {
         const userLon = position.coords.longitude;
         const allLocations = [...islands, testLocationForMap];
         for (const location of allLocations) {
-            const  = getInKm(userLat, userLon, location.lat, location.lng);
+            const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
             if (distance <= 10) {
                 canUseCamera = true;
                 showMessage("スタンプラリーエリア内です。QRスキャンが利用できます！", "success");
