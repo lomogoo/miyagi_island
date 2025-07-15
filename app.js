@@ -45,6 +45,7 @@ let isProcessingQR = false;
 let isAppInitialized = false;
 let canUseCamera = false;
 let prizeHistory = [];
+let qrScanTimeout = null; // ★ 修正: タイムアウトIDを管理する変数を追加
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -150,6 +151,12 @@ function initializeApp() {
 //================================================================
 
 async function onScanSuccess(decodedText) {
+    // ★ 修正: タイムアウトを解除
+    if (qrScanTimeout) {
+        clearTimeout(qrScanTimeout);
+        qrScanTimeout = null;
+    }
+
     if (isProcessingQR) {
         return;
     }
@@ -382,6 +389,14 @@ async function openQRCamera() {
         );
         qrStatus.textContent = 'QRコードを枠内に収めてください';
         qrStatus.className = 'qr-status info';
+        
+        // ★ 修正: 10秒のタイムアウトを設定
+        qrScanTimeout = setTimeout(() => {
+            console.log("10秒間読み取りがなかったため、カメラを自動的に閉じます。");
+            closeQRCamera();
+            showMessage("タイムアウトしました。もう一度お試しください。", "warning");
+        }, 10000);
+
     } catch (err) {
         console.error("html5-qrcode.start() failed", err);
         let message = 'カメラの起動に失敗しました。';
@@ -392,6 +407,12 @@ async function openQRCamera() {
 }
 
 function closeQRCamera() {
+    // ★ 修正: タイムアウトを解除
+    if (qrScanTimeout) {
+        clearTimeout(qrScanTimeout);
+        qrScanTimeout = null;
+    }
+
     if (html5Qrcode && html5Qrcode.isScanning) {
         html5Qrcode.stop().catch(err => console.error("QRスキャナの停止に失敗しました。", err));
     }
