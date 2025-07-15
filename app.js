@@ -588,7 +588,7 @@ function getCurrentLocation() {
     });
 }
 
-function getDistanceInKm(lat1, lon1, lat2, lon2) {
+function getInKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -605,8 +605,8 @@ async function checkInitialLocationAndSetCameraPermission() {
         const userLon = position.coords.longitude;
         const allLocations = [...islands, testLocationForMap];
         for (const location of allLocations) {
-            const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
-            if (distance <= 3) {
+            const  = getInKm(userLat, userLon, location.lat, location.lng);
+            if (distance <= 10) {
                 canUseCamera = true;
                 showMessage("スタンプラリーエリア内です。QRスキャンが利用できます！", "success");
                 return;
