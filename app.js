@@ -51,23 +51,55 @@ let qrScanTimeout = null;
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('dev') === 'true') {
+        // (開発者モードのロジックは変更なし)
         console.log("🛠️ 開発者モードで起動しました。");
         const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
         currentUser = { id: devUserId, email: 'developer@example.com' };
         showAuthenticatedUI();
         loadAndInitializeApp();
     } else {
-        supabaseClient.auth.onAuthStateChange((event, session) => {
+        // ★★★ ここからが変更箇所 ★★★
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
             if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+                // セッションが有効な場合: 通常通りアプリを初期化
                 currentUser = session.user;
                 showAuthenticatedUI();
-                loadAndInitializeApp();
+                if (!isAppInitialized) {
+                    await loadAndInitializeApp();
+                }
             } else if (event === 'SIGNED_OUT') {
+                // 明示的なサインアウトの場合: ログイン画面を表示
                 currentUser = null;
                 userProfile = null;
+                isAppInitialized = false;
                 showLoginUI();
+            } else if (!session) {
+                // セッションがない場合: 自動再ログインを試みる
+                console.log("セッションがありません。自動再ログインを試みます...");
+                try {
+                    const { data, error: funcError } = await supabaseClient.functions.invoke('refresh-pocketsign-session');
+                    
+                    if (funcError) throw funcError;
+
+                    const { supabaseJwt } = data;
+                    if (!supabaseJwt) throw new Error('Supabase JWTの取得に失敗しました。');
+                    
+                    console.log("自動再ログインに成功しました。");
+                    // setSession を呼び出すと、再度 onAuthStateChange が 'SIGNED_IN' イベントでトリガーされる
+                    const { error: sessionError } = await supabaseClient.auth.setSession({
+                        access_token: supabaseJwt,
+                        refresh_token: supabaseJwt // Supabase自身のセッション更新用に設定
+                    });
+                    if (sessionError) throw sessionError;
+
+                } catch (error) {
+                    console.error("自動再ログインに失敗しました:", error.message);
+                    // 再ログインに失敗した場合のみ、ログイン画面を表示
+                    showLoginUI();
+                }
             }
         });
+        // ★★★ ここまでが変更箇所 ★★★
     }
 
     document.addEventListener('visibilitychange', () => {
