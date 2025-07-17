@@ -11,7 +11,7 @@ const islands = [
   { id: "aji", name: "網地島", lat: 38.274976, lng: 141.461628, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//aji.jpeg", qrLocation: "網地浜船着場待合所" },
   { id: "tashiro", name: "田代島", lat: 38.294834, lng: 141.426264, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//tashiro.jpg", qrLocation: "仁斗田港船着場待合所" },
   { id: "katsura", name: "桂島", lat: 38.334949, lng: 141.095117, description: "塩竈市本土から一番近い島。島内には遊歩道があり、風光明媚な景観を楽しむことができるほか、夏には海水浴場がオープンし、多くの観光客で賑わう。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//katsura.JPG", qrLocation: "桂島ステイ・ステーション" },
-  { id: "nonoshima", name: "野々島", lat:　38.338475, lng: 141.105808, description: "宿泊研 修施設「ブルーセンター」や診療所、小中学校があり、生活面でも中心的な島。ボラと呼ばれる洞穴群や椿のトンネルなど神秘的な景観が魅力。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//nono.jpg", qrLocation: "菜の花ラウンジ(浦戸諸島開発総合センター)" },
+  { id: "nonoshima", name: "野々島", lat: 38.338475, lng: 141.105808, description: "宿泊研 修施設「ブルーセンター」や診療所、小中学校があり、生活面でも中心的な島。ボラと呼ばれる洞穴群や椿のトンネルなど神秘的な景観が魅力。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//nono.jpg", qrLocation: "菜の花ラウンジ(浦戸諸島開発総合センター)" },
   { id: "sabusawa", name: "寒風沢島", lat: 38.338049, lng: 141.118135, description: "江戸時代に伊達藩の江戸廻米の港として繁栄を極め、当時を語り継ぐ風景や歴史が多く存在する。島の奥には懐かしい田園風景、美しい砂浜に辿り着く。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//sabusawa.jpeg", qrLocation: "寒風沢桟橋前待合所" },
   { id: "ho", name: "朴島", lat: 38.348959, lng: 141.124619, description: "浦戸諸島の有人島で一番小さく、ミネラル豊富な漁場で種牡蠣の生産地として有名。仙台白菜の種も生産しており、春には美しい菜の花の景色が楽しめる。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//ho.jpg", qrLocation: "市営汽船朴島待合室" },
   { id: "izushima", name: "出島", lat: 38.457811, lng: 141.518860, description: "2024年完成の大橋で本土と直結。釣りや散策が気軽に楽しめる。出島大橋が開通しアクセスが向上、レクリエーションに適した島。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//ide.jpg", qrLocation: "出島漁港内公衆用トイレ" },
@@ -98,6 +98,9 @@ function showLoginUI() {
 
 async function loadAndInitializeApp() {
     await fetchUserData();
+    // ★★★ ここに追加 ★★★
+    await checkIfWinnerAndRequestInfo();
+    // ★★★ ここまで ★★★
     initializeApp();
     await checkInitialLocationAndSetCameraPermission();
 }
@@ -168,9 +171,9 @@ async function onScanSuccess(decodedText) {
         if (!matchedIsland) {
             throw new Error(`「${decodedText}」は対象外のQRコードです。`);
         }
-        
+
         qrStatus.textContent = 'スタンプをデータベースに保存中...';
-        
+
         const { data: rpcData, error: rpcError } = await supabaseClient.rpc('add_stamp_and_point', {
             p_island_id: matchedIsland.id
         });
@@ -185,7 +188,7 @@ async function onScanSuccess(decodedText) {
         if (html5Qrcode && html5Qrcode.isScanning) {
             await html5Qrcode.stop().catch(err => console.error("QRスキャナの停止に失敗しました。", err));
         }
-        
+
         closeQRCamera();
         showSuccessModal(matchedIsland.name, () => {
             updatePointsDisplay();
@@ -195,22 +198,22 @@ async function onScanSuccess(decodedText) {
         });
 
         isProcessingQR = false;
-        
+
     } catch (error) {
         console.error("スタンプ処理中にエラーが発生しました:", error);
-        
+
         const cleanErrorMessage = error.message.replace(/^(Error: )?/, '');
         qrStatus.textContent = cleanErrorMessage;
         qrStatus.className = 'qr-status error';
-        
+
         showMessage(cleanErrorMessage, 'error');
-        
+
         setTimeout(async () => {
             isProcessingQR = false;
             qrStatus.textContent = 'QRコードを枠内に収めてください';
             qrStatus.className = 'qr-status info';
         }, 3000);
-        
+
     } finally {
         if (isProcessingQR) {
             setTimeout(() => {
@@ -232,7 +235,7 @@ async function applyForPrize(prizeIndex) {
             const { data, error } = await supabaseClient.rpc('apply_for_prize', rpcParams);
             if (error) throw error;
             if (data !== '応募に成功しました。') throw new Error(data);
-            
+
             showMessage(`${prize.name}に応募しました！`, 'success');
 
             await fetchUserData();
@@ -264,7 +267,7 @@ function addIslandMarker(island) {
     const iconHtml = `<div class="island-marker ${isCollected ? 'collected' : ''}">🏝️</div>`;
     const customIcon = L.divIcon({ html: iconHtml, className: 'custom-div-icon', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
     const marker = L.marker([island.lat, island.lng], { icon: customIcon }).addTo(map);
-    
+
     const popupContent = `<div class="island-popup">
                               <img src="${island.image}" alt="${island.name}" onerror="this.style.display='none'">
                               <h3>${island.name}</h3>
@@ -373,7 +376,7 @@ async function openQRCamera() {
         );
         qrStatus.textContent = 'QRコードを枠内に収めてください';
         qrStatus.className = 'qr-status info';
-        
+
         qrScanTimeout = setTimeout(() => {
             console.log("10秒間読み取りがなかったため、カメラを自動的に閉じます。");
             closeQRCamera();
@@ -602,4 +605,119 @@ async function checkInitialLocationAndSetCameraPermission() {
         console.error("起動時の位置情報取得に失敗しました:", error);
         showMessage("位置情報の取得に失敗しました。QRスキャンは利用できません。", "error");
     }
+}
+
+// ================================================================
+// ★★★ ここから追加: 当選者情報入力機能 ★★★
+// ================================================================
+
+/**
+ * ユーザーが当選者かどうかを確認し、情報が未入力ならフォームを表示する
+ */
+async function checkIfWinnerAndRequestInfo() {
+    if (!currentUser) return;
+
+    // 賞のテーブル名と表示名のマッピング
+    const prizeTables = {
+        'winners_a': 'A賞',
+        'winners_b': 'B賞',
+        'winners_c': 'C賞',
+        'winners_d': 'D賞'
+    };
+
+    for (const tableName in prizeTables) {
+        try {
+            const { data, error } = await supabaseClient
+                .from(tableName)
+                .select('full_name, shipping_address')
+                .eq('user_id', currentUser.id)
+                .single();
+
+            // データがあり、かつ氏名か住所が未入力の場合
+            if (data && (!data.full_name || !data.shipping_address)) {
+                const prizeName = prizeTables[tableName];
+                showWinnerForm(tableName, prizeName);
+                // 一致するものが見つかったらループを抜ける
+                break;
+            }
+
+            // "PGRST116" は該当データがないエラーなので無視する
+            if (error && error.code !== 'PGRST116') {
+                throw error;
+            }
+
+        } catch (error) {
+            console.error(`Error checking winner status for ${tableName}:`, error);
+        }
+    }
+}
+
+/**
+ * 当選者情報入力フォームのモーダルを表示し、送信処理をセットアップする
+ * @param {string} tableName - 更新対象のSupabaseテーブル名
+ * @param {string} prizeName - 表示用の賞の名前
+ */
+function showWinnerForm(tableName, prizeName) {
+    const modal = document.getElementById('winnerInfoModal');
+    const form = document.getElementById('winnerInfoForm');
+    const title = document.getElementById('winnerModalTitle');
+    const message = document.getElementById('winnerModalMessage');
+    const submitBtn = document.getElementById('submitWinnerInfoBtn');
+
+    title.textContent = `${prizeName}ご当選おめでとうございます！`;
+    message.textContent = `賞品発送のため、お名前とご住所の入力をお願いいたします。`;
+
+    modal.classList.add('active');
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = '登録中...';
+
+        const fullName = document.getElementById('winnerName').value.trim();
+        const shippingAddress = document.getElementById('winnerAddress').value.trim();
+
+        if (!fullName || !shippingAddress) {
+            showMessage('氏名と住所の両方を入力してください。', 'warning');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'この内容で登録する';
+            return;
+        }
+
+        try {
+            await submitWinnerInfo(tableName, fullName, shippingAddress);
+            modal.classList.remove('active');
+            showMessage('ご登録ありがとうございました！賞品の発送までしばらくお待ちください。', 'success');
+        } catch (error) {
+            showMessage(`登録に失敗しました: ${error.message}`, 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'この内容で登録する';
+        }
+    };
+}
+
+/**
+ * 入力された当選者情報をSupabaseに保存する
+ * @param {string} tableName - 更新対象のテーブル名
+ * @param {string} fullName - ユーザーが入力した氏名
+ * @param {string} shippingAddress - ユーザーが入力した住所
+ */
+async function submitWinnerInfo(tableName, fullName, shippingAddress) {
+    if (!currentUser) throw new Error('ユーザーがログインしていません。');
+
+    const { error } = await supabaseClient
+        .from(tableName)
+        .update({
+            full_name: fullName,
+            shipping_address: shippingAddress,
+            updated_at: new Date().toISOString() // 更新日時を記録
+        })
+        .eq('user_id', currentUser.id);
+
+    if (error) {
+        console.error('Failed to submit winner info:', error);
+        throw error;
+    }
+
+    console.log(`Successfully updated winner info in ${tableName}`);
 }
