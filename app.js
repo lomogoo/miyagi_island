@@ -1,6 +1,6 @@
 /**
  * 宮城県離島スタンプラリー アプリケーション
- * メインスクリプト (最終完成版)
+ * メインスクリプト (修正版)
  */
 
 //================================================================
@@ -8,8 +8,8 @@
 //================================================================
 
 const islands = [
-  { id: "aji", name: "網地島", lat: 38.274976, lng: 141.461628, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//aji.jpeg", qrLocation: "網地浜船着場待合所" },
-  { id: "tashiro", name: "田代島", lat: 38.294834, lng: 141.426264, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//tashiro.jpg", qrLocation: "仁斗田港船着場待合所" },
+  { id: "aji", name: "網地島", lat: 38.274976, lng: 141.461628, description: "東北の"ハワイ"ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//aji.jpeg", qrLocation: "網地浜船着場待合所" },
+  { id: "tashiro", name: "田代島", lat: 38.294834, lng: 141.426264, description: ""猫の島"として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//tashiro.jpg", qrLocation: "仁斗田港船着場待合所" },
   { id: "katsura", name: "桂島", lat: 38.334949, lng: 141.095117, description: "塩竈市本土から一番近い島。島内には遊歩道があり、風光明媚な景観を楽しむことができるほか、夏には海水浴場がオープンし、多くの観光客で賑わう。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//katsura.JPG", qrLocation: "桂島ステイ・ステーション" },
   { id: "nonoshima", name: "野々島", lat:　38.338475, lng: 141.105808, description: "宿泊研 修施設「ブルーセンター」や診療所、小中学校があり、生活面でも中心的な島。ボラと呼ばれる洞穴群や椿のトンネルなど神秘的な景観が魅力。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//nono.jpg", qrLocation: "菜の花ラウンジ(浦戸諸島開発総合センター)" },
   { id: "sabusawa", name: "寒風沢島", lat: 38.338049, lng: 141.118135, description: "江戸時代に伊達藩の江戸廻米の港として繁栄を極め、当時を語り継ぐ風景や歴史が多く存在する。島の奥には懐かしい田園風景、美しい砂浜に辿り着く。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//sabusawa.jpeg", qrLocation: "寒風沢島汽船待合所" },
@@ -43,6 +43,8 @@ let isAppInitialized = false;
 let canUseCamera = false;
 let prizeHistory = [];
 let qrScanTimeout = null;
+let isRefreshingSession = false; // 再ログイン中フラグを追加
+let hasAttemptedRefresh = false; // 再ログイン試行済みフラグを追加
 
 //================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
@@ -51,55 +53,36 @@ let qrScanTimeout = null;
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('dev') === 'true') {
-        // (開発者モードのロジックは変更なし)
         console.log("🛠️ 開発者モードで起動しました。");
         const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
         currentUser = { id: devUserId, email: 'developer@example.com' };
         showAuthenticatedUI();
         loadAndInitializeApp();
     } else {
-        // ★★★ ここからが変更箇所 ★★★
+        // 認証状態の変更を監視
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
-            if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-                // セッションが有効な場合: 通常通りアプリを初期化
+            console.log(`Auth state changed: ${event}`, session ? 'with session' : 'no session');
+            
+            if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && session)) {
+                // セッションが有効な場合
                 currentUser = session.user;
+                hasAttemptedRefresh = false; // リセット
                 showAuthenticatedUI();
                 if (!isAppInitialized) {
                     await loadAndInitializeApp();
                 }
             } else if (event === 'SIGNED_OUT') {
-                // 明示的なサインアウトの場合: ログイン画面を表示
+                // 明示的なサインアウトの場合
                 currentUser = null;
                 userProfile = null;
                 isAppInitialized = false;
+                hasAttemptedRefresh = false;
                 showLoginUI();
-            } else if (!session) {
-                // セッションがない場合: 自動再ログインを試みる
-                console.log("セッションがありません。自動再ログインを試みます...");
-                try {
-                    const { data, error: funcError } = await supabaseClient.functions.invoke('refresh-pocketsign-session');
-                    
-                    if (funcError) throw funcError;
-
-                    const { supabaseJwt } = data;
-                    if (!supabaseJwt) throw new Error('Supabase JWTの取得に失敗しました。');
-                    
-                    console.log("自動再ログインに成功しました。");
-                    // setSession を呼び出すと、再度 onAuthStateChange が 'SIGNED_IN' イベントでトリガーされる
-                    const { error: sessionError } = await supabaseClient.auth.setSession({
-                        access_token: supabaseJwt,
-                        refresh_token: supabaseJwt // Supabase自身のセッション更新用に設定
-                    });
-                    if (sessionError) throw sessionError;
-
-                } catch (error) {
-                    console.error("自動再ログインに失敗しました:", error.message);
-                    // 再ログインに失敗した場合のみ、ログイン画面を表示
-                    showLoginUI();
-                }
+            } else if (event === 'INITIAL_SESSION' && !session && !hasAttemptedRefresh && !isRefreshingSession) {
+                // 初回読み込み時でセッションがない場合、一度だけ自動再ログインを試みる
+                await attemptAutoRefresh();
             }
         });
-        // ★★★ ここまでが変更箇所 ★★★
     }
 
     document.addEventListener('visibilitychange', () => {
@@ -109,6 +92,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// 自動再ログイン処理を別関数に分離
+async function attemptAutoRefresh() {
+    if (isRefreshingSession || hasAttemptedRefresh) {
+        return;
+    }
+    
+    isRefreshingSession = true;
+    hasAttemptedRefresh = true;
+    
+    console.log("セッションがありません。自動再ログインを試みます...");
+    
+    try {
+        // ローカルストレージから以前のユーザーIDを取得
+        const lastUserId = localStorage.getItem('lastUserId');
+        if (!lastUserId) {
+            throw new Error('以前のユーザー情報が見つかりません');
+        }
+        
+        // refresh-pocketsign-session関数を呼び出す（ユーザーIDを渡す）
+        const { data, error: funcError } = await supabaseClient.functions.invoke('refresh-pocketsign-session', {
+            body: { userId: lastUserId }
+        });
+        
+        if (funcError) throw funcError;
+
+        const { supabaseJwt } = data;
+        if (!supabaseJwt) throw new Error('Supabase JWTの取得に失敗しました。');
+        
+        console.log("自動再ログインに成功しました。");
+        
+        // setSessionを呼び出す（これにより再度onAuthStateChangeがトリガーされる）
+        const { error: sessionError } = await supabaseClient.auth.setSession({
+            access_token: supabaseJwt,
+            refresh_token: supabaseJwt
+        });
+        
+        if (sessionError) throw sessionError;
+        
+    } catch (error) {
+        console.error("自動再ログインに失敗しました:", error.message);
+        // 再ログインに失敗した場合のみ、ログイン画面を表示
+        showLoginUI();
+    } finally {
+        isRefreshingSession = false;
+    }
+}
 
 //================================================================
 // 2. UI表示の切り替え
@@ -129,9 +159,19 @@ function showLoginUI() {
 //================================================================
 
 async function loadAndInitializeApp() {
-    await fetchUserData();
-    initializeApp();
-    await checkInitialLocationAndSetCameraPermission();
+    try {
+        await fetchUserData();
+        initializeApp();
+        await checkInitialLocationAndSetCameraPermission();
+        
+        // ユーザーIDをローカルストレージに保存（次回の自動再ログイン用）
+        if (currentUser?.id) {
+            localStorage.setItem('lastUserId', currentUser.id);
+        }
+    } catch (error) {
+        console.error("アプリの初期化中にエラーが発生しました:", error);
+        showMessage("アプリの初期化に失敗しました。ページを再読み込みしてください。", "error");
+    }
 }
 
 async function fetchUserData() {
@@ -162,16 +202,26 @@ async function fetchUserData() {
 
 function initializeApp() {
     if (isAppInitialized) return;
-    initializeMap();
-    initializeNavigation();
-    initializeQRCamera();
-    initializeStampCards();
-    initializePrizeSection();
-    renderPrizes();
-    renderHistory();
-    updatePointsDisplay();
-    initializeGeolocation();
-    isAppInitialized = true;
+    
+    console.log("アプリを初期化しています...");
+    
+    try {
+        initializeMap();
+        initializeNavigation();
+        initializeQRCamera();
+        initializeStampCards();
+        initializePrizeSection();
+        renderPrizes();
+        renderHistory();
+        updatePointsDisplay();
+        initializeGeolocation();
+        
+        isAppInitialized = true;
+        console.log("アプリの初期化が完了しました。");
+    } catch (error) {
+        console.error("アプリの初期化中にエラーが発生しました:", error);
+        throw error;
+    }
 }
 
 //================================================================
@@ -619,9 +669,8 @@ async function checkInitialLocationAndSetCameraPermission() {
         const userLon = position.coords.longitude;
         const allLocations = [...islands, testLocationForMap];
         for (const location of allLocations) {
-            // ★★★ バグ修正箇所 ★★★
             const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
-            if (distance <= 10) { // 元の半径3kmに戻しました
+            if (distance <= 10) {
                 canUseCamera = true;
                 showMessage("スタンプラリーエリア内です。QRスキャンが利用できます！", "success");
                 return;
