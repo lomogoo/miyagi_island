@@ -91,6 +91,32 @@
 </div>
     </div>
 
+    <div id="winnerInfoModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="winnerModalTitle">ご当選おめでとうございます！</h3>
+        </div>
+        <div class="confirm-content">
+            <p id="winnerModalMessage">賞品発送のため、お名前とご住所の入力をお願いいたします。</p>
+            <form id="winnerInfoForm" style="width: 100%; text-align: left; display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <label for="winnerName" style="font-weight: bold; margin-bottom: 8px; display: block;">氏名</label>
+                    <input type="text" id="winnerName" name="fullName" required placeholder="例：宮城 太郎" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc;">
+                </div>
+                <div>
+                    <label for="winnerAddress" style="font-weight: bold; margin-bottom: 8px; display: block;">住所</label>
+                    <textarea id="winnerAddress" name="shippingAddress" required rows="4" placeholder="例：〒980-8570 宮城県仙台市青葉区本町３丁目８−１" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; resize: vertical;"></textarea>
+                </div>
+                <div class="confirm-buttons" style="margin-top: 16px;">
+                    <button type="submit" id="submitWinnerInfoBtn" class="btn btn--primary">この内容で登録する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+    
+
     <div id="loginPrompt" style="text-align: center; padding: 50px;">
         <h2>認証情報がありません</h2>
         <p>このアプリはポケットサインから起動してください。</p>
