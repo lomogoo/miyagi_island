@@ -557,12 +557,34 @@ function showConfirmModal(prize, onConfirm) {
     };
 }
 
-function showMessage(message, type = 'info') {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message message-${type}`;
-    messageDiv.textContent = message;
-    document.body.appendChild(messageDiv);
-    setTimeout(() => messageDiv.remove(), 3000);
+/**
+ * 画面上部にメッセージを表示する。
+ * この関数はPromiseを返し、メッセージが消えると解決される。
+ * @param {string} message 表示するテキスト
+ * @param {'info'|'success'|'warning'|'error'} type メッセージの種類
+ * @param {number} duration 表示時間 (ミリ秒)
+ * @returns {Promise<void>}
+ */
+function showMessage(message, type = 'info', duration = 3000) {
+    return new Promise(resolve => {
+        // 既存のメッセージをすべて探し、重なりを防ぐために削除する
+        const existingMessages = document.querySelectorAll('.message');
+        existingMessages.forEach(msg => msg.remove());
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message message-${type}`;
+        messageDiv.textContent = message;
+        document.body.appendChild(messageDiv);
+        
+        // 指定された時間後にメッセージを削除し、Promiseを解決する
+        setTimeout(() => {
+            // メッセージがまだDOMに存在する場合のみ削除
+            if (document.body.contains(messageDiv)) {
+                messageDiv.remove();
+            }
+            resolve();
+        }, duration);
+    });
 }
 
 function getCurrentLocation() {
@@ -582,30 +604,52 @@ function getDistanceInKm(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
+/**
+ * アプリ起動時に現在地を確認し、QRカメラの使用可否を設定する。
+ * メッセージの表示タイミングを制御し、重なりを防ぐ。
+ */
 async function checkInitialLocationAndSetCameraPermission() {
-    showMessage("現在地から利用可能エリアか確認しています...", "info");
+    // 1. 「確認中」メッセージを表示し、そのPromiseを保持する
+    const checkingPromise = showMessage("現在地から利用可能エリアか確認しています...", "info", 3000);
+
     try {
+        // 2. 「確認中」メッセージの表示と並行して位置情報を取得する
         const position = await getCurrentLocation();
+        
+        // 3. 最初のメッセージが表示完了するのを待つ
+        await checkingPromise;
+
+        // 4. 位置情報を評価し、結果を4秒間表示する
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
         const allLocations = [...islands, testLocationForMap];
+        let inArea = false;
+
         for (const location of allLocations) {
-            // ★★★ バグ修正箇所 ★★★
             const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
-            if (distance <= 10) { // 元の半径3kmに戻しました
-                canUseCamera = true;
-                showMessage("スタンプラリーエリア内です。QRスキャンが利用できます！", "success");
-                return;
+            if (distance <= 10) {
+                inArea = true;
+                break;
             }
         }
-        canUseCamera = false;
-        showMessage("スタンプラリーエリア外です。QRスキャンを利用するにはいずれかの島に近づいてください。", "warning");
+
+        if (inArea) {
+            canUseCamera = true;
+            showMessage("スタンプラリーエリア内です。QRスキャンが利用できます！", "success", 4000);
+        } else {
+            canUseCamera = false;
+            showMessage("スタンプラリーエリア外です。QRスキャンを利用するにはいずれかの島に近づいてください。", "warning", 4000);
+        }
     } catch (error) {
+        // エラー時も、最初のメッセージが表示完了するのを待ってからエラーメッセージを表示する
+        await checkingPromise;
+        
         canUseCamera = false;
         console.error("起動時の位置情報取得に失敗しました:", error);
-        showMessage("位置情報の取得に失敗しました。QRスキャンは利用できません。", "error");
+        showMessage("位置情報の取得に失敗しました。QRスキャンは利用できません。", "error", 4000);
     }
 }
+
 
 // ================================================================
 // ★★★ ここから追加: 当選者情報入力機能 ★★★
