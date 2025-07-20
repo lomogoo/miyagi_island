@@ -943,7 +943,9 @@ p { margin: 0; }
   left: 50%; 
   transform: translateX(-50%); 
   padding: var(--space-16) var(--space-24); 
-  border-radius: var(--radius-full); 
+  min-width: 320px; /* メッセージの最小幅を指定して横長に */
+  max-width: 90%;   /* 画面幅が狭い場合のはみ出しを防止 */
+  border-radius: 12px; /* 角丸を緩やかにして四角に近づける */
   color: #FFFFFF; 
   font-weight: var(--font-weight-bold); 
   z-index: 3000; 
