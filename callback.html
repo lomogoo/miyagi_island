@@ -31,7 +31,7 @@
             const savedState = sessionStorage.getItem('oauth_state');
             
             if (!state || state !== savedState) {
-                container.innerHTML = '<h1>エラー</h1><p>不正なアクセスです。認証をやり直してください。</p>';
+                container.innerHTML = '<h1>エラー</h1><p>もう一度最初からやり直してください。</p>';
                 return;
             }
             sessionStorage.removeItem('oauth_state');
@@ -59,7 +59,7 @@
                     container.innerHTML = `<h1>ログインに失敗しました</h1><p>エラー: ${error.message}</p>`;
                 }
             } else {
-                container.innerHTML = '<h1>エラー</h1><p>認証コードが見つかりませんでした。</p>';
+                container.innerHTML = '<h1>エラー</h1><p>認証コードが見つかりませんでした。もう一度最初からやり直してください。</p>';
             }
         });
     </script>
