@@ -8,7 +8,7 @@
 //================================================================
 
 const islands = [
-  { id: "aji", name: "網地島", lat: 38.274976, lng: 141.461628, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//aji.jpeg", qrLocation: "網地浜船着場待合所" },
+  { id: "aji", name: "網地島", lat: 38.274976, lng: 141.461628, description: "東北の”ハワイ”ビーチとして知られる網地白浜海水浴場は、美しいエメラルドグリーンが特徴で、東北有数の透明度を誇る。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//aji.JPG", qrLocation: "網地浜船着場待合所" },
   { id: "tashiro", name: "田代島", lat: 38.294834, lng: 141.426264, description: "”猫の島”として有名で、猫神社もある猫好きの聖地。人口より猫が多く、猫神社が「島の宝100景」に選定。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//tashiro.jpg", qrLocation: "仁斗田港船着場待合所" },
   { id: "katsura", name: "桂島", lat: 38.334949, lng: 141.095117, description: "塩竈市本土から一番近い島。島内には遊歩道があり、風光明媚な景観を楽しむことができるほか、夏には海水浴場がオープンし、多くの観光客で賑わう。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//katsura.JPG", qrLocation: "桂島ステイ・ステーション" },
   { id: "nonoshima", name: "野々島", lat: 38.338475, lng: 141.105808, description: "宿泊研 修施設「ブルーセンター」や診療所、小中学校があり、生活面でも中心的な島。ボラと呼ばれる洞穴群や椿のトンネルなど神秘的な景観が魅力。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//nono.jpg", qrLocation: "菜の花ラウンジ(浦戸諸島開発総合センター)" },
