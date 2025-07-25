@@ -489,7 +489,7 @@ function updatePrizes() {
         if (prize) {
             const canApply = currentPoints >= prize.points;
             btn.disabled = !canApply;
-            btn.textContent = canApply ? '応募する' : `${prize.points}P必要`;
+            btn.textContent = canApply ? '応募する' : `${prize.points}スタンプ必要`;
         }
     });
 }
@@ -517,7 +517,7 @@ function renderHistory() {
         const li = document.createElement('li');
         li.className = 'history-item';
         const entryDate = new Date(entry.entry_at).toLocaleString('ja-JP');
-        li.innerHTML = `<div class="info"><div class="prize-name">${entry.prize_name}</div><div class="entry-time">${entryDate}</div></div><div class="points">${entry.points_spent}P 消費</div>`;
+        li.innerHTML = `<div class="info"><div class="prize-name">${entry.prize_name}</div><div class="entry-time">${entryDate}</div></div><div class="points">${entry.points_spent}スタンプ 消費</div>`;
         historyList.appendChild(li);
     });
 }
@@ -542,7 +542,7 @@ function showConfirmModal(prize, onConfirm) {
     const confirmBtn = document.getElementById('confirmApplyBtn');
     const cancelBtn = document.getElementById('cancelApplyBtn');
     confirmTitle.textContent = `${prize.name}への応募`;
-    confirmMessage.textContent = `${prize.points}ポイントを消費します。本当によろしいですか？`;
+    confirmMessage.textContent = `${prize.points}スタンプを消費します。本当によろしいですか？`;
     confirmModal.classList.add('active');
     confirmBtn.onclick = () => {
         confirmModal.classList.remove('active');
