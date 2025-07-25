@@ -463,7 +463,7 @@ function renderPrizes() {
     prizes.forEach((prize, index) => {
         const prizeCard = document.createElement('div');
         prizeCard.className = 'prize-card';
-        prizeCard.innerHTML = `<div class="prize-info"><h3>${prize.name}</h3><p>${prize.description}</p></div><div class="prize-points">${prize.points}P</div><button class="prize-btn" data-prize-index="${index}">応募する</button>`;
+        prizeCard.innerHTML = `<div class="prize-info"><h3>${prize.name}</h3><p>${prize.description}</p></div><div class="prize-points">${prize.points}スタンプ</div><button class="prize-btn" data-prize-index="${index}">応募する</button>`;
         prizesContainer.appendChild(prizeCard);
     });
     updatePrizes();
