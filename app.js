@@ -18,8 +18,6 @@ const islands = [
   { id: "enoshima", name: "江島", lat: 38.400473, lng: 141.593721, description: "江島褶曲地層があり、海鳥繁殖地としても知られる。断崖が迫る冒険的な島で、ウミネコの観察や神社巡りも楽しめる。", image: "https://impkzpdypusdminmyyea.supabase.co/storage/v1/object/public/isla//enoshima.jpg", qrLocation: "江島離島航路待合所" },
 ];
 
-const testLocationForMap = { id: "miyagi-pref", name: "宮城県庁", lat: 38.268352, lng: 140.872127, description: "テスト用の場所（宮城県庁）です。", image: "https://www.pref.miyagi.jp/images/5994/55420_1.gif", qrLocation: "宮城県庁 1階" };
-
 const prizes = [
   { name: "A賞", points: 3, description: "みやぎの特産品（5,000円相当）" },
   { name: "B賞", points: 2, description: "みやぎの特産品（3,000円相当）" },
@@ -49,26 +47,17 @@ let qrScanTimeout = null;
 //================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('dev') === 'true') {
-        console.log("🛠️ 開発者モードで起動しました。");
-        const devUserId = '87177bcf-87a0-4ef4-b4c7-f54f3073fbe5';
-        currentUser = { id: devUserId, email: 'developer@example.com' };
-        showAuthenticatedUI();
-        loadAndInitializeApp();
-    } else {
-        supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-                currentUser = session.user;
-                showAuthenticatedUI();
-                loadAndInitializeApp();
-            } else if (event === 'SIGNED_OUT') {
-                currentUser = null;
-                userProfile = null;
-                showLoginUI();
-            }
-        });
-    }
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+            currentUser = session.user;
+            showAuthenticatedUI();
+            loadAndInitializeApp();
+        } else if (event === 'SIGNED_OUT') {
+            currentUser = null;
+            userProfile = null;
+            showLoginUI();
+        }
+    });
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && currentUser) {
@@ -259,7 +248,6 @@ function initializeMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
     markers = [];
     islands.forEach(addIslandMarker);
-    addIslandMarker(testLocationForMap);
 }
 
 function addIslandMarker(island) {
@@ -622,7 +610,7 @@ async function checkInitialLocationAndSetCameraPermission() {
         // 4. 位置情報を評価し、結果を4秒間表示する
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
-        const allLocations = [...islands, testLocationForMap];
+        const allLocations = [...islands];
         let inArea = false;
 
         for (const location of allLocations) {
