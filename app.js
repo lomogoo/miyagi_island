@@ -615,7 +615,7 @@ async function checkInitialLocationAndSetCameraPermission() {
 
         for (const location of allLocations) {
             const distance = getDistanceInKm(userLat, userLon, location.lat, location.lng);
-            if (distance <= 10) {
+            if (distance <= 22) {
                 inArea = true;
                 break;
             }
