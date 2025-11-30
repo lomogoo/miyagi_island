@@ -132,6 +132,13 @@ function initializeApp() {
     updatePointsDisplay();
     initializeGeolocation();
     isAppInitialized = true;
+
+    // 期間終了の場合、起動時にお知らせを表示
+    if (STAMP_RALLY_CONFIG.IS_ENDED) {
+        setTimeout(() => {
+            showMessage("【お知らせ】スタンプラリーの期間は終了しました。スタンプカードの確認と応募は引き続きご利用いただけます。", "info", 6000);
+        }, 1000);
+    }
 }
 
 //================================================================
