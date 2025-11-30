@@ -343,6 +343,12 @@ function initializeQRCamera() {
 }
 
 async function openQRCamera() {
+    // 期間終了チェック
+    if (STAMP_RALLY_CONFIG.IS_ENDED) {
+        showMessage("スタンプラリーの期間は終了しました。スタンプカードの確認と応募は引き続きご利用いただけます。", "warning", 5000);
+        return;
+    }
+
     if (!canUseCamera) {
         showMessage("スタンプラリーエリア外です。QRスキャンを利用するにはいずれかの島に近づいてください。", "warning");
         return;
