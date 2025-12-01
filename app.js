@@ -133,11 +133,11 @@ function initializeApp() {
     initializeGeolocation();
     isAppInitialized = true;
 
-    // 期間終了の場合、起動時にお知らせを表示
+    // 期間終了の場合、起動時に全画面モーダルでお知らせを表示
     if (STAMP_RALLY_CONFIG.IS_ENDED) {
         setTimeout(() => {
-            showMessage("【お知らせ】スタンプラリーの期間は終了しました。スタンプカードの確認と応募は引き続きご利用いただけます。", "info", 6000);
-        }, 1000);
+            showEndPeriodModal();
+        }, 500);
     }
 }
 
@@ -220,6 +220,12 @@ async function onScanSuccess(decodedText) {
 }
 
 async function applyForPrize(prizeIndex) {
+    // 期間終了チェック
+    if (STAMP_RALLY_CONFIG.IS_ENDED) {
+        showMessage("応募期間は終了しました。ご参加ありがとうございました。", 'warning', 5000);
+        return;
+    }
+
     const prize = prizes[prizeIndex];
     if (userProfile.total_points < prize.points) {
         showMessage("ポイントが足りません。", 'warning');
@@ -558,6 +564,16 @@ function showConfirmModal(prize, onConfirm) {
     };
 }
 
+function showEndPeriodModal() {
+    const endPeriodModal = document.getElementById('endPeriodModal');
+    endPeriodModal.classList.add('active');
+    const closeButton = document.getElementById('closeEndPeriodModal');
+    closeButton.onclick = () => {
+        endPeriodModal.classList.remove('active');
+        closeButton.onclick = null;
+    };
+}
+
 /**
  * 画面上部にメッセージを表示する。
  * この関数はPromiseを返し、メッセージが消えると解決される。
@@ -610,6 +626,13 @@ function getDistanceInKm(lat1, lon1, lat2, lon2) {
  * メッセージの表示タイミングを制御し、重なりを防ぐ。
  */
 async function checkInitialLocationAndSetCameraPermission() {
+    // 期間終了時はエリアチェックをスキップ（コードは保持）
+    if (STAMP_RALLY_CONFIG.IS_ENDED) {
+        canUseCamera = false;
+        console.log("スタンプラリー期間終了のため、位置情報チェックをスキップします。");
+        return;
+    }
+
     // 1. 「確認中」メッセージを表示し、そのPromiseを保持する
     const checkingPromise = showMessage("現在地から利用可能エリアか確認しています...", "info", 3000);
 
