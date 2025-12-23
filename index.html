@@ -115,25 +115,56 @@
             <h3 id="winnerModalTitle">ご当選おめでとうございます！</h3>
         </div>
         <div class="confirm-content">
-            <p id="winnerModalMessage">賞品発送のため、お名前とご住所の入力をお願いいたします。</p>
+            <p id="winnerModalMessage">賞品発送のため、お名前、郵便番号、ご住所の入力をお願いいたします。</p>
             <form id="winnerInfoForm" style="width: 100%; text-align: left; display: flex; flex-direction: column; gap: 16px;">
                 <div>
                     <label for="winnerName" style="font-weight: bold; margin-bottom: 8px; display: block;">氏名</label>
                     <input type="text" id="winnerName" name="fullName" required placeholder="例：宮城 太郎" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc;">
                 </div>
                 <div>
+                    <label for="winnerPostalCode" style="font-weight: bold; margin-bottom: 8px; display: block;">郵便番号</label>
+                    <input type="text" id="winnerPostalCode" name="postalCode" required placeholder="例：980-8570" pattern="\d{3}-?\d{4}" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc;">
+                </div>
+                <div>
                     <label for="winnerAddress" style="font-weight: bold; margin-bottom: 8px; display: block;">住所</label>
-                    <textarea id="winnerAddress" name="shippingAddress" required rows="4" placeholder="例：〒980-8570 宮城県仙台市青葉区本町３丁目８−１" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; resize: vertical;"></textarea>
+                    <textarea id="winnerAddress" name="shippingAddress" required rows="4" placeholder="例：宮城県仙台市青葉区本町３丁目８−１" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; resize: vertical;"></textarea>
                 </div>
                 <div class="confirm-buttons" style="margin-top: 16px;">
-                    <button type="submit" id="submitWinnerInfoBtn" class="btn btn--primary">この内容で登録する</button>
+                    <button type="submit" id="submitWinnerInfoBtn" class="btn btn--primary">確認画面へ</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-    
+    <!-- 確認画面用モーダル -->
+    <div id="winnerConfirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>入力内容の確認</h3>
+            </div>
+            <div class="confirm-content">
+                <p>以下の内容で登録します。よろしいですか？</p>
+                <div id="confirmDetails" style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 16px 0; text-align: left;">
+                    <div style="margin-bottom: 12px;">
+                        <strong>氏名：</strong><span id="confirmName"></span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <strong>郵便番号：</strong><span id="confirmPostalCode"></span>
+                    </div>
+                    <div>
+                        <strong>住所：</strong><span id="confirmAddress" style="white-space: pre-wrap;"></span>
+                    </div>
+                </div>
+                <div class="confirm-buttons" style="display: flex; gap: 12px;">
+                    <button id="backToEditBtn" class="btn btn--secondary" style="flex: 1;">修正する</button>
+                    <button id="finalSubmitBtn" class="btn btn--primary" style="flex: 1;">この内容で登録する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     <div id="loginPrompt" style="text-align: center; padding: 50px;">
         <h2>認証情報がありません</h2>

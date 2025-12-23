@@ -697,12 +697,12 @@ async function checkIfWinnerAndRequestInfo() {
         try {
             const { data, error } = await supabaseClient
                 .from(tableName)
-                .select('full_name, shipping_address')
+                .select('full_name, postal_code, shipping_address')
                 .eq('user_id', currentUser.id)
                 .single();
 
-            // データがあり、かつ氏名か住所が未入力の場合
-            if (data && (!data.full_name || !data.shipping_address)) {
+            // データがあり、かつ氏名、郵便番号、住所のいずれかが未入力の場合
+            if (data && (!data.full_name || !data.postal_code || !data.shipping_address)) {
                 const prizeName = prizeTables[tableName];
                 showWinnerForm(tableName, prizeName);
                 // 一致するものが見つかったらループを抜ける
@@ -726,40 +726,70 @@ async function checkIfWinnerAndRequestInfo() {
  * @param {string} prizeName - 表示用の賞の名前
  */
 function showWinnerForm(tableName, prizeName) {
-    const modal = document.getElementById('winnerInfoModal');
+    const inputModal = document.getElementById('winnerInfoModal');
+    const confirmModal = document.getElementById('winnerConfirmModal');
     const form = document.getElementById('winnerInfoForm');
     const title = document.getElementById('winnerModalTitle');
     const message = document.getElementById('winnerModalMessage');
     const submitBtn = document.getElementById('submitWinnerInfoBtn');
 
     title.textContent = `${prizeName}ご当選おめでとうございます！`;
-    message.textContent = `賞品発送のため、お名前とご住所の入力をお願いいたします。`;
+    message.textContent = `賞品発送のため、お名前、郵便番号、ご住所の入力をお願いいたします。`;
 
-    modal.classList.add('active');
+    inputModal.classList.add('active');
 
+    // 入力フォームの送信処理（確認画面へ遷移）
     form.onsubmit = async (e) => {
         e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = '登録中...';
 
         const fullName = document.getElementById('winnerName').value.trim();
+        const postalCode = document.getElementById('winnerPostalCode').value.trim();
         const shippingAddress = document.getElementById('winnerAddress').value.trim();
 
-        if (!fullName || !shippingAddress) {
-            showMessage('氏名と住所の両方を入力してください。', 'warning');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'この内容で登録する';
+        if (!fullName || !postalCode || !shippingAddress) {
+            showMessage('氏名、郵便番号、住所のすべてを入力してください。', 'warning');
             return;
         }
 
+        // 確認画面に値を表示
+        document.getElementById('confirmName').textContent = fullName;
+        document.getElementById('confirmPostalCode').textContent = postalCode;
+        document.getElementById('confirmAddress').textContent = shippingAddress;
+
+        // 入力画面を閉じて確認画面を表示
+        inputModal.classList.remove('active');
+        confirmModal.classList.add('active');
+    };
+
+    // 確認画面の「修正する」ボタン
+    const backToEditBtn = document.getElementById('backToEditBtn');
+    backToEditBtn.onclick = () => {
+        confirmModal.classList.remove('active');
+        inputModal.classList.add('active');
+    };
+
+    // 確認画面の「この内容で登録する」ボタン
+    const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+    finalSubmitBtn.onclick = async () => {
+        finalSubmitBtn.disabled = true;
+        finalSubmitBtn.textContent = '登録中...';
+
+        const fullName = document.getElementById('confirmName').textContent;
+        const postalCode = document.getElementById('confirmPostalCode').textContent;
+        const shippingAddress = document.getElementById('confirmAddress').textContent;
+
         try {
-            await submitWinnerInfo(tableName, fullName, shippingAddress);
-            modal.classList.remove('active');
+            await submitWinnerInfo(tableName, fullName, postalCode, shippingAddress);
+            confirmModal.classList.remove('active');
             showMessage('ご登録ありがとうございました！賞品の発送までしばらくお待ちください。', 'success');
+
+            // フォームをリセット
+            form.reset();
         } catch (error) {
             showMessage(`登録に失敗しました: ${error.message}`, 'error');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'この内容で登録する';
+        } finally {
+            finalSubmitBtn.disabled = false;
+            finalSubmitBtn.textContent = 'この内容で登録する';
         }
     };
 }
@@ -768,15 +798,17 @@ function showWinnerForm(tableName, prizeName) {
  * 入力された当選者情報をSupabaseに保存する
  * @param {string} tableName - 更新対象のテーブル名
  * @param {string} fullName - ユーザーが入力した氏名
+ * @param {string} postalCode - ユーザーが入力した郵便番号
  * @param {string} shippingAddress - ユーザーが入力した住所
  */
-async function submitWinnerInfo(tableName, fullName, shippingAddress) {
+async function submitWinnerInfo(tableName, fullName, postalCode, shippingAddress) {
     if (!currentUser) throw new Error('ユーザーがログインしていません。');
 
     const { error } = await supabaseClient
         .from(tableName)
         .update({
             full_name: fullName,
+            postal_code: postalCode,
             shipping_address: shippingAddress,
             updated_at: new Date().toISOString() // 更新日時を記録
         })
