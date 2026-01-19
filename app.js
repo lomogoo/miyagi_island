@@ -43,14 +43,6 @@ let prizeHistory = [];
 let qrScanTimeout = null;
 
 //================================================================
-// スタンプラリー設定
-//================================================================
-
-const STAMP_RALLY_CONFIG = {
-    IS_ENDED: true  // スタンプラリー期間終了フラグ
-};
-
-//================================================================
 // 1. アプリケーションのエントリーポイントと認証管理
 //================================================================
 
@@ -95,8 +87,8 @@ function showLoginUI() {
 
 async function loadAndInitializeApp() {
     await fetchUserData();
-    // ★★★ 当選者入力フォーム機能を一時停止 ★★★
-    // await checkIfWinnerAndRequestInfo();
+    // ★★★ ここに追加 ★★★
+    await checkIfWinnerAndRequestInfo();
     // ★★★ ここまで ★★★
     initializeApp();
     await checkInitialLocationAndSetCameraPermission();
